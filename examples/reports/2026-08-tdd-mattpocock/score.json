@@ -1,0 +1,38 @@
+[
+  {
+    "skill": "tdd",
+    "dimensions": {
+      "capability": 78,
+      "lift": null,
+      "cost": 100,
+      "speed": 100,
+      "stability": 0,
+      "security": 100
+    },
+    "overall": 57.3,
+    "verdict": "INCONCLUSIVE",
+    "reasons": [
+      "effect within noise band — cannot distinguish from run variance"
+    ],
+    "reliability": "low",
+    "inconclusiveReason": "effect within noise band — cannot distinguish from run variance",
+    "evaluation_cost": {
+      "currency": "USD",
+      "skill_cost": {
+        "usd": 0.010528,
+        "tokens": 4465
+      },
+      "eval_overhead": {
+        "usd": 0.020345,
+        "judge_usd": 0.011408,
+        "judge_tokens": 7211,
+        "baseline_usd": 0.008937,
+        "baseline_tokens": 2328
+      },
+      "total_eval_cost": {
+        "usd": 0.030873
+      }
+    },
+    "securityFindings": []
+  }
+]

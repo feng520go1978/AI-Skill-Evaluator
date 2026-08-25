@@ -32,6 +32,7 @@ https://github.com/feng520go1978/AI-Skill-Evaluator （Public，main @ fa72bdd�
 | **P6.2 噪声带规则 I4 + 第三轮验证** | I4 落地 + 有害门控 + 最终验证报告 | commit (P6.2); docs/phase62-final-validation-report.md; results-r3/; 35 tests 全绿 | ✅ 公开标准 5/5 |
 | **PUBLISH GitHub 正式接管** | ✅ **COMPLETE 2026-08-25**：github.com/feng520go1978/AI-Skill-Evaluator (Public)，main@fa72bdd，7 commits 同步，README/LICENSE/PROJECT_STATE 均在线 |
 | HANDOFF 公开发布准备 | README 重写/npm 包名/license 传递说明 | — | ⬜ 未开始 |
+| VALIDATION 首批公开测评报告 | C1 tdd 报告 + 规范 + 指标台账 | examples/reports/2026-08-tdd-mattpocock/; docs/report-publish-spec-V1.md; docs/validation_metrics.md; docs/validation-30day-plan.md | ✅ C1 已过 8 项验收（2026-08-25） |
 
 ## 已完成工件清单（关键）
 
