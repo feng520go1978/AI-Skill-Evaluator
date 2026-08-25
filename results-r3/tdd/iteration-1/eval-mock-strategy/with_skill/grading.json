@@ -1,0 +1,25 @@
+{
+  "assertion_results": [
+    {
+      "text": "Recommends NOT using a real SMTP server for the primary unit tests",
+      "passed": true,
+      "evidence": "Output states: \"I usually do not use a real SMTP server in most tests\" and explains that real SMTP makes tests \"slow and flaky.\""
+    },
+    {
+      "text": "Asserts on what was sent (recipient/content/calls) via a mock or spy",
+      "passed": true,
+      "evidence": "Output provides a FakeEmailSender and asserts: \"assert len(email_sender.sent) == 1\", \"assert email_sender.sent[0].to == \\\"alice@example.com\\\"\", and \"assert email_sender.sent[0].template == \\\"welcome\\\"\"."
+    },
+    {
+      "text": "Suggests isolating side effect from logic so the core decision can be tested purely",
+      "passed": true,
+      "evidence": "Output says: \"Treat SMTP as an external dependency\" and \"Test SignupService, not SMTP,\" using an injected EmailSender interface/fake."
+    }
+  ],
+  "summary": {
+    "passed": 3,
+    "failed": 0,
+    "total": 3,
+    "pass_rate": 1
+  }
+}

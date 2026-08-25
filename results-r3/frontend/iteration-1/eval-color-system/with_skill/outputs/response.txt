@@ -1,0 +1,75 @@
+For a developer-tool documentation site, I’d avoid the usual “dark background + neon green” developer aesthetic unless the product is explicitly about hacking, terminals, or infrastructure. Documentation is a long-reading environment: the palette should feel precise, trustworthy, and low-fatigue while still having enough personality to signal technical depth.
+
+## Palette: “Precision Workshop”
+
+| Role | Color | Hex | Use |
+|---|---|---|---|
+| Canvas | Deep Slate | `#0F172A` | Main dark background / chrome |
+| Surface | Graphite Panel | `#172033` | Cards, code panels, sidebars |
+| Text Primary | Soft White | `#E6EDF3` | Headings and key content |
+| Text Secondary | Muted Steel | `#94A3B8` | Descriptions, metadata |
+| Accent | Signal Cyan | `#22D3EE` | Links, active states, highlights |
+| Accent Warm | Compiler Amber | `#F59E0B` | Warnings, important callouts |
+| Success | Runtime Green | `#34D399` | Success states, examples |
+| Error | Diagnostic Red | `#FB7185` | Errors and destructive states |
+
+### Why this works
+
+**1. It treats documentation like a developer environment, not a marketing page.**  
+The dark slate base mirrors the spaces developers already spend time in (editors, terminals, dashboards) without copying a terminal theme. The slightly blue undertone makes long reading sessions calmer than pure black.
+
+**2. Cyan creates a technical identity without becoming “cyberpunk.”**  
+`#22D3EE` feels like a live signal: useful for API links, navigation states, inline references, and interactive elements. It suggests activity and precision rather than decoration.
+
+**3. Warm amber gives semantic contrast.**  
+Developer docs need many states:
+- “this is important”
+- “watch out”
+- “deprecated”
+- “migration required”
+
+Amber creates hierarchy without competing with the primary accent.
+
+**4. Surfaces are separated by temperature, not borders.**  
+A documentation site has many stacked regions:
+- navigation
+- content
+- code blocks
+- examples
+- callouts
+
+Using subtle surface shifts (`#0F172A` → `#172033`) creates depth while keeping the interface quiet.
+
+---
+
+## Suggested semantic mapping
+
+```css:root {
+  --bg: #0F172A;
+  --surface: #172033;
+  --text: #E6EDF3;
+  --text-muted: #94A3B8;
+
+  --link: #22D3EE;
+  --warning: #F59E0B;
+  --success: #34D399;
+  --error: #FB7185;
+}
+```
+
+---
+
+## One distinctive design choice
+
+Use **cyan only for things users can act on**.
+
+Avoid cyan headings, decorative gradients, and large hero text. Reserve it for:
+- links
+- selected navigation
+- copy buttons
+- API references
+- interactive diagrams
+
+That makes the accent behave like a “signal” rather than a brand color splashed everywhere.
+
+For typography, I’d pair this with a characterful developer-facing display font (for example, a restrained grotesk) and a highly readable neutral sans for body text. The palette’s job is to make the interface feel like a reliable instrument; the type can carry more personality.

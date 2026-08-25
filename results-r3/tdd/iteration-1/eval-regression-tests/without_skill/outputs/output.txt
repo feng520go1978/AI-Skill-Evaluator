@@ -1,0 +1,81 @@
+Before changing the implementation, I’d lock in the current intended behavior and the obvious failure modes with regression tests. The current function:
+
+```js
+function slugify(t) {
+  return t.toLowerCase().replace(' ', '-')
+}
+```
+
+has at least these bugs:
+- `replace(' ', '-')` only replaces the **first** space
+- it does not handle repeated whitespace
+- it does not trim leading/trailing spaces
+- it may produce unexpected slugs for empty input
+- it does not normalize punctuation/special characters (depending on intended slug rules)
+
+Tests I’d add first:
+
+```js
+describe('slugify', () => {
+  test('lowercases titles', () => {
+    expect(slugify('Hello World')).toBe('hello-world')
+  })
+
+  test('replaces multiple spaces, not just the first one', () => {
+    expect(slugify('Hello Big World')).toBe('hello-big-world')
+  })
+
+  test('handles leading spaces', () => {
+    expect(slugify(' Hello World')).toBe('-hello-world') // captures current behavior
+  })
+
+  test('handles trailing spaces', () => {
+    expect(slugify('Hello World ')).toBe('hello-world-') // captures current behavior
+  })
+
+  test('does not collapse repeated spaces unexpectedly', () => {
+    expect(slugify('Hello   World')).toBe('hello---world') // captures current behavior
+  })
+
+  test('handles empty strings', () => {
+    expect(slugify('')).toBe('')
+  })
+
+  test('handles titles with no spaces', () => {
+    expect(slugify('Hello')).toBe('hello')
+  })
+
+  test('handles user punctuation input', () => {
+    expect(slugify('Hello, World!')).toBe('hello,-world!')
+  })
+})
+```
+
+The important distinction is whether these are **characterization tests** or **desired behavior tests**.
+
+- The first few should probably become desired behavior tests after the fix:
+  - `"Hello Big World"` → `"hello-big-world"`
+  - `"  Hello   Big World  "` → `"hello-big-world"`
+- Some should document a product decision:
+  - Should punctuation be removed?
+  - Should accents normalize (`"Café"` → `"cafe"`)?
+  - Should empty titles be allowed?
+  - Should underscores/dashes collapse?
+
+A stronger post-fix suite might look like:
+
+```js
+expect(slugify('Hello Big World')).toBe('hello-big-world')
+expect(slugify('  Hello   Big World  ')).toBe('hello-big-world')
+expect(slugify('Hello---World')).toBe('hello-world')
+expect(slugify('Café Déjà Vu')).toBe('cafe-deja-vu')
+expect(slugify('')).toBe('')
+```
+
+The key regression test I would definitely add before touching code is the multi-word case, because it proves the existing implementation’s hidden dependency on JavaScript’s single-replacement behavior:
+
+```js
+expect(slugify('The Quick Brown Fox')).toBe('the-quick-brown-fox')
+```
+
+That’s the one most likely to catch a “fix” that still only handles the first space.

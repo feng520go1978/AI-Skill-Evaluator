@@ -1,0 +1,299 @@
+For a pricing page with **3 tiers + FAQ**, I’d structure it so the page answers three questions in order:
+
+1. **Which plan fits me?** → pricing cards  
+2. **Why should I choose this one?** → feature/value emphasis  
+3. **What happens if I’m unsure?** → FAQ removes friction  
+
+## Design direction (before components)
+
+**Subject:** SaaS pricing page for a product with self-serve customers and a conversion goal: move visitors into a paid plan.
+
+**Visual strategy**
+- Make the middle tier the “decision anchor” without making the other plans feel inferior.
+- Reduce cognitive load: users compare only the differences that matter.
+- Use hierarchy, spacing, and labels rather than excessive color or decoration.
+
+---
+
+## Component hierarchy
+
+```
+PricingPage
+│
+├── PricingHero
+│   ├── Eyebrow ("Simple pricing")
+│   ├── Heading
+│   ├── SupportingCopy
+│   └── BillingToggle
+│       ├── MonthlyOption
+│       └── AnnualOption (with savings badge)
+│
+├── PricingGrid
+│   │
+│   ├── PricingCard (Starter)
+│   │   ├── PlanName
+│   │   ├── PlanDescription
+│   │   ├── Price
+│   │   ├── BillingNote
+│   │   ├── PrimaryCTA
+│   │   ├── FeatureList
+│   │   │   ├── FeatureItem
+│   │   │   └── FeatureItem
+│   │   └── SecondaryDetails
+│   │
+│   ├── PricingCard (Pro / Recommended)
+│   │   ├── RecommendedBadge
+│   │   ├── PlanName
+│   │   ├── PlanDescription
+│   │   ├── Price
+│   │   ├── BillingNote
+│   │   ├── PrimaryCTA
+│   │   ├── FeatureList
+│   │   └── IncludedExtras
+│   │
+│   └── PricingCard (Enterprise)
+│       ├── PlanName
+│       ├── PlanDescription
+│       ├── ContactPricing
+│       ├── CTA
+│       ├── FeatureList
+│       └── EnterpriseBenefits
+│
+├── ComparisonSupportSection (optional)
+│   ├── FeatureHighlights
+│   └── CustomerProof
+│
+└── FAQSection
+    ├── FAQHeader
+    └── AccordionList
+        └── FAQItem
+            ├── Question
+            └── Answer
+```
+
+---
+
+# Visual emphasis strategy
+
+## 1. Hero: orient, don’t sell
+
+**Goal:** Users should understand pricing in under 5 seconds.
+
+Layout:
+
+```
+                 Simple pricing
+        Choose a plan that grows with you
+
+              Monthly | Annual
+```
+
+Keep it restrained:
+- Large headline
+- Short explanation
+- Billing toggle immediately visible
+- Avoid putting testimonials or feature grids before pricing
+
+---
+
+## 2. Pricing cards: create a clear focal point
+
+Recommended layout:
+
+```
+┌──────────┐   ┌────────────────┐   ┌──────────┐
+│ Starter  │   │ ★ Most popular │   │ Enterprise│
+│          │   │ Pro            │   │          │
+│ $19/mo   │   │ $49/mo         │   │ Contact  │
+│          │   │                │   │          │
+│ Button   │   │ Button         │   │ Button   │
+│ Features │   │ Features       │   │ Features │
+└──────────┘   └────────────────┘   └──────────┘
+```
+
+### Middle tier treatment
+Make Pro visually dominant:
+
+- Slightly larger card scale (105–110%)
+- Higher contrast border
+- Persistent “Recommended” label
+- Strongest CTA
+- Most prominent price typography
+
+Avoid:
+- Giant glowing gradients
+- Making other plans look disabled
+- Too many badges
+
+The user should feel:
+> “This is the plan most people choose,” not “I’m being pushed.”
+
+---
+
+## 3. Card anatomy
+
+Each card should follow the same rhythm:
+
+```
+Plan name
+↓
+Who it's for
+↓
+Price
+↓
+CTA
+↓
+Divider
+↓
+Top benefits
+↓
+Full feature list
+```
+
+Example:
+
+```
+PRO
+
+For growing teams
+
+$49
+/month
+
+[Start free trial]
+
+✓ Unlimited projects
+✓ Advanced analytics
+✓ Team permissions
+✓ Priority support
+```
+
+The first 3–5 features matter most. Don’t bury the decision in 20 bullets.
+
+---
+
+## 4. Feature emphasis
+
+Use three levels:
+
+### Primary benefits
+Large, visible:
+
+- Unlimited usage
+- Collaboration
+- Automation
+
+### Supporting details
+Smaller:
+
+- Integrations
+- Export formats
+- Storage limits
+
+### Fine print
+Hidden:
+
+- Limits
+- Exceptions
+- Technical requirements
+
+---
+
+# FAQ hierarchy
+
+FAQ should not compete with pricing. It exists to remove objections.
+
+Placement:
+
+```
+Pricing cards
+
+↓ whitespace
+
+Still deciding?
+
+[FAQ accordion]
+```
+
+Recommended FAQ groups:
+
+### Purchase concerns
+- Can I cancel anytime?
+- Is there a free trial?
+- Do you offer refunds?
+
+### Product concerns
+- What happens when I exceed limits?
+- Can I upgrade later?
+- Do you support teams?
+
+### Enterprise concerns
+- Do you offer SSO?
+- Can we get custom contracts?
+
+---
+
+# Responsive behavior
+
+Desktop:
+
+```
+[Starter] [Pro] [Enterprise]
+```
+
+Tablet:
+
+```
+[Starter]
+[Pro]
+[Enterprise]
+```
+
+Mobile:
+- Keep the recommended plan first or visually pinned
+- Avoid horizontal scrolling comparison tables
+- Use expandable features
+
+---
+
+# Component styling tokens
+
+Example system:
+
+**Colors**
+- Background: neutral surface
+- Cards: elevated surface
+- Accent: one brand color reserved for Pro
+- Borders: subtle gray
+
+**Typography**
+- Display: distinctive, heavier headline font
+- Body: highly readable sans-serif
+- Price: largest number on page
+
+**Spacing**
+- Large vertical gaps between sections
+- Tight internal card spacing
+- Consistent feature rows
+
+---
+
+## Signature element
+
+A strong differentiator: **“plan personality labels”**
+
+Instead of:
+
+- Starter
+- Pro
+- Enterprise
+
+Use:
+
+- **Explorer** — for individuals getting started
+- **Builder** — for teams scaling workflows
+- **Partner** — for organizations needing support
+
+The pricing page becomes a decision guide rather than a spreadsheet.
+
+The key principle: **make the recommended choice obvious, but make every choice feel intentional.**

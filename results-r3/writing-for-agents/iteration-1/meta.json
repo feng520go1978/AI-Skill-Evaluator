@@ -1,0 +1,12 @@
+{
+  "name": "writing-for-agents",
+  "slug": "writing-for-agents",
+  "relPath": "",
+  "target": "auto",
+  "judge": "auto",
+  "modes": [
+    "with_skill",
+    "without_skill"
+  ],
+  "generated_at": "2026-08-25T10:49:50.604Z"
+}

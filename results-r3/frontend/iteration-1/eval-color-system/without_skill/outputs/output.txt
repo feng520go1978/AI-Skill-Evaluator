@@ -1,0 +1,82 @@
+For a developer-tool documentation site, I’d aim for a palette that feels **precise, technical, calm, and trustworthy** rather than overly “cyberpunk.” Documentation is a reading environment first: syntax highlighting, navigation, code blocks, and long sessions matter more than visual novelty.
+
+## Palette: “Midnight IDE”
+
+{"layout":"carousel","aspect_ratio":"16:9","query":["dark developer documentation website UI","modern IDE dark theme interface","developer portal documentation design"]}
+
+| Role | Color | Hex | Rationale |
+|---|---|---|---|
+| Primary background | Midnight Navy | `#0B1020` | Softer than pure black; reduces eye strain and gives an IDE-like feel |
+| Surface / cards | Deep Slate | `#151C2F` | Creates hierarchy without harsh borders |
+| Elevated surface | Blue Slate | `#1D2942` | Useful for callouts, sidebars, and interactive panels |
+| Primary text | Cloud White | `#F1F5F9` | High readability for long technical pages |
+| Secondary text | Cool Gray | `#94A3B8` | Keeps metadata, captions, and descriptions visually quiet |
+| Brand accent | Developer Blue | `#3B82F6` | Signals reliability, links, actions, and trust |
+| Accent hover | Electric Blue | `#60A5FA` | Provides clear interaction feedback |
+| Success | Terminal Green | `#22C55E` | Familiar for passing builds, successful commands, status |
+| Warning | Amber | `#F59E0B` | Strong attention cue without feeling alarming |
+| Error | Coral Red | `#EF4444` | Clear debugging/error state |
+| Code background | Near Black | `#080D18` | Makes snippets feel like an embedded terminal |
+| Border | Muted Blue Gray | `#26334D` | Separates regions without visual clutter |
+
+## Usage example
+
+### Navigation
+- Background: `#0B1020`
+- Active item: `#3B82F6`
+- Inactive text: `#94A3B8`
+
+### Documentation body
+- Page background: `#0B1020`
+- Headings: `#F1F5F9`
+- Paragraph text: `#CBD5E1`
+- Links: `#60A5FA`
+
+### Code blocks
+- Background: `#080D18`
+- Keywords: `#C084FC` (purple)
+- Strings: `#34D399` (green)
+- Functions: `#60A5FA` (blue)
+- Comments: `#64748B`
+
+### Callouts
+- Info: Blue border + `#1D4ED8`
+- Success: Green border + `#16A34A`
+- Warning: Amber border + `#D97706`
+- Error: Red border + `#DC2626`
+
+## Why this works for developer tools
+
+**1. Familiar mental model**  
+The palette borrows from environments developers already spend time in: IDEs, terminals, dashboards, and cloud consoles.
+
+**2. Strong information hierarchy**  
+Documentation has many competing layers:
+- navigation
+- headings
+- body text
+- code
+- API references
+- warnings
+
+Muted surfaces and restrained accents keep the hierarchy clear.
+
+**3. Blue as the trust anchor**  
+Blue is common in infrastructure and developer products because it communicates stability and professionalism. It also works well for links and primary actions.
+
+**4. Dark-first, not dark-only**  
+The colors avoid OLED-black aesthetics and use navy/slate tones, which feel less harsh during extended reading.
+
+## Optional light mode companion
+
+| Role | Hex |
+|---|---|
+| Background | `#FFFFFF` |
+| Surface | `#F8FAFC` |
+| Text | `#0F172A` |
+| Secondary text | `#475569` |
+| Primary accent | `#2563EB` |
+| Code background | `#F1F5F9` |
+| Border | `#E2E8F0` |
+
+The overall personality: **“a polished cloud platform docs site used by engineers daily”** — closer to an IDE or infrastructure console than a marketing website.

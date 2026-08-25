@@ -1,0 +1,25 @@
+{
+  "assertion_results": [
+    {
+      "text": "Provides specific colors or values, not just adjectives like 'muted blue'",
+      "passed": true,
+      "evidence": "The output provides hex values throughout, e.g. 'Primary background... `#0B1020`', 'Primary text... `#F1F5F9`', and 'Brand accent... `#3B82F6`'."
+    },
+    {
+      "text": "Assigns functional roles to each color (background, text, accent, code blocks)",
+      "passed": true,
+      "evidence": "The palette table assigns roles such as 'Primary background', 'Primary text', 'Brand accent', and 'Code background'; usage examples further specify 'Navigation', 'Documentation body', and 'Code blocks'."
+    },
+    {
+      "text": "Addresses readability/contrast for long-form reading",
+      "passed": true,
+      "evidence": "The output states 'Documentation is a reading environment first' and describes '#F1F5F9' as 'High readability for long technical pages' and '#0B1020' as reducing eye strain."
+    }
+  ],
+  "summary": {
+    "passed": 3,
+    "failed": 0,
+    "total": 3,
+    "pass_rate": 1
+  }
+}

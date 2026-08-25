@@ -1,0 +1,316 @@
+# HTTP/3 Adoption — Engineering Decision Summary
+
+## Executive Summary
+
+HTTP/3 has moved from experimental to broadly deployable. Adoption is now significant among large internet platforms and cloud providers, but it is not yet universal across enterprise infrastructure, internal systems, or long-tail clients.
+
+**Decision guidance:**
+- **Enable HTTP/3 where the infrastructure cost is low and the stack already supports it.**
+- **Do not make HTTP/3 a hard dependency yet** unless you control both clients and servers.
+- **Keep HTTP/2 as the baseline fallback**; HTTP/1.1 remains necessary for compatibility.
+- Expect the largest benefits in **mobile, high-latency, lossy networks, and latency-sensitive APIs**, not necessarily in stable datacenter-to-datacenter traffic.
+
+---
+
+# 1. What HTTP/3 Is
+
+HTTP/3 is the HTTP protocol running over **QUIC** instead of TCP.
+
+Key architectural changes:
+
+| Area | HTTP/2 | HTTP/3 |
+|---|---|---|
+| Transport | TCP + TLS | QUIC (UDP-based) + TLS 1.3 |
+| Connection establishment | TCP handshake + TLS | Integrated QUIC/TLS handshake |
+| Stream multiplexing | HTTP/2 streams over TCP | Native QUIC streams |
+| Head-of-line blocking | Exists at TCP layer | Eliminated between streams |
+| Connection migration | Limited | Supported (e.g., network changes) |
+| Deployment challenge | Mature | Requires UDP support |
+
+The main motivation is not a new HTTP semantic model; it is improving transport behavior.
+
+---
+
+# 2. Current Adoption State
+
+## Internet-facing adoption
+
+HTTP/3 is considered mature enough for production use.
+
+Strong adoption exists among:
+
+- Major CDNs
+- Large consumer platforms
+- Cloud providers
+- Modern browsers
+- Mobile applications with controlled networking stacks
+
+Examples of early and broad adopters include:
+- Google services
+- Meta services
+- Cloudflare customers
+- Fastly customers
+- Many large-scale content delivery deployments
+
+Adoption has been driven primarily by:
+1. Browser support
+2. CDN enablement
+3. QUIC library maturity
+4. Better performance on difficult networks
+
+---
+
+# 3. Client Support
+
+## Browsers
+
+Modern browsers support HTTP/3:
+
+- Chrome / Chromium
+- Firefox
+- Safari
+- Edge
+
+Most users running current browsers can negotiate HTTP/3 automatically.
+
+Fallback behavior is important:
+- Client discovers HTTP/3 availability through mechanisms such as `Alt-Svc`.
+- If QUIC fails, clients generally fall back to HTTP/2 or HTTP/1.1.
+
+**Implication:** enabling HTTP/3 is usually low risk for public web services.
+
+---
+
+# 4. Server and Infrastructure Adoption
+
+## Mature support exists in:
+
+- Major CDNs
+- Reverse proxies
+- Modern web servers
+- Cloud load balancers
+
+Common implementation choices:
+
+| Component | HTTP/3 maturity |
+|---|---|
+| CDN edge | Very mature |
+| Public websites | Mature |
+| API gateways | Increasing |
+| Internal services | Less common |
+| Legacy load balancers | Variable |
+
+Infrastructure considerations:
+- UDP/443 must be allowed.
+- Monitoring must include QUIC-specific metrics.
+- Network security tooling must understand QUIC traffic.
+- Some enterprise firewalls still handle UDP less predictably than TCP.
+
+---
+
+# 5. Expected Benefits
+
+## High-value scenarios
+
+### Mobile networks
+
+HTTP/3 helps when:
+- switching Wi-Fi ↔ cellular
+- packet loss exists
+- latency is high
+- connections are long-lived
+
+QUIC connection migration can avoid reconnects when IP addresses change.
+
+---
+
+### High-latency networks
+
+Benefits increase with:
+- high RTT
+- unstable links
+- congested networks
+
+Examples:
+- global consumer applications
+- edge computing
+- gaming
+- streaming
+- mobile APIs
+
+---
+
+### Many concurrent requests
+
+HTTP/3 improves:
+- independent stream progress
+- multiplexing behavior
+- resilience to packet loss affecting one stream
+
+---
+
+# 6. Where Benefits Are Limited
+
+HTTP/3 is not automatically faster everywhere.
+
+Less impact:
+
+## Low-latency datacenter traffic
+
+Examples:
+- service-to-service calls inside one region
+- internal RPC systems
+
+HTTP/2 over TCP may already be excellent.
+
+---
+
+## CPU-constrained environments
+
+QUIC introduces:
+- encryption overhead
+- more complex transport processing
+- UDP packet handling costs
+
+Modern implementations mitigate this, but it is not free.
+
+---
+
+## Large single transfers
+
+For a single large download on a clean network:
+- TCP with HTTP/2 can already perform very well.
+- HTTP/3 improvements may be modest.
+
+---
+
+# 7. Operational Tradeoffs
+
+## Advantages
+
+### Better latency characteristics
+- Faster connection establishment
+- Reduced impact of packet loss
+
+### Better mobility support
+- Connection survives network changes
+
+### Future-proof transport
+- Increasing ecosystem support
+
+---
+
+## Costs
+
+### Operational complexity
+
+Teams need:
+- UDP monitoring
+- QUIC-aware debugging
+- updated observability tooling
+
+---
+
+### Network compatibility
+
+Potential issues:
+- blocked UDP/443
+- middleboxes with poor QUIC handling
+- corporate networks restricting UDP
+
+Fallback is therefore essential.
+
+---
+
+### Debugging differences
+
+TCP tooling does not directly apply.
+
+Teams need familiarity with:
+- QUIC connection IDs
+- handshake failures
+- transport parameters
+- packet loss metrics
+
+---
+
+# 8. Security Considerations
+
+Positive changes:
+- TLS 1.3 is mandatory in QUIC.
+- Transport encryption is integrated.
+- Some metadata exposure is reduced compared with TCP+TLS.
+
+Considerations:
+- UDP traffic may affect DDoS protection strategies.
+- Network appliances may need updates.
+- QUIC implementations require ongoing patching like any protocol stack.
+
+---
+
+# 9. Recommendation Framework
+
+## Adopt HTTP/3 now if:
+
+✅ You operate public-facing services  
+✅ You already use a CDN/load balancer supporting it  
+✅ Your users are geographically distributed  
+✅ Mobile performance matters  
+✅ You can maintain HTTP/2 fallback  
+
+---
+
+## Delay adoption if:
+
+⚠ Your traffic is mostly internal  
+⚠ Your network blocks UDP broadly  
+⚠ Your observability stack cannot diagnose QUIC issues  
+⚠ You have legacy infrastructure constraints  
+
+---
+
+# 10. Suggested Rollout Strategy
+
+## Phase 1 — Enable opportunistically
+
+- Enable HTTP/3 at CDN or edge layer.
+- Keep HTTP/2 and HTTP/1.1 enabled.
+- Measure adoption.
+
+Metrics:
+- percentage of requests using HTTP/3
+- latency by protocol
+- error rates
+- handshake failures
+- regional performance
+
+---
+
+## Phase 2 — Optimize
+
+Analyze:
+- mobile vs desktop
+- geographic regions
+- packet-loss environments
+- API latency distributions
+
+---
+
+## Phase 3 — Expand
+
+Consider:
+- native client QUIC libraries
+- internal adoption where justified
+- protocol-specific tuning
+
+---
+
+# Bottom Line
+
+HTTP/3 is no longer a speculative technology; it is a production-ready optimization layer with strong ecosystem support. For most public services, the recommended posture is **enable HTTP/3 with fallback rather than migrate everything**.
+
+The engineering question is usually not “should we replace HTTP/2?” but:
+
+> “Do the expected latency and reliability gains for our users justify the operational cost of adding another transport?”
+
+For internet-facing services, the answer is increasingly **yes**. For controlled internal environments, the answer is often **not yet**.

@@ -1,0 +1,163 @@
+I’d frame the product as **a quiet studio for thinking**, not a productivity tool. The audience is writers, so the visual language should borrow from notebooks, publishing, and literary objects rather than the usual SaaS dashboard aesthetic.
+
+## Design direction: “The digital writer’s desk”
+
+### Core idea
+A landing page that feels like opening a well-loved notebook beside a cup of coffee: tactile, focused, and personal. The app’s promise is not “organize more tasks”; it is “protect your ideas long enough for them to become words.”
+
+The single job of the page: **make a writer imagine themselves writing inside the app within 10 seconds.**
+
+---
+
+## Visual system
+
+### Palette: paper, ink, and one unexpected signal
+
+- **Warm parchment** — `#F3EBDD`  
+  The background should feel like paper, not a generic cream SaaS backdrop.
+
+- **Charcoal ink** — `#181714`  
+  Primary text; softer than pure black and more literary.
+
+- **Faded graphite** — `#68635B`  
+  Secondary copy and metadata.
+
+- **Library green** — `#263A32`  
+  A restrained accent suggesting notebooks, archives, and craft.
+
+- **Copper bookmark** — `#B66A3C`  
+  The one expressive accent for CTAs, highlights, or cursor-like details.
+
+I would avoid gradients and glass effects. They immediately push the product toward “AI startup landing page” rather than “writer’s tool.”
+
+---
+
+## Typography
+
+The type should carry the personality.
+
+**Display face:**
+- ["brand","Canela","typeface by Commercial Type"]-style editorial serif (or a similar high-contrast serif)
+- Large, generous headlines with the feeling of a book cover
+
+Example hero:
+
+> “Keep every fragment until it becomes a story.”
+
+**Body:**
+- A humanist sans like ["brand","Söhne","typeface by Klim Type Foundry"]-style typography
+- Clean enough for product explanations without becoming corporate
+
+**Utility:**
+- Monospaced labels for things like word counts, version history, dates, and writing statistics
+
+The contrast between literary headline + precise interface details reinforces the idea: creativity on top, craft underneath.
+
+---
+
+## Layout concept
+
+Instead of a typical:
+
+```
+Headline
+Subtitle
+Button
+Product screenshot
+Feature cards
+```
+
+I’d create a “desk scene”:
+
+```
+------------------------------------------------
+
+        YOUR WORDS, WITHOUT THE NOISE
+
+   A calm writing space for drafts,
+   fragments, research, and unfinished ideas.
+
+             [ Start writing ]
+
+
+
+        ┌─────────────────────┐
+        │                     │
+        │  Chapter 3          │
+        │                     │
+        │  The morning train  │
+        │  arrived before...  │
+        │                     │
+        └─────────────────────┘
+
+     Notes      Drafts      Archive
+
+------------------------------------------------
+```
+
+The hero screenshot is not a polished app dashboard. It should show:
+- an unfinished paragraph
+- a margin note
+- a cursor blinking
+- a few crossed-out words
+
+Writers connect with process, not perfection.
+
+---
+
+## Signature element
+
+The memorable detail: **a living manuscript timeline.**
+
+As users scroll, a subtle “draft history” line moves through versions:
+
+```
+Idea → Fragment → Draft → Revision → Story
+```
+
+Each stage reveals a different piece of writing. It communicates the app’s philosophy visually: writing is evolution, not document creation.
+
+---
+
+## Motion
+
+Keep animation restrained:
+
+- A cursor blinking in the hero text
+- Pages/folders subtly shifting when hovered
+- Draft versions fading between states
+- Handwritten annotation marks appearing briefly
+
+Avoid:
+- floating gradient blobs
+- excessive parallax
+- animated counters
+- bouncing buttons
+
+Those belong to growth software, not a writing sanctuary.
+
+---
+
+## Content tone
+
+The copy should sound like a thoughtful editor, not a productivity coach.
+
+Avoid:
+- “10x your creativity”
+- “AI-powered writing workflow”
+- “The ultimate productivity system”
+
+Prefer:
+- “Capture the sentence before it disappears.”
+- “A home for unfinished thoughts.”
+- “Write badly. Revise beautifully.”
+
+---
+
+## One deliberate risk
+
+I would make the hero intentionally resemble a **book’s title page**, with oversized typography and lots of empty space.
+
+Most app landing pages compete for attention. A writing app should do the opposite: demonstrate confidence by leaving room for thought.
+
+The result should feel less like downloading software and more like discovering a favorite notebook.

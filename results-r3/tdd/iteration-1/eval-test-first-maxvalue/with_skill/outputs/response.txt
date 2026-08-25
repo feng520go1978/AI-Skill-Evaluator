@@ -1,0 +1,209 @@
+We'll build this using the **TDD loop: red → green → refactor**.
+
+The goal is to test the behavior through the public interface:
+
+```js
+maxValue(rows, column)
+```
+
+The seam we care about is: **given rows and a column name, it returns the largest numeric value in that column.**
+
+We'll avoid testing implementation details like whether we used `reduce`, `Math.max`, or a loop.
+
+---
+
+## 1. Start with a failing test (RED)
+
+Assume we are using Jest.
+
+Create a test file:
+
+```js
+// maxValue.test.js
+const { maxValue } = require("./maxValue");
+
+test("returns the maximum value from a numeric column", () => {
+  const rows = [
+    { age: 25, name: "Ana" },
+    { age: 40, name: "Ben" },
+    { age: 32, name: "Cara" },
+  ];
+
+  expect(maxValue(rows, "age")).toBe(40);
+});
+```
+
+Run it.
+
+It should fail because `maxValue` does not exist yet.
+
+That failure is useful: it proves the test is actually checking something.
+
+---
+
+## 2. Write the smallest implementation (GREEN)
+
+Create:
+
+```js
+// maxValue.js
+function maxValue(rows, column) {
+  return Math.max(...rows.map(row => row[column]));
+}
+
+module.exports = { maxValue };
+```
+
+Run the test again.
+
+Now it passes:
+
+```
+✓ returns the maximum value from a numeric column
+```
+
+At this point, stop. Don't add extra behavior yet.
+
+---
+
+## 3. Add another behavior with a new failing test (RED)
+
+Now ask: what happens with negative numbers?
+
+Add:
+
+```js
+test("handles columns containing negative numbers", () => {
+  const rows = [
+    { score: -10 },
+    { score: -3 },
+    { score: -8 },
+  ];
+
+  expect(maxValue(rows, "score")).toBe(-3);
+});
+```
+
+The existing implementation already passes, so no code change is needed.
+
+That tells us our current design handles this case.
+
+---
+
+## 4. Find the next meaningful edge case
+
+A likely question is: what if the column is empty?
+
+Write the behavior we want first:
+
+```js
+test("returns null when the column has no values", () => {
+  const rows = [];
+
+  expect(maxValue(rows, "age")).toBeNull();
+});
+```
+
+Run it.
+
+It fails because:
+
+```js
+Math.max(...[])
+```
+
+returns:
+
+```js
+-Infinity
+```
+
+---
+
+## 5. Minimal fix (GREEN)
+
+Adjust the implementation:
+
+```js
+function maxValue(rows, column) {
+  if (rows.length === 0) {
+    return null;
+  }
+
+  return Math.max(...rows.map(row => row[column]));
+}
+
+module.exports = { maxValue };
+```
+
+Run tests:
+
+```
+✓ returns the maximum value from a numeric column
+✓ handles columns containing negative numbers
+✓ returns null when the column has no values
+```
+
+---
+
+## 6. Refactor only after the behavior is covered
+
+Now we can make the implementation clearer if desired:
+
+```js
+function maxValue(rows, column) {
+  if (rows.length === 0) {
+    return null;
+  }
+
+  return rows.reduce((max, row) => {
+    return row[column] > max? row[column]: max;
+  }, rows[0][column]);
+}
+
+module.exports = { maxValue };
+```
+
+The tests stay the same because they describe the contract, not the implementation.
+
+---
+
+## Final test suite
+
+```js
+const { maxValue } = require("./maxValue");
+
+test("returns the maximum value from a numeric column", () => {
+  const rows = [
+    { age: 25 },
+    { age: 40 },
+    { age: 32 },
+  ];
+
+  expect(maxValue(rows, "age")).toBe(40);
+});
+
+test("handles columns containing negative numbers", () => {
+  const rows = [
+    { score: -10 },
+    { score: -3 },
+    { score: -8 },
+  ];
+
+  expect(maxValue(rows, "score")).toBe(-3);
+});
+
+test("returns null when the column has no values", () => {
+  expect(maxValue([], "age")).toBeNull();
+});
+```
+
+The TDD rhythm here is:
+
+1. **Write one behavior as a test**
+2. **Watch it fail**
+3. **Add the smallest code to pass**
+4. **Repeat**
+5. **Refactor only when the tests protect you**
+
+That keeps the implementation driven by actual requirements rather than guesses.

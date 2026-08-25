@@ -1,0 +1,25 @@
+{
+  "assertion_results": [
+    {
+      "text": "Proposes consulting primary/high-trust sources (protocol specs, official docs) before secondary sources like blogs",
+      "passed": true,
+      "evidence": "Output states: \"I would prioritize sources that define the protocols and their intended behavior\" and lists \"WHATWG HTML Living Standard,\" \"W3C Server-Sent Events specification history,\" and \"IETF WebSocket protocol specification (RFC 6455).\" It also says: \"I would be careful with blog posts: use them for operational anecdotes, not protocol facts.\""
+    },
+    {
+      "text": "Identifies at least 3 concrete technical comparison dimensions (e.g. directionality, reconnection, proxies)",
+      "passed": true,
+      "evidence": "The evaluation matrix includes multiple concrete dimensions: \"Directionality,\" \"Reconnection,\" and \"Infrastructure compatibility | Does it work easily through HTTP proxies/load balancers?\" It also includes latency, throughput, scaling, security, and other dimensions."
+    },
+    {
+      "text": "Includes a verification or cross-checking step rather than accepting single-source claims",
+      "passed": true,
+      "evidence": "Output includes \"Cross-check operational experience\" and says it would examine \"Production case studies,\" \"Cloud provider guidance,\" and \"Framework documentation.\" It also proposes running benchmarks and measuring \"CPU usage,\" \"Memory per connection,\" \"Network overhead,\" \"Message latency,\" and \"Reconnection recovery time.\""
+    }
+  ],
+  "summary": {
+    "passed": 3,
+    "failed": 0,
+    "total": 3,
+    "pass_rate": 1
+  }
+}

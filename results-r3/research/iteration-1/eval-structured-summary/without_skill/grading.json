@@ -1,0 +1,25 @@
+{
+  "assertion_results": [
+    {
+      "text": "Output uses clear section structure suitable for a decision document",
+      "passed": true,
+      "evidence": "Uses a decision-oriented structure with sections including \"Executive summary\", \"Current adoption status\", \"Operational considerations\", \"Decision criteria\", \"Recommended engineering position\", and \"Bottom line\"."
+    },
+    {
+      "text": "Distinguishes confident facts from uncertain or time-sensitive claims",
+      "passed": true,
+      "evidence": "Separates factual statements such as \"HTTP/3 replaces TCP-based HTTP/1.1 and HTTP/2 transport with QUIC\" from qualified claims such as \"Potential benefits\" and \"The largest improvements tend to occur outside stable low-latency networks.\""
+    },
+    {
+      "text": "Includes caveats about verification or recency rather than presenting everything as settled",
+      "passed": false,
+      "evidence": "The output includes operational caveats and fallback recommendations, but it does not include caveats about verifying claims, checking recency, or confirming current status; it presents adoption status as \"HTTP/3 support is mature\" without a verification or recency qualifier."
+    }
+  ],
+  "summary": {
+    "passed": 2,
+    "failed": 1,
+    "total": 3,
+    "pass_rate": 0.6666666666666666
+  }
+}

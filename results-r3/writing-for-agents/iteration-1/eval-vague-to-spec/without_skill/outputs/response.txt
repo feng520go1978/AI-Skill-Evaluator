@@ -1,0 +1,77 @@
+Here is a version an AI coding agent can implement without needing clarification:
+
+```text
+Task: Improve dashboard performance and visual design.
+
+Goals:
+1. Reduce dashboard initial load time.
+2. Improve the dashboard UI consistency, readability, and overall appearance.
+
+Performance requirements:
+- Measure the current dashboard load time before making changes using browser performance tools.
+- Reduce initial page load time by at least 30% compared with the baseline.
+- Identify and fix unnecessary API requests:
+  - Remove duplicate requests.
+  - Parallelize independent requests where possible.
+  - Delay loading non-critical data until after the initial render.
+- Add lazy loading for:
+  - Charts/components below the fold.
+  - Large images or assets.
+  - Heavy third-party libraries.
+- Reduce frontend bundle size:
+  - Remove unused dependencies.
+  - Replace heavy libraries with lighter alternatives where practical.
+  - Use code splitting for dashboard sections.
+- Optimize rendering:
+  - Prevent unnecessary component re-renders.
+  - Memoize expensive calculations.
+  - Avoid recalculating unchanged data on every render.
+- Add loading states:
+  - Show skeleton placeholders while data is loading.
+  - Avoid blank screens during API calls.
+- Ensure the dashboard remains fully functional on slower network connections.
+
+UI/UX requirements:
+- Update the dashboard styling to create a cleaner, more modern interface.
+- Use a consistent design system:
+  - Standardize spacing, typography, colors, borders, and button styles.
+  - Ensure consistent alignment across cards, charts, and tables.
+- Improve information hierarchy:
+  - Make primary metrics visually prominent.
+  - Group related information into clear sections.
+  - Reduce visual clutter.
+- Improve readability:
+  - Increase contrast where needed.
+  - Ensure text sizes are accessible.
+  - Add appropriate whitespace between sections.
+- Improve dashboard components:
+  - Cards should have consistent padding and sizing.
+  - Charts should have clear titles, legends, and empty states.
+  - Tables should support easier scanning with improved row spacing and column alignment.
+- Ensure responsive behavior:
+  - Desktop layout should remain unchanged in functionality.
+  - Tablet and mobile layouts should stack components cleanly.
+  - No horizontal scrolling on standard screen sizes.
+
+Implementation constraints:
+- Do not change backend APIs unless required for performance improvements.
+- Do not remove existing dashboard functionality.
+- Preserve existing user permissions and data visibility rules.
+- Keep code maintainable and follow existing project conventions.
+
+Validation:
+- Compare before/after performance metrics:
+  - Initial load time.
+  - Time to first meaningful render.
+  - JavaScript bundle size.
+  - Number of network requests.
+- Verify all dashboard features still work.
+- Test layouts at:
+  - 1440px desktop width.
+  - 768px tablet width.
+  - 375px mobile width.
+- Provide a summary of:
+  - Performance improvements made.
+  - UI changes made.
+  - Any remaining bottlenecks.
+```

@@ -1,0 +1,38 @@
+[
+  {
+    "skill": "frontend-design",
+    "dimensions": {
+      "capability": 100,
+      "lift": null,
+      "cost": 91,
+      "speed": 100,
+      "stability": 100,
+      "security": 100
+    },
+    "overall": 74.1,
+    "verdict": "INCONCLUSIVE",
+    "reasons": [
+      "baseline near-perfect — task too easy for this skill"
+    ],
+    "reliability": "low",
+    "inconclusiveReason": "baseline near-perfect — task too easy for this skill",
+    "evaluation_cost": {
+      "currency": "USD",
+      "skill_cost": {
+        "usd": 0.017183,
+        "tokens": 8075
+      },
+      "eval_overhead": {
+        "usd": 0.025364,
+        "judge_usd": 0.013412,
+        "judge_tokens": 9020,
+        "baseline_usd": 0.011952,
+        "baseline_tokens": 3048
+      },
+      "total_eval_cost": {
+        "usd": 0.042547
+      }
+    },
+    "securityFindings": []
+  }
+]

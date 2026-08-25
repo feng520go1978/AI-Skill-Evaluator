@@ -1,0 +1,113 @@
+:::writing{variant="document" id="58391" title="Nightly Data Import Failure Recovery Runbook"}
+# Nightly Data Import Failure Recovery Runbook
+
+## Purpose
+Restore the nightly data import when the pipeline fails while retrieving files from SFTP, transforming CSV data, or loading records into Postgres.
+
+## Preconditions
+- Confirm access to:
+  - Import job logs and monitoring dashboard
+  - SFTP server credentials and directories
+  - Application/runtime environment where the importer runs
+  - Postgres database connection
+- Identify the failed import run ID and scheduled execution time.
+
+## Recovery Steps
+
+### 1. Identify the failure stage
+1. Open the importer logs for the failed nightly run.
+2. Locate the first error message and determine whether the failure occurred during:
+   - SFTP download
+   - CSV transformation
+   - Postgres load
+   - Post-import validation
+3. Record the failure stage, error message, affected files, and timestamp.
+
+**Completion criteria:** The failed pipeline stage and root error are identified.
+
+---
+
+### 2. Recover from an SFTP download failure
+1. Verify the SFTP server is reachable.
+2. Confirm the expected CSV files exist in the remote directory.
+3. Check whether files were:
+   - Missing
+   - Renamed unexpectedly
+   - Partially uploaded
+   - Locked or inaccessible
+4. If files are missing or incomplete:
+   - Contact the upstream file owner or system owner.
+   - Request the files be re-uploaded.
+5. If connectivity or authentication failed:
+   - Verify SFTP credentials have not expired.
+   - Confirm the importer configuration points to the correct host and directory.
+6. Re-run the import after the required files are available.
+
+**Completion criteria:** All required CSV files are present locally and the importer can access the SFTP source.
+
+---
+
+### 3. Recover from a CSV transformation failure
+1. Identify the CSV file that caused the transformation error.
+2. Validate the file format:
+   - Required columns exist.
+   - Column names match the expected schema.
+   - Delimiters, quoting, and encoding are correct.
+   - Data types are valid.
+3. Compare the failed file against a known-good previous import file.
+4. Correct the source file or transformation configuration as appropriate.
+5. Re-run the transformation step.
+
+**Completion criteria:** CSV files transform successfully into load-ready output files.
+
+---
+
+### 4. Recover from a Postgres load failure
+1. Review the Postgres error details.
+2. Determine the failure type:
+   - Constraint violation
+   - Duplicate records
+   - Invalid data types
+   - Missing tables or permissions
+   - Database availability issue
+3. Check whether the failed load partially inserted data.
+4. If partial data exists:
+   - Follow the importer’s rollback or cleanup procedure.
+   - Remove only records associated with the failed run.
+5. Fix the underlying issue:
+   - Correct bad source data.
+   - Restore missing permissions.
+   - Resolve database availability problems.
+6. Re-run the load step.
+
+**Completion criteria:** The affected dataset is loaded successfully without unresolved errors.
+
+---
+
+### 5. Validate the recovered import
+1. Confirm the importer job completed successfully.
+2. Verify expected row counts against the source files.
+3. Run post-import validation checks.
+4. Confirm downstream systems can access the updated data.
+5. Update the incident record with:
+   - Failure cause
+   - Recovery actions
+   - Time restored
+   - Any follow-up work required
+
+**Completion criteria:** Data is available in Postgres and downstream validation checks pass.
+
+---
+
+## Escalation Criteria
+Escalate when:
+- The SFTP server is unavailable and cannot be restored.
+- Source files are incorrect and require upstream changes.
+- The importer code or transformation logic must be modified.
+- Postgres data integrity is uncertain.
+- The import cannot be safely re-run without manual data repair.
+
+## Operator Notes
+- Avoid manually editing production database records unless approved and documented.
+- Preserve failed input files and logs for troubleshooting.
+- Always verify whether a previous partial load occurred before retrying.:::

@@ -1,0 +1,105 @@
+For a welcome-email function, I usually **do not use a real SMTP server in most tests**. A real SMTP server tests a lot of things you don't own (network, provider uptime, credentials, throttling, spam rules), and it tends to make tests slow and flaky.
+
+My approach is to test at the right seam:
+
+### 1. Unit test: verify your application asks the email service to send the right thing
+Treat SMTP as an external dependency.
+
+Example seam:
+
+```
+SignupService
+    |
+    v
+EmailSender interface
+    |
+    v
+SMTP provider
+```
+
+Test `SignupService`, not SMTP.
+
+A good test:
+
+> "When a new user signs up, a welcome email is sent to their address with the expected template/data."
+
+You would inject a fake:
+
+```python
+class FakeEmailSender:
+    def __init__(self):
+        self.sent = []
+
+    def send(self, email):
+        self.sent.append(email)
+
+
+def test_signup_sends_welcome_email():
+    email_sender = FakeEmailSender()
+    signup = SignupService(email_sender)
+
+    signup.register("alice@example.com")
+
+    assert len(email_sender.sent) == 1
+    assert email_sender.sent[0].to == "alice@example.com"
+    assert email_sender.sent[0].template == "welcome"
+```
+
+This catches your business logic mistakes.
+
+### 2. Integration test: use a local SMTP server, not production SMTP
+For verifying that your email formatting and SMTP adapter work, use a disposable local server:
+
+- MailHog
+- Mailpit
+- smtp4dev
+
+Your test sends mail through your real SMTP adapter, but the server only captures messages locally.
+
+You can assert:
+
+- SMTP connection succeeds
+- subject is correct
+- HTML/text body is correct
+- headers are correct
+- attachments work (if relevant)
+
+Example flow:
+
+```
+SignupService
+      |
+      v
+SMTPEmailSender
+      |
+      v
+Mailpit container
+      |
+      v
+Assert received message
+```
+
+### 3. End-to-end test: rarely, and usually not on every commit
+A real provider (SES, SendGrid, Gmail SMTP, etc.) is useful for a small number of checks:
+
+- credentials/configuration
+- production-like delivery pipeline
+- provider API changes
+
+Run these separately:
+
+- nightly
+- before releases
+- manually
+
+Don't make them part of your normal test suite.
+
+### My test pyramid for this feature
+
+| Test | SMTP? | Frequency |
+|---|---|---|
+| Signup triggers welcome email | Fake/mock | Every commit |
+| Email template renders correctly | Local SMTP capture | Every commit/CI |
+| Provider actually accepts mail | Real SMTP/provider sandbox | Occasionally |
+
+One important TDD point: decide the seam first. The behavior you care about is not "SMTP successfully sent bytes"; it is "a signed-up user gets a welcome email request." Test through the public interface that represents that behavior, then add a smaller number of adapter tests for SMTP itself.

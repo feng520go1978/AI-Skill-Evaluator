@@ -1,0 +1,36 @@
+[
+  {
+    "skill": "writing-for-agents",
+    "dimensions": {
+      "capability": 100,
+      "lift": 100,
+      "cost": 88,
+      "speed": 100,
+      "stability": 100,
+      "security": 100
+    },
+    "overall": 98.8,
+    "verdict": "PASS",
+    "reasons": [
+      "no issues flagged"
+    ],
+    "evaluation_cost": {
+      "currency": "USD",
+      "skill_cost": {
+        "usd": 0.013559,
+        "tokens": 8819
+      },
+      "eval_overhead": {
+        "usd": 0.019045,
+        "judge_usd": 0.010724,
+        "judge_tokens": 6566,
+        "baseline_usd": 0.008321,
+        "baseline_tokens": 2177
+      },
+      "total_eval_cost": {
+        "usd": 0.032604
+      }
+    },
+    "securityFindings": []
+  }
+]

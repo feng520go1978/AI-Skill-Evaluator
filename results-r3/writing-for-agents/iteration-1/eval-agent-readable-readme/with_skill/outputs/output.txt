@@ -1,0 +1,84 @@
+:::writing{variant="document" id="48391" title="README Section: Running deploykit"}
+# Running `deploykit`
+
+`deploykit` is the command-line interface for managing deployment workflows. Use the commands below in order unless you are performing a recovery operation.
+
+## Command overview
+
+| Command | Purpose |
+| --- | --- |
+| `deploykit init` | Initialize deployment configuration for the repository. |
+| `deploykit plan` | Preview the changes that would be applied without modifying the environment. |
+| `deploykit apply` | Execute the planned deployment changes. |
+| `deploykit rollback` | Revert a deployment to a previous known state. |
+
+## Typical workflow
+
+Run the following sequence for a normal deployment:
+
+```bash
+deploykit init
+deploykit plan
+deploykit apply
+```
+
+Before running `apply`, review the output from `plan` to verify that the proposed changes match the intended deployment.
+
+## Commands
+
+### Initialize the project
+
+```bash
+deploykit init
+```
+
+Use `init` when setting up `deploykit` in a repository for the first time or when regenerating deployment configuration.
+
+Completion criteria:
+- Deployment configuration files required by `deploykit` exist.
+- The repository is ready for planning.
+
+### Preview changes
+
+```bash
+deploykit plan
+```
+
+Use `plan` to inspect pending deployment actions before making changes.
+
+Completion criteria:
+- The generated plan has been reviewed.
+- Any unexpected changes have been resolved before continuing.
+
+### Apply a deployment
+
+```bash
+deploykit apply
+```
+
+Use `apply` to execute the deployment plan against the target environment.
+
+Completion criteria:
+- The command completes successfully.
+- The deployment state matches the expected result.
+
+### Roll back a deployment
+
+```bash
+deploykit rollback
+```
+
+Use `rollback` when a deployment needs to be reverted to a previous stable state.
+
+Completion criteria:
+- The rollback operation completes successfully.
+- The environment is restored to the intended previous state.
+
+## Agent workflow notes
+
+When modifying deployment-related code:
+
+1. Run `deploykit plan` before making changes that affect deployment behavior.
+2. Use `deploykit apply` only after verifying the generated plan.
+3. Use `deploykit rollback` for recovery instead of manually reversing deployment changes.
+4. Check command output and repository state after each operation before continuing.:::

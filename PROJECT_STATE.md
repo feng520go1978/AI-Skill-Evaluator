@@ -15,8 +15,8 @@
 
 ## 当前阶段
 
-**Phase 6.1 完成 → Phase 6.2（噪声带规则 I4 + 第三轮验证）待批**
-**不可进入公开测试阶段。**
+**Phase 6.2 完成，公开测试标准 5/5 通过 → 待批进入 PUBLISH（GitHub 接管）**
+公开测试阻塞已解除。
 
 ## 阶段台账
 
@@ -27,9 +27,9 @@
 | P1-V0.1 MVP 开发 | pricing/scoring/security/--runs/CLI 集成 | 本地 commit d18704a；34 tests 全绿 | ✅（代码级） |
 | P5 真实 Skill 测试 | 测试方案 + 结果分析 | docs/real-skill-test-plan-V1.md; results/real-test-analysis-V1.md; results/{tdd,research,writing,frontend} | ✅ |
 | P6 校准设计 | 校准报告 V1.0 | docs/scoring-calibration-V1.md | ✅ |
-| P6.1 规则落地+复测 | INCONCLUSIVE/新权重/judge成本入账 + 复测报告 | 本地 commit 41bda2e; docs/phase61-recalibration-report.md; results-r2/ | ⚠️ 代码✅ / 复测报告未 commit |
-| **P6.2 噪声带规则 I4 + 第三轮验证** | 未开始 | — | ⬜ 阻塞公开测试 |
-| **PUBLISH GitHub 正式接管** | remote 不存在 | — | ❌ **从未执行** |
+| P6.1 规则落地+复测 | INCONCLUSIVE/新权重/judge成本入账 + 复测报告 | 本地 commit 41bda2e; docs/phase61-recalibration-report.md; results-r2/ | ✅ |
+| **P6.2 噪声带规则 I4 + 第三轮验证** | I4 落地 + 有害门控 + 最终验证报告 | commit (P6.2); docs/phase62-final-validation-report.md; results-r3/; 35 tests 全绿 | ✅ 公开标准 5/5 |
+| **PUBLISH GitHub 正式接管** | remote 不存在 | — | ❌ **从未执行**（待用户定仓库名/可见性） |
 | HANDOFF 公开发布准备 | README 重写/npm 包名/license 传递说明 | — | ⬜ 未开始 |
 
 ## 已完成工件清单（关键）

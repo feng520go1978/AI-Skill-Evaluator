@@ -1,0 +1,180 @@
+search("Research question: Is WebSocket or Server-Sent Events better for a live dashboard? Before answering, lay out HOW you would research this: information sources and verification steps.")slow|WebSocket Server-Sent Events specification RFC official documentation
+I would research this as a **decision problem**, not just a protocol comparison. The question is not “which technology is faster?” but “which technology better fits a live dashboard’s requirements?”
+
+## Research approach
+
+### 1. Define the dashboard scenario first
+
+Before comparing technologies, I would establish the workload assumptions:
+
+- **Data direction**
+  - Server → browser only (metrics, alerts, charts)
+  - Browser → server as well (controls, filters, commands, collaboration)
+
+- **Update characteristics**
+  - Update frequency: once/minute, once/second, hundreds/sec?
+  - Payload size: small events vs large state snapshots
+  - Latency target: seconds vs milliseconds
+
+- **Scale**
+  - Number of concurrent viewers
+  - Number of dashboards per user
+  - Geographic distribution
+  - Whether connections pass through proxies/CDNs/load balancers
+
+- **Operational requirements**
+  - Authentication
+  - Reconnection behavior
+  - Backpressure handling
+  - Monitoring/debugging complexity
+
+This prevents a generic “WebSocket wins because it is real-time” answer.
+
+---
+
+## 2. Primary information sources
+
+I would prioritize sources that define the protocols and their intended behavior.
+
+### Protocol specifications
+
+**Server-Sent Events (SSE)**
+
+- WHATWG HTML Living Standard — Server-sent events section  
+  Verify:
+  - EventSource API behavior
+  - Connection semantics
+  - Event format
+  - Reconnection rules  
+  
+
+- W3C Server-Sent Events specification history  
+  Verify:
+  - Original design goals
+  - Browser API model  
+  
+
+**WebSocket**
+
+- IETF WebSocket protocol specification (RFC 6455)
+  - Handshake
+  - Framing
+  - Full-duplex communication model
+  - Connection lifecycle
+
+- Related IETF extensions/specifications where relevant (for example compression behavior)  
+  
+
+---
+
+## 3. Compare the technologies using a fixed evaluation matrix
+
+I would collect evidence for each category:
+
+| Criterion | Questions to verify |
+|---|---|
+| Directionality | Is communication one-way or bidirectional? |
+| Latency | What overhead exists before messages flow? |
+| Throughput | How does it behave with frequent updates? |
+| Browser support | What APIs and limitations exist? |
+| Reconnection | Who handles reconnect logic? |
+| Infrastructure compatibility | Does it work easily through HTTP proxies/load balancers? |
+| Server complexity | How difficult is connection management? |
+| Scaling | How do many long-lived connections behave? |
+| Debugging | Can operators inspect traffic easily? |
+| Security | How do authentication, authorization, and origin checks work? |
+
+---
+
+## 4. Validate with implementation evidence
+
+I would inspect real implementations, not only specifications:
+
+### Browser/client libraries
+Examples:
+- Native `EventSource`
+- Native WebSocket API
+
+Verify:
+- API complexity
+- Error handling
+- Reconnect patterns
+- Message handling
+
+### Server frameworks
+Compare implementations in common stacks:
+
+- Node.js
+- Go
+- Java/Spring
+- Python
+
+Look for:
+- Connection lifecycle management
+- Memory usage patterns
+- Backpressure mechanisms
+- Operational maturity
+
+---
+
+## 5. Run a small benchmark
+
+I would create a representative dashboard test:
+
+### Scenario A: Typical monitoring dashboard
+- 10,000 connected browsers
+- 1–10 events/sec/user
+- Server sends JSON metric updates
+
+Measure:
+
+- CPU usage
+- Memory per connection
+- Network overhead
+- Message latency
+- Reconnection recovery time
+
+### Scenario B: Interactive control dashboard
+Add:
+- User commands
+- Acknowledgements
+- Bidirectional messages
+
+This tests where WebSockets become necessary.
+
+---
+
+## 6. Cross-check operational experience
+
+I would examine:
+
+- Production case studies from companies running dashboards
+- Cloud provider guidance
+- Framework documentation
+- Known limitations in browsers and proxies
+
+I would be careful with blog posts: use them for operational anecdotes, not protocol facts.
+
+---
+
+## 7. Decision rule I would apply
+
+After gathering evidence:
+
+- If the dashboard is **mostly server → browser updates**, I would test SSE first.
+- If the dashboard requires **interactive, bidirectional communication**, I would test WebSocket first.
+- If latency requirements are extreme or messages are very frequent, I would benchmark both rather than assume.
+
+---
+
+## Expected conclusion format
+
+The final answer would not be:
+
+> “WebSockets are better.”
+
+It would be:
+
+> “For this dashboard profile, choose X because requirements A/B/C dominate. Choose Y instead when conditions D/E/F apply.”
+
+The research would therefore produce a recommendation tied to workload assumptions, backed by specifications, implementation evidence, and measured behavior.

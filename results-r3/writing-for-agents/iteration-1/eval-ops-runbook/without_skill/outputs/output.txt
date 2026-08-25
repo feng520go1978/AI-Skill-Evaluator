@@ -1,0 +1,223 @@
+:::writing{variant="document" id="48391" title="Nightly Data Import Failure Recovery Runbook"}
+# Nightly Data Import Failure Recovery Runbook
+
+## Purpose
+
+This runbook describes how an operator can diagnose and recover from failures in the nightly data import process.
+
+The import workflow:
+
+1. Retrieves source CSV files from an SFTP server.
+2. Validates and transforms CSV data.
+3. Loads transformed data into PostgreSQL.
+4. Reports job completion or failure status.
+
+Use this procedure when the nightly import job fails or data is not available after the scheduled run.
+
+---
+
+# 1. Confirm the Failure
+
+## Symptoms
+
+Common indicators:
+
+- Import job alert triggered.
+- Scheduled job did not complete successfully.
+- Expected data is missing or stale.
+- Downstream reports or applications show missing data.
+
+## Steps
+
+1. Check the import job status in the scheduler or job monitoring system.
+2. Record:
+   - Job run ID.
+   - Failure timestamp.
+   - Error message.
+   - Failed pipeline stage.
+3. Check whether the failure is:
+   - SFTP connection/download failure.
+   - CSV validation or transformation failure.
+   - PostgreSQL load failure.
+   - Infrastructure/resource issue.
+
+Do not rerun the job until the failure point is identified.
+
+---
+
+# 2. Check Import Logs
+
+1. Open the importer logs for the failed run.
+2. Review entries around the failure timestamp.
+3. Look for:
+
+| Failure area | Example errors |
+|---|---|
+| SFTP | Authentication failed, timeout, missing file |
+| CSV processing | Invalid format, missing column, malformed row |
+| Transformation | Unexpected value, mapping failure |
+| PostgreSQL | Constraint violation, connection error, insufficient space |
+
+4. Save the relevant error output for incident tracking.
+
+---
+
+# 3. Recover From SFTP Failures
+
+Use this section when files could not be downloaded.
+
+## Verify SFTP Availability
+
+1. Confirm the SFTP server is reachable.
+2. Test authentication using the importer service account.
+3. Verify expected files exist in the inbound directory.
+
+Check:
+
+- Filename pattern.
+- File timestamp.
+- File size.
+- Permissions.
+
+## If Files Are Missing
+
+1. Confirm whether the upstream system generated the files.
+2. Contact the upstream owner if files were not delivered.
+3. Do not create replacement files unless approved.
+
+## If Credentials Failed
+
+1. Verify the configured SFTP credentials have not expired.
+2. Confirm the account has access to the expected directory.
+3. Update credentials through the approved secrets management process.
+4. Retry the import.
+
+---
+
+# 4. Recover From CSV Transformation Failures
+
+Use this section when files downloaded successfully but processing failed.
+
+## Validate Input Files
+
+1. Locate the downloaded CSV files.
+2. Confirm:
+   - File is not empty.
+   - Header row exists.
+   - Required columns are present.
+   - Encoding is correct.
+   - Delimiter matches expected format.
+
+3. Compare the failed file against a recent successful import file.
+
+## Handle Data Issues
+
+Common fixes:
+
+- Remove duplicate rows if duplicates are invalid.
+- Request corrected source files from the upstream owner.
+- Update transformation mappings if a known format change occurred.
+- Correct unexpected values only if the correction procedure is documented.
+
+Do not manually edit production data files without recording the change.
+
+---
+
+# 5. Recover From PostgreSQL Load Failures
+
+Use this section when transformation completed but loading failed.
+
+## Check Database Connectivity
+
+1. Confirm PostgreSQL is available.
+2. Verify importer credentials.
+3. Check connection limits and database health.
+
+## Check for Data Conflicts
+
+Review errors for:
+
+- Duplicate key violations.
+- Foreign key failures.
+- Missing required fields.
+- Invalid data types.
+
+## Resolve Load Issues
+
+Depending on the cause:
+
+- Remove incomplete staging data.
+- Reload from the staging area.
+- Apply approved schema changes.
+- Request corrected source data.
+
+Do not modify production tables manually unless the recovery procedure requires it.
+
+---
+
+# 6. Retry the Import
+
+Before rerunning:
+
+1. Confirm the root cause has been addressed.
+2. Confirm required source files are available.
+3. Confirm no partial load remains from the failed attempt.
+4. Confirm sufficient disk space and database capacity.
+
+Run the importer again.
+
+Monitor:
+
+- File retrieval.
+- Transformation progress.
+- Database load progress.
+- Final completion status.
+
+---
+
+# 7. Verify Successful Completion
+
+After rerun:
+
+1. Confirm the job reports success.
+2. Verify imported record counts.
+3. Compare totals against expected ranges.
+4. Check downstream systems or reports.
+5. Confirm the latest import timestamp is updated.
+
+If validation fails, stop and investigate before declaring recovery complete.
+
+---
+
+# 8. Escalation Guidelines
+
+Escalate when:
+
+- SFTP files are not delivered by the source system.
+- Import failures indicate a breaking schema change.
+- Database corruption or availability issues occur.
+- Data corrections require business approval.
+- Multiple retries fail.
+
+Include:
+
+- Failed job ID.
+- Timestamp.
+- Error logs.
+- Affected files.
+- Recovery steps already attempted.
+
+---
+
+# 9. Post-Incident Tasks
+
+After recovery:
+
+1. Document:
+   - Root cause.
+   - Resolution.
+   - Duration of outage.
+   - Data impact.
+2. Attach relevant logs.
+3. Create follow-up work items for recurring problems.
+4. Update monitoring or validation rules if needed.:::

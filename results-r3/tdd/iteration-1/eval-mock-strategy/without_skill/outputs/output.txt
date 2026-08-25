@@ -1,0 +1,105 @@
+For testing a welcome-email function, I generally **would not start with a real SMTP server**. It depends on what you are trying to validate.
+
+A practical approach is to test in layers:
+
+### 1. Unit test: don't send email at all
+Mock the mail sender and verify your signup flow triggers the right call.
+
+Example things to assert:
+- User signup succeeds
+- Welcome email function is invoked once
+- Correct recipient is passed
+- Correct template/data is passed
+- Failures are handled (retry, logging, etc.)
+
+This is the fastest and most reliable test.
+
+---
+
+### 2. Integration test: use a fake SMTP server
+Use a local SMTP catcher instead of sending real mail.
+
+Common options:
+- ["company","MailHog","local SMTP testing tool"] — runs locally and captures emails in a web UI
+- ["company","Mailpit","local SMTP testing tool"] — modern MailHog alternative
+- ["company","Mailtrap","email testing platform"] — hosted email sandbox
+
+Your app still talks SMTP, so you test:
+- SMTP configuration
+- MIME formatting
+- templates
+- attachments
+- headers
+
+…but nothing reaches real users.
+
+Typical flow:
+
+```
+Signup API
+    |
+    v
+WelcomeEmailService
+    |
+    v
+SMTP client
+    |
+    v
+Local SMTP catcher
+    |
+    v
+Browser inbox preview
+```
+
+---
+
+### 3. Staging test: use a real email provider sandbox
+For a staging environment, use a provider with a test domain/sandbox mode.
+
+Examples:
+- ["company","Amazon Simple Email Service","AWS email sending service"] sandbox
+- ["company","SendGrid","email delivery platform"] test environment
+- ["company","Postmark","transactional email service"] test mode
+
+This catches issues fake SMTP won't:
+- SPF/DKIM configuration
+- sender reputation
+- provider API behavior
+- rate limits
+
+---
+
+### 4. Avoid real user emails in automated tests
+I would avoid a test that creates:
+
+```
+testuser123@example.com
+        |
+        v
+real SMTP server
+        |
+        v
+actual inbox
+```
+
+Problems:
+- tests become flaky
+- accidental emails can escape
+- cleanup is annoying
+- you can damage sender reputation
+
+If you do need an end-to-end production-like test, use a dedicated mailbox you control.
+
+---
+
+My usual setup:
+
+| Environment | Email target |
+|---|---|
+| Unit tests | Mock mailer |
+| Local development | MailHog/Mailpit |
+| CI | Fake SMTP container |
+| Staging | Email provider sandbox |
+| Production | Real SMTP/API provider |
+
+The key thing I test separately is **"did we decide to send the email?"** and **"can the email system deliver it?"**. Mixing those into one test makes failures much harder to diagnose.

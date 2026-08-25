@@ -1,0 +1,63 @@
+```markdown
+## Running deploykit
+
+`deploykit` is the CLI used to initialize, preview, execute, and recover deployments. AI coding agents should use the commands below in order unless the task explicitly requires a different workflow.
+
+### Command overview
+
+| Command | Purpose |
+| --- | --- |
+| `deploykit init` | Create or initialize deploykit configuration for the current repository |
+| `deploykit plan` | Preview the changes deploykit will make without applying them |
+| `deploykit apply` | Execute the deployment plan |
+| `deploykit rollback` | Revert the most recent deployment |
+
+### Standard workflow
+
+1. Initialize deploykit in the repository:
+
+```bash
+deploykit init
+```
+
+This creates the required deploykit configuration files. Review any generated files before continuing.
+
+2. Generate a deployment plan:
+
+```bash
+deploykit plan
+```
+
+Use the plan output to verify:
+- resources that will be created, updated, or removed
+- configuration changes
+- environment-specific differences
+
+Do not run `apply` if the plan contains unexpected changes.
+
+3. Apply the deployment:
+
+```bash
+deploykit apply
+```
+
+This executes the changes shown in the plan.
+
+4. Roll back if needed:
+
+```bash
+deploykit rollback
+```
+
+Use rollback when an applied deployment must be reverted. Confirm the rollback target before running the command in production environments.
+
+### Agent guidance
+
+When modifying deployment-related code:
+
+- Run `deploykit plan` before `deploykit apply`.
+- Treat plan output as the source of truth for intended changes.
+- Do not skip `init` in a new checkout unless deploykit configuration already exists.
+- If `apply` fails, inspect the error output before retrying.
+- Prefer `rollback` over manual fixes when recovering from a failed deployment.
+```

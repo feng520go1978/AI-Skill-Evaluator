@@ -1,0 +1,25 @@
+{
+  "assertion_results": [
+    {
+      "text": "Diagnostic steps appear in a logical ordered sequence covering the three failure domains (network/SFTP, file format/transformation, database)",
+      "passed": true,
+      "evidence": "Sections are ordered as \"# 3. Recover From SFTP Failures\", \"# 4. Recover From CSV Transformation Failures\", and \"# 5. Recover From PostgreSQL Load Failures\" after confirming the failure domain."
+    },
+    {
+      "text": "Each step indicates how to determine success or failure",
+      "passed": false,
+      "evidence": "Although some checks include outcomes (e.g., \"Confirm the job reports success\" and \"If validation fails, stop and investigate\"), many diagnostic steps only give actions without an explicit success/failure determination method, such as \"Update credentials through the approved secrets management process\"."
+    },
+    {
+      "text": "No critical steps left implicit (e.g. does not assume the reader knows where logs live)",
+      "passed": false,
+      "evidence": "The runbook says \"Open the importer logs for the failed run\" but does not specify where importer logs are stored or how to locate them."
+    }
+  ],
+  "summary": {
+    "passed": 1,
+    "failed": 2,
+    "total": 3,
+    "pass_rate": 0.3333333333333333
+  }
+}

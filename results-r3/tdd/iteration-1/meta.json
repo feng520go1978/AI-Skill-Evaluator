@@ -1,0 +1,12 @@
+{
+  "name": "tdd",
+  "slug": "tdd",
+  "relPath": "",
+  "target": "auto",
+  "judge": "auto",
+  "modes": [
+    "with_skill",
+    "without_skill"
+  ],
+  "generated_at": "2026-08-25T10:46:15.849Z"
+}

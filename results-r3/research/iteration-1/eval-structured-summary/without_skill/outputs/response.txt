@@ -1,0 +1,237 @@
+# HTTP/3 Adoption — Engineering Decision Summary
+
+## Executive summary
+
+HTTP/3 adoption is no longer experimental: it is supported across major browsers, operating systems, CDNs, cloud providers, and web servers. Adoption is meaningful but not universal; HTTP/2 remains the default fallback for many deployments.
+
+**Decision framing:**
+- **Adopt HTTP/3 if:** you operate latency-sensitive internet-facing services, have significant mobile/global traffic, use a major CDN, or want improved resilience over unreliable networks.
+- **Do not prioritize HTTP/3 if:** your traffic is mostly internal, latency is not a concern, or operational simplicity is the primary goal.
+- **Recommended approach:** enable HTTP/3 opportunistically alongside HTTP/2 rather than treating it as a replacement migration.
+
+---
+
+# 1. What HTTP/3 changes
+
+HTTP/3 replaces TCP-based HTTP/1.1 and HTTP/2 transport with **QUIC**, a transport protocol built on UDP.
+
+Key changes:
+
+| Area | HTTP/2 | HTTP/3 |
+|---|---|---|
+| Transport | TCP | QUIC over UDP |
+| Encryption | TLS layered on TCP | TLS 1.3 integrated into QUIC |
+| Connection setup | TCP + TLS handshake | Faster QUIC handshake |
+| Multiplexing | Streams over TCP | Streams natively in QUIC |
+| Head-of-line blocking | Exists at TCP layer | Avoided between streams |
+| Connection migration | Limited | Supported (e.g., Wi-Fi → cellular) |
+
+The main intended benefits are:
+- Lower connection establishment latency
+- Better performance on lossy networks
+- Better mobile experience
+- More efficient multiplexing
+- Improved connection continuity
+
+---
+
+# 2. Current adoption status
+
+## Browser support
+
+HTTP/3 support is mature.
+
+Supported by:
+- Chrome / Chromium-based browsers
+- Firefox
+- Safari
+- Edge
+
+Most modern clients will automatically negotiate HTTP/3 using **Alt-Svc** or HTTPS DNS records (especially HTTPS/SVCB and ALPN signaling).
+
+For users, adoption is generally invisible:
+- Client tries HTTP/3
+- Falls back to HTTP/2 if unavailable
+
+---
+
+## Infrastructure adoption
+
+HTTP/3 is widely available through:
+
+- Major CDNs
+- Cloud load balancers
+- Modern web servers
+- Reverse proxies
+
+Common deployment paths:
+- CDN terminates HTTP/3 at the edge
+- Origin remains HTTP/2 or HTTP/1.1 internally
+
+This means many organizations can enable HTTP/3 without changing application infrastructure.
+
+---
+
+# 3. Where HTTP/3 provides measurable value
+
+## High-value scenarios
+
+### Mobile applications and users
+
+Benefits:
+- Networks change frequently
+- Packet loss is common
+- RTT is often high
+
+QUIC connection migration can avoid reconnecting when:
+- Switching Wi-Fi ↔ cellular
+- Changing IP addresses
+
+---
+
+### Global user bases
+
+HTTP/3 helps when users experience:
+- Long geographic distances
+- Higher latency
+- Variable network quality
+
+The largest improvements tend to occur outside stable low-latency networks.
+
+---
+
+### Latency-sensitive applications
+
+Potential benefits:
+- Faster first connection
+- Faster page/API startup
+- Better parallel request behavior
+
+Examples:
+- Consumer web apps
+- Streaming services
+- Real-time applications
+- APIs serving many short-lived requests
+
+---
+
+# 4. Where benefits are limited
+
+HTTP/3 is not automatically faster.
+
+Expected limited impact:
+- Low-latency internal services
+- Server-to-server traffic in controlled networks
+- Large bulk transfers on stable networks
+- Applications already optimized with HTTP/2
+
+Reasons:
+- TCP performance is already good on clean networks
+- HTTP/2 multiplexing already solves many HTTP-level inefficiencies
+- Application latency often dominates transport latency
+
+---
+
+# 5. Operational considerations
+
+## Infrastructure requirements
+
+Need:
+- UDP port 443 availability
+- HTTP/3-capable edge/server software
+- Monitoring support
+- Appropriate firewall rules
+
+Common operational issue:
+- Some networks block or degrade UDP traffic
+
+Therefore:
+- HTTP/3 must always have HTTP/2 fallback.
+
+---
+
+## Debugging and observability
+
+HTTP/3 introduces new operational concerns:
+
+Need visibility into:
+- QUIC connection failures
+- UDP reachability
+- Version negotiation failures
+- HTTP/3 vs HTTP/2 performance
+
+Existing TCP-based tooling is less directly applicable.
+
+Teams should ensure:
+- CDN metrics expose HTTP version usage
+- Logs include negotiated protocol
+- Synthetic tests cover HTTP/3 paths
+
+---
+
+## Security considerations
+
+HTTP/3 inherits strong security properties:
+- Mandatory TLS 1.3
+- Encrypted transport metadata
+- No plaintext HTTP/3
+
+New considerations:
+- UDP exposure increases attack surface considerations
+- QUIC-specific DDoS handling may be required
+- Network security tooling may need updates
+
+---
+
+# 6. Deployment patterns
+
+## Recommended pattern: enable alongside HTTP/2
+
+Typical rollout:
+
+1. Enable HTTP/3 at CDN/load balancer
+2. Monitor adoption percentage
+3. Compare performance metrics
+4. Keep HTTP/2 fallback permanently
+
+Avoid:
+- HTTP/3-only deployments
+- Removing TCP support
+- Large application rewrites
+
+---
+
+# 7. Decision criteria
+
+| Question | If yes | Recommendation |
+|---|---|---|
+| Do we serve internet users? | Yes | Enable HTTP/3 |
+| Do we have mobile/global users? | Yes | Strong candidate |
+| Do we use a CDN? | Yes | Low-effort adoption |
+| Are requests latency-sensitive? | Yes | Evaluate benefits |
+| Is traffic internal only? | Yes | Lower priority |
+| Do we lack UDP operational support? | Yes | Improve tooling first |
+
+---
+
+# 8. Recommended engineering position
+
+**Adopt HTTP/3 as an incremental capability, not a migration project.**
+
+Suggested stance:
+
+- Enable HTTP/3 at the edge where supported.
+- Maintain HTTP/2 fallback.
+- Measure:
+  - HTTP/3 adoption rate
+  - handshake latency
+  - tail latency (p95/p99)
+  - error rates
+  - mobile performance
+- Revisit broader adoption only if metrics show meaningful gains.
+
+---
+
+# Bottom line
+
+HTTP/3 is a mature protocol with broad ecosystem support and low migration cost when enabled through modern CDNs or load balancers. Its strongest benefits appear for mobile, global, and unreliable network conditions. For most engineering organizations, the right decision is **"enable and measure" rather than "migrate everything."**

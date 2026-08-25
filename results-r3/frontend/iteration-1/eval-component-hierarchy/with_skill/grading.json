@@ -1,0 +1,25 @@
+{
+  "assertion_results": [
+    {
+      "text": "States which pricing tier receives emphasis and by what visual mechanism",
+      "passed": true,
+      "evidence": "The output states: \"Make Pro visually dominant\" and lists mechanisms including \"Slightly larger card scale (105–110%)\", \"Higher contrast border\", \"Persistent 'Recommended' label\", and \"Strongest CTA\"."
+    },
+    {
+      "text": "Maintains structural consistency across the three tiers while differentiating emphasis",
+      "passed": true,
+      "evidence": "The output says \"Each card should follow the same rhythm\" and provides the shared structure \"Plan name ↓ Who it's for ↓ Price ↓ CTA ↓ Divider ↓ Top benefits ↓ Full feature list\" while separately specifying the Pro card treatment."
+    },
+    {
+      "text": "FAQ treatment is deliberately de-emphasized relative to pricing tiers with a stated reason",
+      "passed": true,
+      "evidence": "The output states: \"FAQ should not compete with pricing. It exists to remove objections\" and places it after \"Pricing cards\" with whitespace."
+    }
+  ],
+  "summary": {
+    "passed": 3,
+    "failed": 0,
+    "total": 3,
+    "pass_rate": 1
+  }
+}

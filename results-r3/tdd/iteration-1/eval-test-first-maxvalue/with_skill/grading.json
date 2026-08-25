@@ -1,0 +1,25 @@
+{
+  "assertion_results": [
+    {
+      "text": "Presents a failing test BEFORE any implementation code (strict red-green order)",
+      "passed": true,
+      "evidence": "The output has '## 1. Start with a failing test (RED)' with a test block before '## 2. Write the smallest implementation (GREEN)' where the implementation code is introduced."
+    },
+    {
+      "text": "Tests cover edge cases beyond the happy path (e.g. empty input, missing/non-numeric column values)",
+      "passed": true,
+      "evidence": "The test suite includes 'handles columns containing negative numbers' and 'returns null when the column has no values', covering non-happy-path inputs."
+    },
+    {
+      "text": "Implementation is presented as the step that makes tests pass, not written first",
+      "passed": true,
+      "evidence": "The output explicitly labels the implementation section 'Write the smallest implementation (GREEN)' after the failing test and says 'Run the test again. Now it passes'."
+    }
+  ],
+  "summary": {
+    "passed": 3,
+    "failed": 0,
+    "total": 3,
+    "pass_rate": 1
+  }
+}

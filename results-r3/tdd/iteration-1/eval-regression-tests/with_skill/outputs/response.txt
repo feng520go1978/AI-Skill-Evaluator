@@ -1,0 +1,55 @@
+Using TDD, I’d write regression tests at the **public interface** of `slugify` first. The current implementation has several likely bugs:
+
+- only replaces the **first** space (`replace(' ', '-')`)
+- does not handle repeated whitespace
+- does not handle leading/trailing whitespace
+- does not handle non-string-ish edge cases (depending on the contract)
+- may leave punctuation or special characters if the intended slug rules require stripping them
+
+Before fixing, I’d pin down the expected behavior with tests. For example:
+
+```js
+describe('slugify', () => {
+  test('lowercases titles', () => {
+    expect(slugify('Hello World')).toBe('hello-world')
+  })
+
+  test('replaces every space, not just the first one', () => {
+    expect(slugify('Hello Big World')).toBe('hello-big-world')
+  })
+
+  test('handles multiple spaces between words', () => {
+    expect(slugify('Hello   Big   World')).toBe('hello-big-world')
+  })
+
+  test('removes leading and trailing spaces', () => {
+    expect(slugify('  Hello World  ')).toBe('hello-world')
+  })
+
+  test('does not create empty hyphen segments from whitespace', () => {
+    expect(slugify('Hello     World')).toBe('hello-world')
+  })
+
+  test('handles mixed case input', () => {
+    expect(slugify('My Awesome Title')).toBe('my-awesome-title')
+  })
+})
+```
+
+I would **not** add tests for punctuation removal, Unicode handling, empty strings, or `null` unless the product requirements say slugs should support those. Otherwise the tests are defining a new contract rather than protecting the existing one.
+
+The first failing test I’d expect is:
+
+```js
+test('replaces every space, not just the first one', () => {
+  expect(slugify('Hello Big World')).toBe('hello-big-world')
+})
+```
+
+because the current output is:
+
+```
+hello-big world
+```
+
+That gives a small red → green step: fix repeated spaces first, then add further behavior only as the requirements become clear.

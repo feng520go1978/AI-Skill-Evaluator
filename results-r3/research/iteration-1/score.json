@@ -1,0 +1,39 @@
+[
+  {
+    "skill": "research",
+    "dimensions": {
+      "capability": 56,
+      "lift": 0,
+      "cost": 100,
+      "speed": 100,
+      "stability": 0,
+      "security": 100
+    },
+    "overall": 49.6,
+    "verdict": "FAIL",
+    "reasons": [
+      "capability low: 56% of judge assertions passed",
+      "weak lift over baseline: -22pp",
+      "skill made outputs WORSE than baseline — consider uninstalling",
+      "unstable: pass-rate stddev 0.31 across runs"
+    ],
+    "evaluation_cost": {
+      "currency": "USD",
+      "skill_cost": {
+        "usd": 0.013911,
+        "tokens": 3975
+      },
+      "eval_overhead": {
+        "usd": 0.028223,
+        "judge_usd": 0.014151,
+        "judge_tokens": 9813,
+        "baseline_usd": 0.014072,
+        "baseline_tokens": 3599
+      },
+      "total_eval_cost": {
+        "usd": 0.042134
+      }
+    },
+    "securityFindings": []
+  }
+]

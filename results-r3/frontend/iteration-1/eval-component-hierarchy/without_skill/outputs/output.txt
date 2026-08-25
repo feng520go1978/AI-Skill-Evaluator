@@ -1,0 +1,217 @@
+A strong pricing page should guide users toward a decision, not just present three equal boxes. The hierarchy should make the recommended plan obvious while still allowing comparison and reducing purchase anxiety.
+
+## Component hierarchy
+
+```
+PricingPage
+├── PricingHero
+│   ├── Eyebrow (optional)
+│   ├── Heading
+│   ├── SupportingCopy
+│   └── BillingToggle
+│       ├── MonthlyOption
+│       └── AnnualOption (with savings badge)
+│
+├── PricingGrid
+│   ├── PricingCard (Tier 1: Entry)
+│   │   ├── TierHeader
+│   │   │   ├── PlanName
+│   │   │   ├── PlanDescription
+│   │   │   └── Price
+│   │   ├── FeatureSummary
+│   │   ├── FeatureList
+│   │   └── CTAButton
+│   │
+│   ├── PricingCard (Tier 2: Recommended)
+│   │   ├── PopularBadge
+│   │   ├── TierHeader
+│   │   ├── Price
+│   │   ├── FeatureSummary
+│   │   ├── FeatureList
+│   │   ├── CTAButton
+│   │   └── SocialProof (optional)
+│   │
+│   └── PricingCard (Tier 3: Premium)
+│       ├── TierHeader
+│       ├── Price
+│       ├── FeatureSummary
+│       ├── FeatureList
+│       ├── CTAButton
+│       └── EnterpriseContactOption (optional)
+│
+├── ComparisonSection (optional)
+│   ├── FeatureCategory
+│   ├── ComparisonRows
+│   └── ExpandControls (mobile)
+│
+├── TrustSection
+│   ├── CustomerLogos
+│   ├── SecurityBadges
+│   └── Testimonials
+│
+└── FAQSection
+    ├── FAQHeading
+    ├── FAQAccordion
+    │   ├── Question
+    │   └── Answer
+    └── ContactCTA
+```
+
+---
+
+## Visual emphasis strategy
+
+### 1. Make the middle tier the visual anchor
+
+Most users compare options rather than independently evaluating each one. The recommended plan should receive the strongest emphasis.
+
+**Recommended tier treatment:**
+- Slightly larger card (`scale: 1.02–1.05`)
+- Elevated position on desktop (higher top edge)
+- Stronger border or background treatment
+- "Most Popular" or "Best Value" badge
+- Primary CTA color
+- More detailed benefit language
+
+Example hierarchy:
+
+```
+        ⭐ MOST POPULAR
+
+ ┌─────────┐ ┌──────────────┐ ┌─────────┐
+ │ Basic   │ │ Professional │ │ Premium │
+ │         │ │              │ │         │
+ │ $19/mo  │ │ $49/mo       │ │ $99/mo  │
+ │         │ │              │ │         │
+ │ Button  │ │ Button       │ │ Button  │
+ └─────────┘ └──────────────┘ └─────────┘
+```
+
+---
+
+### 2. Establish a clear scanning order
+
+Users should understand the difference between plans in seconds.
+
+Within each card:
+
+1. **Plan name** — largest text after price
+2. **Who it is for** — short description
+3. **Price** — dominant visual element
+4. **Primary outcome/features** — not a full feature dump
+5. **CTA** — obvious next action
+
+Example:
+
+```
+PROFESSIONAL
+
+For growing teams that need automation
+
+$49 / month
+
+✓ Unlimited projects
+✓ Advanced analytics
+✓ Priority support
+
+[Start Free Trial]
+```
+
+---
+
+### 3. Use contrast, not just size
+
+Avoid making every tier equally loud.
+
+| Element | Entry | Recommended | Premium |
+|---|---|---|---|
+| Card size | Normal | Largest | Normal |
+| Border | Neutral | Accent | Neutral |
+| CTA | Secondary | Primary | Secondary |
+| Badge | None | Popular | Optional |
+| Feature list | Short | Most detailed | Advanced |
+| Background | Plain | Highlighted | Plain |
+
+---
+
+### 4. Make plan differences obvious
+
+Avoid three cards that only differ by a few bullet points.
+
+Use:
+- Outcome-based descriptions
+- Highlighted differentiators
+- Feature grouping
+
+Example:
+
+**Basic**
+> For individuals getting started
+
+**Professional**
+> For teams scaling workflows
+
+**Enterprise**
+> For organizations needing control and security
+
+---
+
+### 5. FAQ placement strategy
+
+FAQ should remove final purchase friction, not introduce new information.
+
+Place it after pricing because users typically ask:
+
+1. "Can I cancel?"
+2. "What happens after trial?"
+3. "Do you support my use case?"
+4. "Is there a discount?"
+5. "How does billing work?"
+
+Recommended FAQ layout:
+
+```
+FAQ
+
+Can I change plans later?          +
+Do you offer annual billing?       +
+What happens after my trial?       +
+Is there a refund policy?          +
+Do you support enterprise needs?  +
+```
+
+Keep answers short; link to deeper docs if needed.
+
+---
+
+## Responsive behavior
+
+### Desktop
+```
+[ Basic ] [ Recommended ] [ Premium ]
+```
+
+### Mobile
+Stack with recommended first:
+
+```
+[ Recommended ]
+
+[ Basic ]
+
+[ Premium ]
+
+FAQ
+```
+
+The recommended plan should appear early because many mobile users will not scroll through all options.
+
+---
+
+## Key design principle
+
+The page should communicate:
+
+**"Here is the plan most people choose, here is why, and here are alternatives if your needs differ."**
+
+The visual system should not make users decide *whether* to choose a plan; it should help them decide *which* plan fits.

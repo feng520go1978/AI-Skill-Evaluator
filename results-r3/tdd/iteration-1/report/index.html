@@ -1,0 +1,2140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Agent Skills Eval report</title>
+  <style>
+  :root {
+    --fg: #1a1f24;
+    --muted: #6a737d;
+    --bg: #ffffff;
+    --bg-alt: #f6f8fa;
+    --border: #e1e4e8;
+    --ok: #1a7f37;
+    --warn: #b08800;
+    --bad: #cf222e;
+    --ok-bg: #dafbe1;
+    --warn-bg: #fff8c5;
+    --bad-bg: #ffebe9;
+    --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 14px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; color: var(--fg); background: var(--bg); }
+  header.hero { background: linear-gradient(180deg, #fafbfc 0%, #f0f2f5 100%); border-bottom: 1px solid var(--border); padding: 24px 32px; }
+  header.hero h1 { margin: 0 0 4px; font-size: 22px; }
+  header.hero .meta { color: var(--muted); font-size: 13px; }
+  header.hero .totals { margin-top: 16px; display: flex; gap: 16px; flex-wrap: wrap; }
+  header.hero .stat { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 12px 16px; min-width: 120px; }
+  header.hero .stat .label { display: block; font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
+  header.hero .stat .value { display: block; font-size: 22px; font-weight: 600; margin-top: 2px; }
+  header.hero .stat.ok .value { color: var(--ok); }
+  header.hero .stat.bad .value { color: var(--bad); }
+  main { padding: 24px 32px; max-width: 1200px; margin: 0 auto; }
+  h2 { margin: 0 0 4px; font-size: 18px; }
+  .muted { color: var(--muted); font-size: 12px; }
+  table.summary { width: 100%; border-collapse: collapse; margin-bottom: 32px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+  table.summary th, table.summary td { padding: 10px 12px; border-bottom: 1px solid var(--border); text-align: left; }
+  table.summary th { background: var(--bg-alt); font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); }
+  table.summary td.num { text-align: right; font-variant-numeric: tabular-nums; }
+  table.summary tr.skill-row.bad { background: var(--bad-bg); }
+  table.summary tr.skill-row.warn { background: var(--warn-bg); }
+  table.summary tr.skill-row.ok td { background: transparent; }
+  table.summary tr.skill-row a { color: var(--fg); text-decoration: none; font-weight: 500; }
+  table.summary tr.skill-row a:hover { text-decoration: underline; }
+  .bar { width: 100px; height: 10px; background: var(--bg-alt); border-radius: 5px; overflow: hidden; }
+  .bar .fill { height: 100%; }
+  .bar.ok .fill { background: var(--ok); }
+  .bar.warn .fill { background: var(--warn); }
+  .bar.bad .fill { background: var(--bad); }
+  article.skill { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 20px; margin-bottom: 20px; }
+  article.skill header h2 .badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: 500; vertical-align: middle; margin-left: 8px; }
+  article.skill header h2 .badge.ok { background: var(--ok-bg); color: var(--ok); }
+  article.skill header h2 .badge.warn { background: var(--warn-bg); color: var(--warn); }
+  article.skill header h2 .badge.bad { background: var(--bad-bg); color: var(--bad); }
+  article.skill .delta { margin-top: 8px; font-size: 13px; }
+  article.skill .delta.ok { color: var(--ok); }
+  article.skill .delta.bad { color: var(--bad); }
+  details.eval { border: 1px solid var(--border); border-radius: 6px; margin-top: 12px; }
+  details.eval > summary { padding: 10px 14px; cursor: pointer; display: flex; gap: 10px; align-items: center; }
+  details.eval[open] > summary { border-bottom: 1px solid var(--border); }
+  details.eval.bad > summary { background: var(--bad-bg); }
+  details.eval.ok > summary { background: var(--ok-bg); }
+  details.eval .eval-status { font-weight: 600; }
+  details.eval.bad .eval-status { color: var(--bad); }
+  details.eval.ok .eval-status { color: var(--ok); }
+  .eval-body { padding: 12px 16px; }
+  .run { padding: 12px 0; border-top: 1px dashed var(--border); }
+  .run:first-child { border-top: none; padding-top: 0; }
+  .run-head { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+  .mode { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.04em; }
+  .mode-with_skill { background: #ddf4ff; color: #0969da; }
+  .mode-without_skill { background: #fff1e5; color: #bc4c00; }
+  .status.ok { color: var(--ok); font-weight: 600; }
+  .status.bad { color: var(--bad); font-weight: 600; }
+  .run details > summary { cursor: pointer; font-size: 12px; color: var(--muted); padding: 4px 0; }
+  .run details[open] > summary { color: var(--fg); }
+  .run pre { background: var(--bg-alt); border: 1px solid var(--border); border-radius: 6px; padding: 10px 12px; font-family: var(--mono); font-size: 12px; line-height: 1.45; overflow-x: auto; white-space: pre-wrap; word-break: break-word; max-height: 400px; overflow-y: auto; }
+  table.assertions { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 13px; }
+  table.assertions th, table.assertions td { padding: 6px 8px; border-bottom: 1px solid var(--border); text-align: left; vertical-align: top; }
+  table.assertions th { background: var(--bg-alt); font-size: 11px; text-transform: uppercase; color: var(--muted); }
+  table.assertions tr.bad td { background: var(--bad-bg); }
+  table.assertions .check { color: var(--ok); font-weight: 600; }
+  table.assertions .x { color: var(--bad); font-weight: 600; }
+  table.assertions .evidence { color: var(--muted); font-size: 12px; }
+  details.tools { margin: 12px 0; }
+  details.tools > summary { cursor: pointer; font-size: 12px; color: var(--muted); padding: 4px 0; }
+  details.tools[open] > summary { color: var(--fg); font-weight: 500; }
+  table.tool-calls { width: 100%; border-collapse: collapse; margin: 6px 0 8px; font-size: 13px; }
+  table.tool-calls th, table.tool-calls td { padding: 6px 8px; border-bottom: 1px solid var(--border); text-align: left; vertical-align: top; }
+  table.tool-calls th { background: var(--bg-alt); font-size: 11px; text-transform: uppercase; color: var(--muted); }
+  table.tool-calls .tool-name { font-family: var(--mono); color: #b08800; font-weight: 600; }
+  pre.tool-args { background: var(--bg-alt); border: 1px solid var(--border); border-radius: 4px; padding: 6px 8px; margin: 0; font-family: var(--mono); font-size: 12px; line-height: 1.4; overflow-x: auto; white-space: pre-wrap; word-break: break-word; max-height: 240px; overflow-y: auto; }
+  .empty { padding: 60px 20px; text-align: center; color: var(--muted); }
+</style>
+</head>
+<body>
+  <header class="hero">
+    <h1>Agent Skills Eval report</h1>
+    <div class="meta">
+      generated 2026-08-25T10:47:50.272Z
+      · target <code>auto</code>
+      · judge <code>auto</code>
+    </div>
+    <div class="totals">
+      <div class="stat"><span class="label">skills</span><span class="value">1</span></div>
+      <div class="stat"><span class="label">evals</span><span class="value">3</span></div>
+      <div class="stat ok"><span class="label">passed</span><span class="value">7</span></div>
+      <div class="stat bad"><span class="label">failed</span><span class="value">2</span></div>
+      <div class="stat warn"><span class="label">pass rate</span><span class="value">77.8%</span></div>
+    </div>
+  </header>
+  <main>
+        <table class="summary">
+          <thead>
+            <tr>
+              <th>Skill</th>
+              <th class="num">Evals</th>
+              <th class="num">Passed</th>
+              <th class="num">Pass rate</th>
+              <th></th>
+              <th class="num">Avg time</th>
+              <th class="num">Avg tokens</th>
+            </tr>
+          </thead>
+          <tbody>
+    <tr class="skill-row warn">
+      <td><a href="#skill-tdd">tdd</a>
+          <div class="muted"></div></td>
+      <td class="num">3</td>
+      <td class="num">7/9</td>
+      <td class="num">77.8%</td>
+      <td class="bar-cell"><div class="bar warn"><div class="fill" style="width:78%"></div></div></td>
+      <td class="num">17ms</td>
+      <td class="num">1488</td>
+    </tr>
+  </tbody>
+        </table>
+        
+    <article class="skill" id="skill-tdd">
+      <header>
+        <h2>tdd <span class="badge warn">77.8%</span></h2>
+        <div class="muted"></div>
+        <div class="muted">7/9 assertions · 3 evals · 17ms avg · 1488 tokens avg</div>
+        <div class="delta bad">Δ vs baseline: pass-rate -11.11pp · time +0.23s · tokens +712.33</div>
+      </header>
+      <div class="evals">
+    <details class="eval ok">
+      <summary>
+        <span class="eval-status">✓</span>
+        <span class="eval-name">eval-mock-strategy</span>
+        <span class="muted">6/6 assertions</span>
+      </summary>
+      <div class="eval-body">
+    <section class="run">
+      <header class="run-head">
+        <span class="mode mode-with_skill">with_skill</span>
+        <span class="status ok">PASS</span>
+        <span class="muted">17ms · 1421 tokens · 3/3</span>
+      </header>
+      <details class="prompt"><summary>system prompt</summary><pre>&lt;skill name=&quot;tdd&quot;&gt;
+&lt;description&gt;Test-driven development. Use when the user wants to build features or fix bugs test-first, mentions &quot;red-green-refactor&quot;, or wants integration tests.&lt;/description&gt;
+&lt;instructions&gt;
+# Test-Driven Development
+
+TDD is the red → green loop. This skill is the reference that makes that loop produce tests worth keeping: what a good test is, where tests go, the anti-patterns, and the rules of the loop. Every section applies on every cycle: consult them before and during the loop, not after.
+
+When exploring the codebase, read `CONTEXT.md` (if it exists) so test names and interface vocabulary match the project's domain language, and respect ADRs in the area you're touching.
+
+## What a good test is
+
+Tests verify behavior through public interfaces, not implementation details. Code can change entirely; tests shouldn't. A good test reads like a specification: &quot;user can checkout with valid cart&quot; tells you exactly what capability exists, and it survives refactors because it doesn't care about internal structure.
+
+See [tests.md](tests.md) for examples and [mocking.md](mocking.md) for mocking guidelines.
+
+## Seams: where tests go
+
+A **seam** is the public boundary you test at: the interface where you observe behavior without reaching inside. Tests live at seams, never against internals.
+
+**Test only at pre-agreed seams.** Before writing any test, write down the seams under test and confirm them with the user. No test is written at an unconfirmed seam. You can't test everything, so agreeing the seams up front is how testing effort lands on the critical paths and complex logic instead of every edge case.
+
+Ask: &quot;What's the public interface, and which seams should we test?&quot;
+
+When the shape of that interface is itself in question (how deep the module is, where the seam belongs, what the interface should expose), call the Skill tool with &quot;codebase-design&quot; for the vocabulary. It is the shared source of the module, interface, depth, seam, adapter, leverage and locality terms, and it is a reference to consult, not a session to run.
+
+## Anti-patterns
+
+- **Implementation-coupled**: mocks internal collaborators, tests private methods, or verifies through a side channel (querying the database instead of using the interface). The tell: the test breaks when you refactor but behavior hasn't changed.
+- **Tautological**: the assertion recomputes the expected value the way the code does (`expect(add(a, b)).toBe(a + b)`, a snapshot derived by hand the same way, a constant asserted equal to itself), so it passes by construction and can never disagree with the code. Expected values must come from an independent source of truth: a known-good literal, a worked example, the spec.
+- **Horizontal slicing**: writing all tests first, then all implementation. Bulk tests verify _imagined_ behavior: you test the _shape_ of things rather than user-facing behavior, the tests go insensitive to real changes, and you commit to test structure before understanding the implementation. Work in **vertical slices** instead: one test → one implementation → repeat, each test a **tracer bullet** that responds to what the last cycle taught you.
+
+## Rules of the loop
+
+- **Red before green.** Write the failing test first, then only enough code to pass it. Don't anticipate future tests or add speculative features.
+- **One slice at a time.** One seam, one test, one minimal implementation per cycle.
+- **Refactoring is not part of the loop.** It belongs to the review stage (see the `code-review` skill), not the red → green implementation cycle.
+&lt;/instructions&gt;
+&lt;/skill&gt;</pre></details>
+      <details class="prompt" open><summary>user prompt</summary><pre>I'm testing a function that sends a welcome email after user signup. Should I use a real SMTP server, and what's your approach?</pre></details>
+      <details class="output" open><summary>output</summary><pre>For a welcome-email function, I usually **do not use a real SMTP server in most tests**. A real SMTP server tests a lot of things you don't own (network, provider uptime, credentials, throttling, spam rules), and it tends to make tests slow and flaky.
+
+My approach is to test at the right seam:
+
+### 1. Unit test: verify your application asks the email service to send the right thing
+Treat SMTP as an external dependency.
+
+Example seam:
+
+```
+SignupService
+    |
+    v
+EmailSender interface
+    |
+    v
+SMTP provider
+```
+
+Test `SignupService`, not SMTP.
+
+A good test:
+
+&gt; &quot;When a new user signs up, a welcome email is sent to their address with the expected template/data.&quot;
+
+You would inject a fake:
+
+```python
+class FakeEmailSender:
+    def __init__(self):
+        self.sent = []
+
+    def send(self, email):
+        self.sent.append(email)
+
+
+def test_signup_sends_welcome_email():
+    email_sender = FakeEmailSender()
+    signup = SignupService(email_sender)
+
+    signup.register(&quot;alice@example.com&quot;)
+
+    assert len(email_sender.sent) == 1
+    assert email_sender.sent[0].to == &quot;alice@example.com&quot;
+    assert email_sender.sent[0].template == &quot;welcome&quot;
+```
+
+This catches your business logic mistakes.
+
+### 2. Integration test: use a local SMTP server, not production SMTP
+For verifying that your email formatting and SMTP adapter work, use a disposable local server:
+
+- MailHog
+- Mailpit
+- smtp4dev
+
+Your test sends mail through your real SMTP adapter, but the server only captures messages locally.
+
+You can assert:
+
+- SMTP connection succeeds
+- subject is correct
+- HTML/text body is correct
+- headers are correct
+- attachments work (if relevant)
+
+Example flow:
+
+```
+SignupService
+      |
+      v
+SMTPEmailSender
+      |
+      v
+Mailpit container
+      |
+      v
+Assert received message
+```
+
+### 3. End-to-end test: rarely, and usually not on every commit
+A real provider (SES, SendGrid, Gmail SMTP, etc.) is useful for a small number of checks:
+
+- credentials/configuration
+- production-like delivery pipeline
+- provider API changes
+
+Run these separately:
+
+- nightly
+- before releases
+- manually
+
+Don't make them part of your normal test suite.
+
+### My test pyramid for this feature
+
+| Test | SMTP? | Frequency |
+|---|---|---|
+| Signup triggers welcome email | Fake/mock | Every commit |
+| Email template renders correctly | Local SMTP capture | Every commit/CI |
+| Provider actually accepts mail | Real SMTP/provider sandbox | Occasionally |
+
+One important TDD point: decide the seam first. The behavior you care about is not &quot;SMTP successfully sent bytes&quot;; it is &quot;a signed-up user gets a welcome email request.&quot; Test through the public interface that represents that behavior, then add a smaller number of adapter tests for SMTP itself.</pre></details>
+      
+      <table class="assertions"><thead><tr><th>#</th><th></th><th>Assertion</th><th>Evidence</th></tr></thead><tbody>
+        <tr class="ok">
+          <td class="num">1</td>
+          <td><span class='check'>✓</span></td>
+          <td>Recommends NOT using a real SMTP server for the primary unit tests</td>
+          <td><span class="evidence">Output states: &quot;I usually do not use a real SMTP server in most tests&quot; and explains that real SMTP makes tests &quot;slow and flaky.&quot;</span></td>
+        </tr>
+
+        <tr class="ok">
+          <td class="num">2</td>
+          <td><span class='check'>✓</span></td>
+          <td>Asserts on what was sent (recipient/content/calls) via a mock or spy</td>
+          <td><span class="evidence">Output provides a FakeEmailSender and asserts: &quot;assert len(email_sender.sent) == 1&quot;, &quot;assert email_sender.sent[0].to == \&quot;alice@example.com\&quot;&quot;, and &quot;assert email_sender.sent[0].template == \&quot;welcome\&quot;&quot;.</span></td>
+        </tr>
+
+        <tr class="ok">
+          <td class="num">3</td>
+          <td><span class='check'>✓</span></td>
+          <td>Suggests isolating side effect from logic so the core decision can be tested purely</td>
+          <td><span class="evidence">Output says: &quot;Treat SMTP as an external dependency&quot; and &quot;Test SignupService, not SMTP,&quot; using an injected EmailSender interface/fake.</span></td>
+        </tr></tbody></table>
+      <details class="judge"><summary>judge prompt</summary><pre>You are grading an agentskills.io evaluation run.
+Grading principles:
+- Require concrete evidence for every PASS; quote or reference the output.
+- Do not give the benefit of the doubt.
+- PASS an assertion only if every condition in the assertion text holds.
+- A label without substance is a FAIL.
+- Tool calls (when present) are authoritative evidence of model behavior.
+Return STRICT JSON only. No markdown. Shape:
+{&quot;assertion_results&quot;:[{&quot;text&quot;:&quot;...&quot;,&quot;passed&quot;:true,&quot;evidence&quot;:&quot;...&quot;}],&quot;summary&quot;:{&quot;passed&quot;:0,&quot;failed&quot;:0,&quot;total&quot;:0,&quot;pass_rate&quot;:0}}
+Rules:
+- Include every assertion exactly once and copy the full assertion text verbatim into text.
+- Use short concrete evidence: quote, snippet, or file reference.
+- Summary may be included, but it will be recomputed by the caller.
+Assertions:
+[
+  &quot;Recommends NOT using a real SMTP server for the primary unit tests&quot;,
+  &quot;Asserts on what was sent (recipient/content/calls) via a mock or spy&quot;,
+  &quot;Suggests isolating side effect from logic so the core decision can be tested purely&quot;
+]
+Model output:
+For a welcome-email function, I usually **do not use a real SMTP server in most tests**. A real SMTP server tests a lot of things you don't own (network, provider uptime, credentials, throttling, spam rules), and it tends to make tests slow and flaky.
+
+My approach is to test at the right seam:
+
+### 1. Unit test: verify your application asks the email service to send the right thing
+Treat SMTP as an external dependency.
+
+Example seam:
+
+```
+SignupService
+    |
+    v
+EmailSender interface
+    |
+    v
+SMTP provider
+```
+
+Test `SignupService`, not SMTP.
+
+A good test:
+
+&gt; &quot;When a new user signs up, a welcome email is sent to their address with the expected template/data.&quot;
+
+You would inject a fake:
+
+```python
+class FakeEmailSender:
+    def __init__(self):
+        self.sent = []
+
+    def send(self, email):
+        self.sent.append(email)
+
+
+def test_signup_sends_welcome_email():
+    email_sender = FakeEmailSender()
+    signup = SignupService(email_sender)
+
+    signup.register(&quot;alice@example.com&quot;)
+
+    assert len(email_sender.sent) == 1
+    assert email_sender.sent[0].to == &quot;alice@example.com&quot;
+    assert email_sender.sent[0].template == &quot;welcome&quot;
+```
+
+This catches your business logic mistakes.
+
+### 2. Integration test: use a local SMTP server, not production SMTP
+For verifying that your email formatting and SMTP adapter work, use a disposable local server:
+
+- MailHog
+- Mailpit
+- smtp4dev
+
+Your test sends mail through your real SMTP adapter, but the server only captures messages locally.
+
+You can assert:
+
+- SMTP connection succeeds
+- subject is correct
+- HTML/text body is correct
+- headers are correct
+- attachments work (if relevant)
+
+Example flow:
+
+```
+SignupService
+      |
+      v
+SMTPEmailSender
+      |
+      v
+Mailpit container
+      |
+      v
+Assert received message
+```
+
+### 3. End-to-end test: rarely, and usually not on every commit
+A real provider (SES, SendGrid, Gmail SMTP, etc.) is useful for a small number of checks:
+
+- credentials/configuration
+- production-like delivery pipeline
+- provider API changes
+
+Run these separately:
+
+- nightly
+- before releases
+- manually
+
+Don't make them part of your normal test suite.
+
+### My test pyramid for this feature
+
+| Test | SMTP? | Frequency |
+|---|---|---|
+| Signup triggers welcome email | Fake/mock | Every commit |
+| Email template renders correctly | Local SMTP capture | Every commit/CI |
+| Provider actually accepts mail | Real SMTP/provider sandbox | Occasionally |
+
+One important TDD point: decide the seam first. The behavior you care about is not &quot;SMTP successfully sent bytes&quot;; it is &quot;a signed-up user gets a welcome email request.&quot; Test through the public interface that represents that behavior, then add a smaller number of adapter tests for SMTP itself.
+Output files:
+No output files were captured.</pre></details>
+    </section>
+  
+
+    <section class="run">
+      <header class="run-head">
+        <span class="mode mode-without_skill">without_skill</span>
+        <span class="status ok">PASS</span>
+        <span class="muted">17ms · 614 tokens · 3/3</span>
+      </header>
+      
+      <details class="prompt" open><summary>user prompt</summary><pre>I'm testing a function that sends a welcome email after user signup. Should I use a real SMTP server, and what's your approach?</pre></details>
+      <details class="output" open><summary>output</summary><pre>For testing a welcome-email function, I generally **would not start with a real SMTP server**. It depends on what you are trying to validate.
+
+A practical approach is to test in layers:
+
+### 1. Unit test: don't send email at all
+Mock the mail sender and verify your signup flow triggers the right call.
+
+Example things to assert:
+- User signup succeeds
+- Welcome email function is invoked once
+- Correct recipient is passed
+- Correct template/data is passed
+- Failures are handled (retry, logging, etc.)
+
+This is the fastest and most reliable test.
+
+---
+
+### 2. Integration test: use a fake SMTP server
+Use a local SMTP catcher instead of sending real mail.
+
+Common options:
+- [&quot;company&quot;,&quot;MailHog&quot;,&quot;local SMTP testing tool&quot;] — runs locally and captures emails in a web UI
+- [&quot;company&quot;,&quot;Mailpit&quot;,&quot;local SMTP testing tool&quot;] — modern MailHog alternative
+- [&quot;company&quot;,&quot;Mailtrap&quot;,&quot;email testing platform&quot;] — hosted email sandbox
+
+Your app still talks SMTP, so you test:
+- SMTP configuration
+- MIME formatting
+- templates
+- attachments
+- headers
+
+…but nothing reaches real users.
+
+Typical flow:
+
+```
+Signup API
+    |
+    v
+WelcomeEmailService
+    |
+    v
+SMTP client
+    |
+    v
+Local SMTP catcher
+    |
+    v
+Browser inbox preview
+```
+
+---
+
+### 3. Staging test: use a real email provider sandbox
+For a staging environment, use a provider with a test domain/sandbox mode.
+
+Examples:
+- [&quot;company&quot;,&quot;Amazon Simple Email Service&quot;,&quot;AWS email sending service&quot;] sandbox
+- [&quot;company&quot;,&quot;SendGrid&quot;,&quot;email delivery platform&quot;] test environment
+- [&quot;company&quot;,&quot;Postmark&quot;,&quot;transactional email service&quot;] test mode
+
+This catches issues fake SMTP won't:
+- SPF/DKIM configuration
+- sender reputation
+- provider API behavior
+- rate limits
+
+---
+
+### 4. Avoid real user emails in automated tests
+I would avoid a test that creates:
+
+```
+testuser123@example.com
+        |
+        v
+real SMTP server
+        |
+        v
+actual inbox
+```
+
+Problems:
+- tests become flaky
+- accidental emails can escape
+- cleanup is annoying
+- you can damage sender reputation
+
+If you do need an end-to-end production-like test, use a dedicated mailbox you control.
+
+---
+
+My usual setup:
+
+| Environment | Email target |
+|---|---|
+| Unit tests | Mock mailer |
+| Local development | MailHog/Mailpit |
+| CI | Fake SMTP container |
+| Staging | Email provider sandbox |
+| Production | Real SMTP/API provider |
+
+The key thing I test separately is **&quot;did we decide to send the email?&quot;** and **&quot;can the email system deliver it?&quot;**. Mixing those into one test makes failures much harder to diagnose.</pre></details>
+      
+      <table class="assertions"><thead><tr><th>#</th><th></th><th>Assertion</th><th>Evidence</th></tr></thead><tbody>
+        <tr class="ok">
+          <td class="num">1</td>
+          <td><span class='check'>✓</span></td>
+          <td>Recommends NOT using a real SMTP server for the primary unit tests</td>
+          <td><span class="evidence">&quot;I generally would not start with a real SMTP server&quot; and &quot;Unit test: don't send email at all&quot;</span></td>
+        </tr>
+
+        <tr class="ok">
+          <td class="num">2</td>
+          <td><span class='check'>✓</span></td>
+          <td>Asserts on what was sent (recipient/content/calls) via a mock or spy</td>
+          <td><span class="evidence">&quot;Mock the mail sender and verify your signup flow triggers the right call&quot;; examples include &quot;Correct recipient is passed&quot; and &quot;Correct template/data is passed&quot;</span></td>
+        </tr>
+
+        <tr class="ok">
+          <td class="num">3</td>
+          <td><span class='check'>✓</span></td>
+          <td>Suggests isolating side effect from logic so the core decision can be tested purely</td>
+          <td><span class="evidence">&quot;The key thing I test separately is 'did we decide to send the email?' and 'can the email system deliver it?' Mixing those into one test makes failures much harder to diagnose.&quot;</span></td>
+        </tr></tbody></table>
+      <details class="judge"><summary>judge prompt</summary><pre>You are grading an agentskills.io evaluation run.
+Grading principles:
+- Require concrete evidence for every PASS; quote or reference the output.
+- Do not give the benefit of the doubt.
+- PASS an assertion only if every condition in the assertion text holds.
+- A label without substance is a FAIL.
+- Tool calls (when present) are authoritative evidence of model behavior.
+Return STRICT JSON only. No markdown. Shape:
+{&quot;assertion_results&quot;:[{&quot;text&quot;:&quot;...&quot;,&quot;passed&quot;:true,&quot;evidence&quot;:&quot;...&quot;}],&quot;summary&quot;:{&quot;passed&quot;:0,&quot;failed&quot;:0,&quot;total&quot;:0,&quot;pass_rate&quot;:0}}
+Rules:
+- Include every assertion exactly once and copy the full assertion text verbatim into text.
+- Use short concrete evidence: quote, snippet, or file reference.
+- Summary may be included, but it will be recomputed by the caller.
+Assertions:
+[
+  &quot;Recommends NOT using a real SMTP server for the primary unit tests&quot;,
+  &quot;Asserts on what was sent (recipient/content/calls) via a mock or spy&quot;,
+  &quot;Suggests isolating side effect from logic so the core decision can be tested purely&quot;
+]
+Model output:
+For testing a welcome-email function, I generally **would not start with a real SMTP server**. It depends on what you are trying to validate.
+
+A practical approach is to test in layers:
+
+### 1. Unit test: don't send email at all
+Mock the mail sender and verify your signup flow triggers the right call.
+
+Example things to assert:
+- User signup succeeds
+- Welcome email function is invoked once
+- Correct recipient is passed
+- Correct template/data is passed
+- Failures are handled (retry, logging, etc.)
+
+This is the fastest and most reliable test.
+
+---
+
+### 2. Integration test: use a fake SMTP server
+Use a local SMTP catcher instead of sending real mail.
+
+Common options:
+- [&quot;company&quot;,&quot;MailHog&quot;,&quot;local SMTP testing tool&quot;] — runs locally and captures emails in a web UI
+- [&quot;company&quot;,&quot;Mailpit&quot;,&quot;local SMTP testing tool&quot;] — modern MailHog alternative
+- [&quot;company&quot;,&quot;Mailtrap&quot;,&quot;email testing platform&quot;] — hosted email sandbox
+
+Your app still talks SMTP, so you test:
+- SMTP configuration
+- MIME formatting
+- templates
+- attachments
+- headers
+
+…but nothing reaches real users.
+
+Typical flow:
+
+```
+Signup API
+    |
+    v
+WelcomeEmailService
+    |
+    v
+SMTP client
+    |
+    v
+Local SMTP catcher
+    |
+    v
+Browser inbox preview
+```
+
+---
+
+### 3. Staging test: use a real email provider sandbox
+For a staging environment, use a provider with a test domain/sandbox mode.
+
+Examples:
+- [&quot;company&quot;,&quot;Amazon Simple Email Service&quot;,&quot;AWS email sending service&quot;] sandbox
+- [&quot;company&quot;,&quot;SendGrid&quot;,&quot;email delivery platform&quot;] test environment
+- [&quot;company&quot;,&quot;Postmark&quot;,&quot;transactional email service&quot;] test mode
+
+This catches issues fake SMTP won't:
+- SPF/DKIM configuration
+- sender reputation
+- provider API behavior
+- rate limits
+
+---
+
+### 4. Avoid real user emails in automated tests
+I would avoid a test that creates:
+
+```
+testuser123@example.com
+        |
+        v
+real SMTP server
+        |
+        v
+actual inbox
+```
+
+Problems:
+- tests become flaky
+- accidental emails can escape
+- cleanup is annoying
+- you can damage sender reputation
+
+If you do need an end-to-end production-like test, use a dedicated mailbox you control.
+
+---
+
+My usual setup:
+
+| Environment | Email target |
+|---|---|
+| Unit tests | Mock mailer |
+| Local development | MailHog/Mailpit |
+| CI | Fake SMTP container |
+| Staging | Email provider sandbox |
+| Production | Real SMTP/API provider |
+
+The key thing I test separately is **&quot;did we decide to send the email?&quot;** and **&quot;can the email system deliver it?&quot;**. Mixing those into one test makes failures much harder to diagnose.
+Output files:
+No output files were captured.</pre></details>
+    </section>
+  </div>
+    </details>
+  
+
+    <details class="eval bad">
+      <summary>
+        <span class="eval-status">✗</span>
+        <span class="eval-name">eval-regression-tests</span>
+        <span class="muted">3/6 assertions</span>
+      </summary>
+      <div class="eval-body">
+    <section class="run">
+      <header class="run-head">
+        <span class="mode mode-with_skill">with_skill</span>
+        <span class="status bad">FAIL</span>
+        <span class="muted">12ms · 1268 tokens · 1/3</span>
+      </header>
+      <details class="prompt"><summary>system prompt</summary><pre>&lt;skill name=&quot;tdd&quot;&gt;
+&lt;description&gt;Test-driven development. Use when the user wants to build features or fix bugs test-first, mentions &quot;red-green-refactor&quot;, or wants integration tests.&lt;/description&gt;
+&lt;instructions&gt;
+# Test-Driven Development
+
+TDD is the red → green loop. This skill is the reference that makes that loop produce tests worth keeping: what a good test is, where tests go, the anti-patterns, and the rules of the loop. Every section applies on every cycle: consult them before and during the loop, not after.
+
+When exploring the codebase, read `CONTEXT.md` (if it exists) so test names and interface vocabulary match the project's domain language, and respect ADRs in the area you're touching.
+
+## What a good test is
+
+Tests verify behavior through public interfaces, not implementation details. Code can change entirely; tests shouldn't. A good test reads like a specification: &quot;user can checkout with valid cart&quot; tells you exactly what capability exists, and it survives refactors because it doesn't care about internal structure.
+
+See [tests.md](tests.md) for examples and [mocking.md](mocking.md) for mocking guidelines.
+
+## Seams: where tests go
+
+A **seam** is the public boundary you test at: the interface where you observe behavior without reaching inside. Tests live at seams, never against internals.
+
+**Test only at pre-agreed seams.** Before writing any test, write down the seams under test and confirm them with the user. No test is written at an unconfirmed seam. You can't test everything, so agreeing the seams up front is how testing effort lands on the critical paths and complex logic instead of every edge case.
+
+Ask: &quot;What's the public interface, and which seams should we test?&quot;
+
+When the shape of that interface is itself in question (how deep the module is, where the seam belongs, what the interface should expose), call the Skill tool with &quot;codebase-design&quot; for the vocabulary. It is the shared source of the module, interface, depth, seam, adapter, leverage and locality terms, and it is a reference to consult, not a session to run.
+
+## Anti-patterns
+
+- **Implementation-coupled**: mocks internal collaborators, tests private methods, or verifies through a side channel (querying the database instead of using the interface). The tell: the test breaks when you refactor but behavior hasn't changed.
+- **Tautological**: the assertion recomputes the expected value the way the code does (`expect(add(a, b)).toBe(a + b)`, a snapshot derived by hand the same way, a constant asserted equal to itself), so it passes by construction and can never disagree with the code. Expected values must come from an independent source of truth: a known-good literal, a worked example, the spec.
+- **Horizontal slicing**: writing all tests first, then all implementation. Bulk tests verify _imagined_ behavior: you test the _shape_ of things rather than user-facing behavior, the tests go insensitive to real changes, and you commit to test structure before understanding the implementation. Work in **vertical slices** instead: one test → one implementation → repeat, each test a **tracer bullet** that responds to what the last cycle taught you.
+
+## Rules of the loop
+
+- **Red before green.** Write the failing test first, then only enough code to pass it. Don't anticipate future tests or add speculative features.
+- **One slice at a time.** One seam, one test, one minimal implementation per cycle.
+- **Refactoring is not part of the loop.** It belongs to the review stage (see the `code-review` skill), not the red → green implementation cycle.
+&lt;/instructions&gt;
+&lt;/skill&gt;</pre></details>
+      <details class="prompt" open><summary>user prompt</summary><pre>Here's a buggy function: function slugify(t){return t.toLowerCase().replace(' ','-')} — it's used on user-typed titles. What regression tests would you write before fixing it?</pre></details>
+      <details class="output" open><summary>output</summary><pre>Using TDD, I’d write regression tests at the **public interface** of `slugify` first. The current implementation has several likely bugs:
+
+- only replaces the **first** space (`replace(' ', '-')`)
+- does not handle repeated whitespace
+- does not handle leading/trailing whitespace
+- does not handle non-string-ish edge cases (depending on the contract)
+- may leave punctuation or special characters if the intended slug rules require stripping them
+
+Before fixing, I’d pin down the expected behavior with tests. For example:
+
+```js
+describe('slugify', () =&gt; {
+  test('lowercases titles', () =&gt; {
+    expect(slugify('Hello World')).toBe('hello-world')
+  })
+
+  test('replaces every space, not just the first one', () =&gt; {
+    expect(slugify('Hello Big World')).toBe('hello-big-world')
+  })
+
+  test('handles multiple spaces between words', () =&gt; {
+    expect(slugify('Hello   Big   World')).toBe('hello-big-world')
+  })
+
+  test('removes leading and trailing spaces', () =&gt; {
+    expect(slugify('  Hello World  ')).toBe('hello-world')
+  })
+
+  test('does not create empty hyphen segments from whitespace', () =&gt; {
+    expect(slugify('Hello     World')).toBe('hello-world')
+  })
+
+  test('handles mixed case input', () =&gt; {
+    expect(slugify('My Awesome Title')).toBe('my-awesome-title')
+  })
+})
+```
+
+I would **not** add tests for punctuation removal, Unicode handling, empty strings, or `null` unless the product requirements say slugs should support those. Otherwise the tests are defining a new contract rather than protecting the existing one.
+
+The first failing test I’d expect is:
+
+```js
+test('replaces every space, not just the first one', () =&gt; {
+  expect(slugify('Hello Big World')).toBe('hello-big-world')
+})
+```
+
+because the current output is:
+
+```
+hello-big world
+```
+
+That gives a small red → green step: fix repeated spaces first, then add further behavior only as the requirements become clear.</pre></details>
+      
+      <table class="assertions"><thead><tr><th>#</th><th></th><th>Assertion</th><th>Evidence</th></tr></thead><tbody>
+        <tr class="ok">
+          <td class="num">1</td>
+          <td><span class='check'>✓</span></td>
+          <td>Includes a test case with MULTIPLE spaces or multiple words that exposes the single-replace bug</td>
+          <td><span class="evidence">Includes tests: &quot;expect(slugify('Hello Big World')).toBe('hello-big-world')&quot; and &quot;expect(slugify('Hello   Big   World')).toBe('hello-big-world')&quot;; also notes the bug is &quot;only replaces the first space&quot;.</span></td>
+        </tr>
+
+        <tr class="bad">
+          <td class="num">2</td>
+          <td><span class='x'>✗</span></td>
+          <td>Covers additional edge cases: at minimum empty string and special characters or unicode</td>
+          <td><span class="evidence">The output explicitly says: &quot;I would not add tests for punctuation removal, Unicode handling, empty strings, or `null` unless the product requirements say slugs should support those.&quot;</span></td>
+        </tr>
+
+        <tr class="bad">
+          <td class="num">3</td>
+          <td><span class='x'>✗</span></td>
+          <td>States these tests should fail against the current implementation before the fix is made</td>
+          <td><span class="evidence">The output only states: &quot;The first failing test I’d expect is&quot; and gives one test case; it does not state that these tests (the regression test set) should fail against the current implementation.</span></td>
+        </tr></tbody></table>
+      <details class="judge"><summary>judge prompt</summary><pre>You are grading an agentskills.io evaluation run.
+Grading principles:
+- Require concrete evidence for every PASS; quote or reference the output.
+- Do not give the benefit of the doubt.
+- PASS an assertion only if every condition in the assertion text holds.
+- A label without substance is a FAIL.
+- Tool calls (when present) are authoritative evidence of model behavior.
+Return STRICT JSON only. No markdown. Shape:
+{&quot;assertion_results&quot;:[{&quot;text&quot;:&quot;...&quot;,&quot;passed&quot;:true,&quot;evidence&quot;:&quot;...&quot;}],&quot;summary&quot;:{&quot;passed&quot;:0,&quot;failed&quot;:0,&quot;total&quot;:0,&quot;pass_rate&quot;:0}}
+Rules:
+- Include every assertion exactly once and copy the full assertion text verbatim into text.
+- Use short concrete evidence: quote, snippet, or file reference.
+- Summary may be included, but it will be recomputed by the caller.
+Assertions:
+[
+  &quot;Includes a test case with MULTIPLE spaces or multiple words that exposes the single-replace bug&quot;,
+  &quot;Covers additional edge cases: at minimum empty string and special characters or unicode&quot;,
+  &quot;States these tests should fail against the current implementation before the fix is made&quot;
+]
+Model output:
+Using TDD, I’d write regression tests at the **public interface** of `slugify` first. The current implementation has several likely bugs:
+
+- only replaces the **first** space (`replace(' ', '-')`)
+- does not handle repeated whitespace
+- does not handle leading/trailing whitespace
+- does not handle non-string-ish edge cases (depending on the contract)
+- may leave punctuation or special characters if the intended slug rules require stripping them
+
+Before fixing, I’d pin down the expected behavior with tests. For example:
+
+```js
+describe('slugify', () =&gt; {
+  test('lowercases titles', () =&gt; {
+    expect(slugify('Hello World')).toBe('hello-world')
+  })
+
+  test('replaces every space, not just the first one', () =&gt; {
+    expect(slugify('Hello Big World')).toBe('hello-big-world')
+  })
+
+  test('handles multiple spaces between words', () =&gt; {
+    expect(slugify('Hello   Big   World')).toBe('hello-big-world')
+  })
+
+  test('removes leading and trailing spaces', () =&gt; {
+    expect(slugify('  Hello World  ')).toBe('hello-world')
+  })
+
+  test('does not create empty hyphen segments from whitespace', () =&gt; {
+    expect(slugify('Hello     World')).toBe('hello-world')
+  })
+
+  test('handles mixed case input', () =&gt; {
+    expect(slugify('My Awesome Title')).toBe('my-awesome-title')
+  })
+})
+```
+
+I would **not** add tests for punctuation removal, Unicode handling, empty strings, or `null` unless the product requirements say slugs should support those. Otherwise the tests are defining a new contract rather than protecting the existing one.
+
+The first failing test I’d expect is:
+
+```js
+test('replaces every space, not just the first one', () =&gt; {
+  expect(slugify('Hello Big World')).toBe('hello-big-world')
+})
+```
+
+because the current output is:
+
+```
+hello-big world
+```
+
+That gives a small red → green step: fix repeated spaces first, then add further behavior only as the requirements become clear.
+Output files:
+No output files were captured.</pre></details>
+    </section>
+  
+
+    <section class="run">
+      <header class="run-head">
+        <span class="mode mode-without_skill">without_skill</span>
+        <span class="status bad">FAIL</span>
+        <span class="muted">27ms · 716 tokens · 2/3</span>
+      </header>
+      
+      <details class="prompt" open><summary>user prompt</summary><pre>Here's a buggy function: function slugify(t){return t.toLowerCase().replace(' ','-')} — it's used on user-typed titles. What regression tests would you write before fixing it?</pre></details>
+      <details class="output" open><summary>output</summary><pre>Before changing the implementation, I’d lock in the current intended behavior and the obvious failure modes with regression tests. The current function:
+
+```js
+function slugify(t) {
+  return t.toLowerCase().replace(' ', '-')
+}
+```
+
+has at least these bugs:
+- `replace(' ', '-')` only replaces the **first** space
+- it does not handle repeated whitespace
+- it does not trim leading/trailing spaces
+- it may produce unexpected slugs for empty input
+- it does not normalize punctuation/special characters (depending on intended slug rules)
+
+Tests I’d add first:
+
+```js
+describe('slugify', () =&gt; {
+  test('lowercases titles', () =&gt; {
+    expect(slugify('Hello World')).toBe('hello-world')
+  })
+
+  test('replaces multiple spaces, not just the first one', () =&gt; {
+    expect(slugify('Hello Big World')).toBe('hello-big-world')
+  })
+
+  test('handles leading spaces', () =&gt; {
+    expect(slugify(' Hello World')).toBe('-hello-world') // captures current behavior
+  })
+
+  test('handles trailing spaces', () =&gt; {
+    expect(slugify('Hello World ')).toBe('hello-world-') // captures current behavior
+  })
+
+  test('does not collapse repeated spaces unexpectedly', () =&gt; {
+    expect(slugify('Hello   World')).toBe('hello---world') // captures current behavior
+  })
+
+  test('handles empty strings', () =&gt; {
+    expect(slugify('')).toBe('')
+  })
+
+  test('handles titles with no spaces', () =&gt; {
+    expect(slugify('Hello')).toBe('hello')
+  })
+
+  test('handles user punctuation input', () =&gt; {
+    expect(slugify('Hello, World!')).toBe('hello,-world!')
+  })
+})
+```
+
+The important distinction is whether these are **characterization tests** or **desired behavior tests**.
+
+- The first few should probably become desired behavior tests after the fix:
+  - `&quot;Hello Big World&quot;` → `&quot;hello-big-world&quot;`
+  - `&quot;  Hello   Big World  &quot;` → `&quot;hello-big-world&quot;`
+- Some should document a product decision:
+  - Should punctuation be removed?
+  - Should accents normalize (`&quot;Café&quot;` → `&quot;cafe&quot;`)?
+  - Should empty titles be allowed?
+  - Should underscores/dashes collapse?
+
+A stronger post-fix suite might look like:
+
+```js
+expect(slugify('Hello Big World')).toBe('hello-big-world')
+expect(slugify('  Hello   Big World  ')).toBe('hello-big-world')
+expect(slugify('Hello---World')).toBe('hello-world')
+expect(slugify('Café Déjà Vu')).toBe('cafe-deja-vu')
+expect(slugify('')).toBe('')
+```
+
+The key regression test I would definitely add before touching code is the multi-word case, because it proves the existing implementation’s hidden dependency on JavaScript’s single-replacement behavior:
+
+```js
+expect(slugify('The Quick Brown Fox')).toBe('the-quick-brown-fox')
+```
+
+That’s the one most likely to catch a “fix” that still only handles the first space.</pre></details>
+      
+      <table class="assertions"><thead><tr><th>#</th><th></th><th>Assertion</th><th>Evidence</th></tr></thead><tbody>
+        <tr class="ok">
+          <td class="num">1</td>
+          <td><span class='check'>✓</span></td>
+          <td>Includes a test case with MULTIPLE spaces or multiple words that exposes the single-replace bug</td>
+          <td><span class="evidence">Includes tests such as `expect(slugify('Hello Big World')).toBe('hello-big-world')` and `expect(slugify('Hello   World')).toBe('hello---world')`, and states `replace(' ', '-')` only replaces the first space.</span></td>
+        </tr>
+
+        <tr class="ok">
+          <td class="num">2</td>
+          <td><span class='check'>✓</span></td>
+          <td>Covers additional edge cases: at minimum empty string and special characters or unicode</td>
+          <td><span class="evidence">Includes `test('handles empty strings', () =&gt; { expect(slugify('')).toBe('') })` and tests special/unicode cases such as `expect(slugify('Hello, World!')).toBe('hello,-world!')` and `expect(slugify('Café Déjà Vu')).toBe('cafe-deja-vu')`.</span></td>
+        </tr>
+
+        <tr class="bad">
+          <td class="num">3</td>
+          <td><span class='x'>✗</span></td>
+          <td>States these tests should fail against the current implementation before the fix is made</td>
+          <td><span class="evidence">The output says `Before changing the implementation, I’d lock in the current intended behavior` and describes bugs, but it does not explicitly state that these tests should fail against the current implementation before the fix.</span></td>
+        </tr></tbody></table>
+      <details class="judge"><summary>judge prompt</summary><pre>You are grading an agentskills.io evaluation run.
+Grading principles:
+- Require concrete evidence for every PASS; quote or reference the output.
+- Do not give the benefit of the doubt.
+- PASS an assertion only if every condition in the assertion text holds.
+- A label without substance is a FAIL.
+- Tool calls (when present) are authoritative evidence of model behavior.
+Return STRICT JSON only. No markdown. Shape:
+{&quot;assertion_results&quot;:[{&quot;text&quot;:&quot;...&quot;,&quot;passed&quot;:true,&quot;evidence&quot;:&quot;...&quot;}],&quot;summary&quot;:{&quot;passed&quot;:0,&quot;failed&quot;:0,&quot;total&quot;:0,&quot;pass_rate&quot;:0}}
+Rules:
+- Include every assertion exactly once and copy the full assertion text verbatim into text.
+- Use short concrete evidence: quote, snippet, or file reference.
+- Summary may be included, but it will be recomputed by the caller.
+Assertions:
+[
+  &quot;Includes a test case with MULTIPLE spaces or multiple words that exposes the single-replace bug&quot;,
+  &quot;Covers additional edge cases: at minimum empty string and special characters or unicode&quot;,
+  &quot;States these tests should fail against the current implementation before the fix is made&quot;
+]
+Model output:
+Before changing the implementation, I’d lock in the current intended behavior and the obvious failure modes with regression tests. The current function:
+
+```js
+function slugify(t) {
+  return t.toLowerCase().replace(' ', '-')
+}
+```
+
+has at least these bugs:
+- `replace(' ', '-')` only replaces the **first** space
+- it does not handle repeated whitespace
+- it does not trim leading/trailing spaces
+- it may produce unexpected slugs for empty input
+- it does not normalize punctuation/special characters (depending on intended slug rules)
+
+Tests I’d add first:
+
+```js
+describe('slugify', () =&gt; {
+  test('lowercases titles', () =&gt; {
+    expect(slugify('Hello World')).toBe('hello-world')
+  })
+
+  test('replaces multiple spaces, not just the first one', () =&gt; {
+    expect(slugify('Hello Big World')).toBe('hello-big-world')
+  })
+
+  test('handles leading spaces', () =&gt; {
+    expect(slugify(' Hello World')).toBe('-hello-world') // captures current behavior
+  })
+
+  test('handles trailing spaces', () =&gt; {
+    expect(slugify('Hello World ')).toBe('hello-world-') // captures current behavior
+  })
+
+  test('does not collapse repeated spaces unexpectedly', () =&gt; {
+    expect(slugify('Hello   World')).toBe('hello---world') // captures current behavior
+  })
+
+  test('handles empty strings', () =&gt; {
+    expect(slugify('')).toBe('')
+  })
+
+  test('handles titles with no spaces', () =&gt; {
+    expect(slugify('Hello')).toBe('hello')
+  })
+
+  test('handles user punctuation input', () =&gt; {
+    expect(slugify('Hello, World!')).toBe('hello,-world!')
+  })
+})
+```
+
+The important distinction is whether these are **characterization tests** or **desired behavior tests**.
+
+- The first few should probably become desired behavior tests after the fix:
+  - `&quot;Hello Big World&quot;` → `&quot;hello-big-world&quot;`
+  - `&quot;  Hello   Big World  &quot;` → `&quot;hello-big-world&quot;`
+- Some should document a product decision:
+  - Should punctuation be removed?
+  - Should accents normalize (`&quot;Café&quot;` → `&quot;cafe&quot;`)?
+  - Should empty titles be allowed?
+  - Should underscores/dashes collapse?
+
+A stronger post-fix suite might look like:
+
+```js
+expect(slugify('Hello Big World')).toBe('hello-big-world')
+expect(slugify('  Hello   Big World  ')).toBe('hello-big-world')
+expect(slugify('Hello---World')).toBe('hello-world')
+expect(slugify('Café Déjà Vu')).toBe('cafe-deja-vu')
+expect(slugify('')).toBe('')
+```
+
+The key regression test I would definitely add before touching code is the multi-word case, because it proves the existing implementation’s hidden dependency on JavaScript’s single-replacement behavior:
+
+```js
+expect(slugify('The Quick Brown Fox')).toBe('the-quick-brown-fox')
+```
+
+That’s the one most likely to catch a “fix” that still only handles the first space.
+Output files:
+No output files were captured.</pre></details>
+    </section>
+  </div>
+    </details>
+  
+
+    <details class="eval ok">
+      <summary>
+        <span class="eval-status">✓</span>
+        <span class="eval-name">eval-test-first-maxvalue</span>
+        <span class="muted">6/6 assertions</span>
+      </summary>
+      <div class="eval-body">
+    <section class="run">
+      <header class="run-head">
+        <span class="mode mode-with_skill">with_skill</span>
+        <span class="status ok">PASS</span>
+        <span class="muted">23ms · 1776 tokens · 3/3</span>
+      </header>
+      <details class="prompt"><summary>system prompt</summary><pre>&lt;skill name=&quot;tdd&quot;&gt;
+&lt;description&gt;Test-driven development. Use when the user wants to build features or fix bugs test-first, mentions &quot;red-green-refactor&quot;, or wants integration tests.&lt;/description&gt;
+&lt;instructions&gt;
+# Test-Driven Development
+
+TDD is the red → green loop. This skill is the reference that makes that loop produce tests worth keeping: what a good test is, where tests go, the anti-patterns, and the rules of the loop. Every section applies on every cycle: consult them before and during the loop, not after.
+
+When exploring the codebase, read `CONTEXT.md` (if it exists) so test names and interface vocabulary match the project's domain language, and respect ADRs in the area you're touching.
+
+## What a good test is
+
+Tests verify behavior through public interfaces, not implementation details. Code can change entirely; tests shouldn't. A good test reads like a specification: &quot;user can checkout with valid cart&quot; tells you exactly what capability exists, and it survives refactors because it doesn't care about internal structure.
+
+See [tests.md](tests.md) for examples and [mocking.md](mocking.md) for mocking guidelines.
+
+## Seams: where tests go
+
+A **seam** is the public boundary you test at: the interface where you observe behavior without reaching inside. Tests live at seams, never against internals.
+
+**Test only at pre-agreed seams.** Before writing any test, write down the seams under test and confirm them with the user. No test is written at an unconfirmed seam. You can't test everything, so agreeing the seams up front is how testing effort lands on the critical paths and complex logic instead of every edge case.
+
+Ask: &quot;What's the public interface, and which seams should we test?&quot;
+
+When the shape of that interface is itself in question (how deep the module is, where the seam belongs, what the interface should expose), call the Skill tool with &quot;codebase-design&quot; for the vocabulary. It is the shared source of the module, interface, depth, seam, adapter, leverage and locality terms, and it is a reference to consult, not a session to run.
+
+## Anti-patterns
+
+- **Implementation-coupled**: mocks internal collaborators, tests private methods, or verifies through a side channel (querying the database instead of using the interface). The tell: the test breaks when you refactor but behavior hasn't changed.
+- **Tautological**: the assertion recomputes the expected value the way the code does (`expect(add(a, b)).toBe(a + b)`, a snapshot derived by hand the same way, a constant asserted equal to itself), so it passes by construction and can never disagree with the code. Expected values must come from an independent source of truth: a known-good literal, a worked example, the spec.
+- **Horizontal slicing**: writing all tests first, then all implementation. Bulk tests verify _imagined_ behavior: you test the _shape_ of things rather than user-facing behavior, the tests go insensitive to real changes, and you commit to test structure before understanding the implementation. Work in **vertical slices** instead: one test → one implementation → repeat, each test a **tracer bullet** that responds to what the last cycle taught you.
+
+## Rules of the loop
+
+- **Red before green.** Write the failing test first, then only enough code to pass it. Don't anticipate future tests or add speculative features.
+- **One slice at a time.** One seam, one test, one minimal implementation per cycle.
+- **Refactoring is not part of the loop.** It belongs to the review stage (see the `code-review` skill), not the red → green implementation cycle.
+&lt;/instructions&gt;
+&lt;/skill&gt;</pre></details>
+      <details class="prompt" open><summary>user prompt</summary><pre>I need a JavaScript function `maxValue(rows, column)` that takes an array of objects and returns the max value of a given numeric column. Walk me through building this test-first.</pre></details>
+      <details class="output" open><summary>output</summary><pre>We'll build this using the **TDD loop: red → green → refactor**.
+
+The goal is to test the behavior through the public interface:
+
+```js
+maxValue(rows, column)
+```
+
+The seam we care about is: **given rows and a column name, it returns the largest numeric value in that column.**
+
+We'll avoid testing implementation details like whether we used `reduce`, `Math.max`, or a loop.
+
+---
+
+## 1. Start with a failing test (RED)
+
+Assume we are using Jest.
+
+Create a test file:
+
+```js
+// maxValue.test.js
+const { maxValue } = require(&quot;./maxValue&quot;);
+
+test(&quot;returns the maximum value from a numeric column&quot;, () =&gt; {
+  const rows = [
+    { age: 25, name: &quot;Ana&quot; },
+    { age: 40, name: &quot;Ben&quot; },
+    { age: 32, name: &quot;Cara&quot; },
+  ];
+
+  expect(maxValue(rows, &quot;age&quot;)).toBe(40);
+});
+```
+
+Run it.
+
+It should fail because `maxValue` does not exist yet.
+
+That failure is useful: it proves the test is actually checking something.
+
+---
+
+## 2. Write the smallest implementation (GREEN)
+
+Create:
+
+```js
+// maxValue.js
+function maxValue(rows, column) {
+  return Math.max(...rows.map(row =&gt; row[column]));
+}
+
+module.exports = { maxValue };
+```
+
+Run the test again.
+
+Now it passes:
+
+```
+✓ returns the maximum value from a numeric column
+```
+
+At this point, stop. Don't add extra behavior yet.
+
+---
+
+## 3. Add another behavior with a new failing test (RED)
+
+Now ask: what happens with negative numbers?
+
+Add:
+
+```js
+test(&quot;handles columns containing negative numbers&quot;, () =&gt; {
+  const rows = [
+    { score: -10 },
+    { score: -3 },
+    { score: -8 },
+  ];
+
+  expect(maxValue(rows, &quot;score&quot;)).toBe(-3);
+});
+```
+
+The existing implementation already passes, so no code change is needed.
+
+That tells us our current design handles this case.
+
+---
+
+## 4. Find the next meaningful edge case
+
+A likely question is: what if the column is empty?
+
+Write the behavior we want first:
+
+```js
+test(&quot;returns null when the column has no values&quot;, () =&gt; {
+  const rows = [];
+
+  expect(maxValue(rows, &quot;age&quot;)).toBeNull();
+});
+```
+
+Run it.
+
+It fails because:
+
+```js
+Math.max(...[])
+```
+
+returns:
+
+```js
+-Infinity
+```
+
+---
+
+## 5. Minimal fix (GREEN)
+
+Adjust the implementation:
+
+```js
+function maxValue(rows, column) {
+  if (rows.length === 0) {
+    return null;
+  }
+
+  return Math.max(...rows.map(row =&gt; row[column]));
+}
+
+module.exports = { maxValue };
+```
+
+Run tests:
+
+```
+✓ returns the maximum value from a numeric column
+✓ handles columns containing negative numbers
+✓ returns null when the column has no values
+```
+
+---
+
+## 6. Refactor only after the behavior is covered
+
+Now we can make the implementation clearer if desired:
+
+```js
+function maxValue(rows, column) {
+  if (rows.length === 0) {
+    return null;
+  }
+
+  return rows.reduce((max, row) =&gt; {
+    return row[column] &gt; max? row[column]: max;
+  }, rows[0][column]);
+}
+
+module.exports = { maxValue };
+```
+
+The tests stay the same because they describe the contract, not the implementation.
+
+---
+
+## Final test suite
+
+```js
+const { maxValue } = require(&quot;./maxValue&quot;);
+
+test(&quot;returns the maximum value from a numeric column&quot;, () =&gt; {
+  const rows = [
+    { age: 25 },
+    { age: 40 },
+    { age: 32 },
+  ];
+
+  expect(maxValue(rows, &quot;age&quot;)).toBe(40);
+});
+
+test(&quot;handles columns containing negative numbers&quot;, () =&gt; {
+  const rows = [
+    { score: -10 },
+    { score: -3 },
+    { score: -8 },
+  ];
+
+  expect(maxValue(rows, &quot;score&quot;)).toBe(-3);
+});
+
+test(&quot;returns null when the column has no values&quot;, () =&gt; {
+  expect(maxValue([], &quot;age&quot;)).toBeNull();
+});
+```
+
+The TDD rhythm here is:
+
+1. **Write one behavior as a test**
+2. **Watch it fail**
+3. **Add the smallest code to pass**
+4. **Repeat**
+5. **Refactor only when the tests protect you**
+
+That keeps the implementation driven by actual requirements rather than guesses.</pre></details>
+      
+      <table class="assertions"><thead><tr><th>#</th><th></th><th>Assertion</th><th>Evidence</th></tr></thead><tbody>
+        <tr class="ok">
+          <td class="num">1</td>
+          <td><span class='check'>✓</span></td>
+          <td>Presents a failing test BEFORE any implementation code (strict red-green order)</td>
+          <td><span class="evidence">The output has '## 1. Start with a failing test (RED)' with a test block before '## 2. Write the smallest implementation (GREEN)' where the implementation code is introduced.</span></td>
+        </tr>
+
+        <tr class="ok">
+          <td class="num">2</td>
+          <td><span class='check'>✓</span></td>
+          <td>Tests cover edge cases beyond the happy path (e.g. empty input, missing/non-numeric column values)</td>
+          <td><span class="evidence">The test suite includes 'handles columns containing negative numbers' and 'returns null when the column has no values', covering non-happy-path inputs.</span></td>
+        </tr>
+
+        <tr class="ok">
+          <td class="num">3</td>
+          <td><span class='check'>✓</span></td>
+          <td>Implementation is presented as the step that makes tests pass, not written first</td>
+          <td><span class="evidence">The output explicitly labels the implementation section 'Write the smallest implementation (GREEN)' after the failing test and says 'Run the test again. Now it passes'.</span></td>
+        </tr></tbody></table>
+      <details class="judge"><summary>judge prompt</summary><pre>You are grading an agentskills.io evaluation run.
+Grading principles:
+- Require concrete evidence for every PASS; quote or reference the output.
+- Do not give the benefit of the doubt.
+- PASS an assertion only if every condition in the assertion text holds.
+- A label without substance is a FAIL.
+- Tool calls (when present) are authoritative evidence of model behavior.
+Return STRICT JSON only. No markdown. Shape:
+{&quot;assertion_results&quot;:[{&quot;text&quot;:&quot;...&quot;,&quot;passed&quot;:true,&quot;evidence&quot;:&quot;...&quot;}],&quot;summary&quot;:{&quot;passed&quot;:0,&quot;failed&quot;:0,&quot;total&quot;:0,&quot;pass_rate&quot;:0}}
+Rules:
+- Include every assertion exactly once and copy the full assertion text verbatim into text.
+- Use short concrete evidence: quote, snippet, or file reference.
+- Summary may be included, but it will be recomputed by the caller.
+Assertions:
+[
+  &quot;Presents a failing test BEFORE any implementation code (strict red-green order)&quot;,
+  &quot;Tests cover edge cases beyond the happy path (e.g. empty input, missing/non-numeric column values)&quot;,
+  &quot;Implementation is presented as the step that makes tests pass, not written first&quot;
+]
+Model output:
+We'll build this using the **TDD loop: red → green → refactor**.
+
+The goal is to test the behavior through the public interface:
+
+```js
+maxValue(rows, column)
+```
+
+The seam we care about is: **given rows and a column name, it returns the largest numeric value in that column.**
+
+We'll avoid testing implementation details like whether we used `reduce`, `Math.max`, or a loop.
+
+---
+
+## 1. Start with a failing test (RED)
+
+Assume we are using Jest.
+
+Create a test file:
+
+```js
+// maxValue.test.js
+const { maxValue } = require(&quot;./maxValue&quot;);
+
+test(&quot;returns the maximum value from a numeric column&quot;, () =&gt; {
+  const rows = [
+    { age: 25, name: &quot;Ana&quot; },
+    { age: 40, name: &quot;Ben&quot; },
+    { age: 32, name: &quot;Cara&quot; },
+  ];
+
+  expect(maxValue(rows, &quot;age&quot;)).toBe(40);
+});
+```
+
+Run it.
+
+It should fail because `maxValue` does not exist yet.
+
+That failure is useful: it proves the test is actually checking something.
+
+---
+
+## 2. Write the smallest implementation (GREEN)
+
+Create:
+
+```js
+// maxValue.js
+function maxValue(rows, column) {
+  return Math.max(...rows.map(row =&gt; row[column]));
+}
+
+module.exports = { maxValue };
+```
+
+Run the test again.
+
+Now it passes:
+
+```
+✓ returns the maximum value from a numeric column
+```
+
+At this point, stop. Don't add extra behavior yet.
+
+---
+
+## 3. Add another behavior with a new failing test (RED)
+
+Now ask: what happens with negative numbers?
+
+Add:
+
+```js
+test(&quot;handles columns containing negative numbers&quot;, () =&gt; {
+  const rows = [
+    { score: -10 },
+    { score: -3 },
+    { score: -8 },
+  ];
+
+  expect(maxValue(rows, &quot;score&quot;)).toBe(-3);
+});
+```
+
+The existing implementation already passes, so no code change is needed.
+
+That tells us our current design handles this case.
+
+---
+
+## 4. Find the next meaningful edge case
+
+A likely question is: what if the column is empty?
+
+Write the behavior we want first:
+
+```js
+test(&quot;returns null when the column has no values&quot;, () =&gt; {
+  const rows = [];
+
+  expect(maxValue(rows, &quot;age&quot;)).toBeNull();
+});
+```
+
+Run it.
+
+It fails because:
+
+```js
+Math.max(...[])
+```
+
+returns:
+
+```js
+-Infinity
+```
+
+---
+
+## 5. Minimal fix (GREEN)
+
+Adjust the implementation:
+
+```js
+function maxValue(rows, column) {
+  if (rows.length === 0) {
+    return null;
+  }
+
+  return Math.max(...rows.map(row =&gt; row[column]));
+}
+
+module.exports = { maxValue };
+```
+
+Run tests:
+
+```
+✓ returns the maximum value from a numeric column
+✓ handles columns containing negative numbers
+✓ returns null when the column has no values
+```
+
+---
+
+## 6. Refactor only after the behavior is covered
+
+Now we can make the implementation clearer if desired:
+
+```js
+function maxValue(rows, column) {
+  if (rows.length === 0) {
+    return null;
+  }
+
+  return rows.reduce((max, row) =&gt; {
+    return row[column] &gt; max? row[column]: max;
+  }, rows[0][column]);
+}
+
+module.exports = { maxValue };
+```
+
+The tests stay the same because they describe the contract, not the implementation.
+
+---
+
+## Final test suite
+
+```js
+const { maxValue } = require(&quot;./maxValue&quot;);
+
+test(&quot;returns the maximum value from a numeric column&quot;, () =&gt; {
+  const rows = [
+    { age: 25 },
+    { age: 40 },
+    { age: 32 },
+  ];
+
+  expect(maxValue(rows, &quot;age&quot;)).toBe(40);
+});
+
+test(&quot;handles columns containing negative numbers&quot;, () =&gt; {
+  const rows = [
+    { score: -10 },
+    { score: -3 },
+    { score: -8 },
+  ];
+
+  expect(maxValue(rows, &quot;score&quot;)).toBe(-3);
+});
+
+test(&quot;returns null when the column has no values&quot;, () =&gt; {
+  expect(maxValue([], &quot;age&quot;)).toBeNull();
+});
+```
+
+The TDD rhythm here is:
+
+1. **Write one behavior as a test**
+2. **Watch it fail**
+3. **Add the smallest code to pass**
+4. **Repeat**
+5. **Refactor only when the tests protect you**
+
+That keeps the implementation driven by actual requirements rather than guesses.
+Output files:
+No output files were captured.</pre></details>
+    </section>
+  
+
+    <section class="run">
+      <header class="run-head">
+        <span class="mode mode-without_skill">without_skill</span>
+        <span class="status ok">PASS</span>
+        <span class="muted">17ms · 998 tokens · 3/3</span>
+      </header>
+      
+      <details class="prompt" open><summary>user prompt</summary><pre>I need a JavaScript function `maxValue(rows, column)` that takes an array of objects and returns the max value of a given numeric column. Walk me through building this test-first.</pre></details>
+      <details class="output" open><summary>output</summary><pre>A good test-first (TDD) workflow is:
+
+1. **Write a test that describes the behavior you want**
+2. **Run it and see it fail**
+3. **Write the smallest implementation that makes it pass**
+4. **Refactor while keeping tests green**
+
+Let's build `maxValue(rows, column)` that finds the maximum numeric value in a column.
+
+Assume we have a test runner like Jest.
+
+## 1. Start with the first test
+
+First define the expected behavior:
+
+- Given rows of objects
+- Given a column name
+- Return the largest numeric value in that column
+
+Create a test:
+
+```javascript
+// maxValue.test.js
+
+import { maxValue } from &quot;./maxValue&quot;;
+
+test(&quot;returns the maximum value in a numeric column&quot;, () =&gt; {
+  const rows = [
+    { score: 10 },
+    { score: 25 },
+    { score: 15 }
+  ];
+
+  expect(maxValue(rows, &quot;score&quot;)).toBe(25);
+});
+```
+
+Run the test.
+
+It fails because `maxValue` does not exist yet. That failure is useful: it confirms the test is actually checking something.
+
+---
+
+## 2. Write the simplest implementation
+
+Now create `maxValue.js`:
+
+```javascript
+export function maxValue(rows, column) {
+  return Math.max(...rows.map(row =&gt; row[column]));
+}
+```
+
+Run the test again.
+
+It passes.
+
+At this point we have the smallest working solution.
+
+---
+
+## 3. Add another test: negative values
+
+A good TDD habit is to add edge cases before changing code.
+
+What happens with negative numbers?
+
+```javascript
+test(&quot;handles negative numbers&quot;, () =&gt; {
+  const rows = [
+    { temperature: -5 },
+    { temperature: -2 },
+    { temperature: -10 }
+  ];
+
+  expect(maxValue(rows, &quot;temperature&quot;)).toBe(-2);
+});
+```
+
+The current implementation passes because `Math.max` handles negatives.
+
+---
+
+## 4. Add a test for an empty array
+
+Now decide what should happen if there are no rows.
+
+A reasonable API choice:
+
+- Return `null` because there is no maximum value.
+
+Write the test:
+
+```javascript
+test(&quot;returns null when rows are empty&quot;, () =&gt; {
+  expect(maxValue([], &quot;score&quot;)).toBeNull();
+});
+```
+
+This fails because:
+
+```javascript
+Math.max(...[])
+```
+
+returns `-Infinity`.
+
+Now update the implementation:
+
+```javascript
+export function maxValue(rows, column) {
+  if (rows.length === 0) {
+    return null;
+  }
+
+  return Math.max(...rows.map(row =&gt; row[column]));
+}
+```
+
+Run tests again. They pass.
+
+---
+
+## 5. Add a test for missing/non-numeric values
+
+The function says it accepts a **numeric column**, so we need to decide how strict to be.
+
+For example:
+
+```javascript
+test(&quot;ignores non-numeric values&quot;, () =&gt; {
+  const rows = [
+    { score: 10 },
+    { score: &quot;not a number&quot; },
+    { score: 20 }
+  ];
+
+  expect(maxValue(rows, &quot;score&quot;)).toBe(20);
+});
+```
+
+Now the implementation needs to filter:
+
+```javascript
+export function maxValue(rows, column) {
+  const values = rows.map(row =&gt; row[column]).filter(value =&gt; typeof value === &quot;number&quot; &amp;&amp;!Number.isNaN(value));
+
+  if (values.length === 0) {
+    return null;
+  }
+
+  return Math.max(...values);
+}
+```
+
+---
+
+## 6. Final test suite
+
+You now have tests covering:
+
+```javascript
+maxValue([
+  { score: 10 },
+  { score: 25 }
+], &quot;score&quot;)
+// =&gt; 25
+```
+
+```javascript
+maxValue([
+  { score: -5 },
+  { score: -2 }
+], &quot;score&quot;)
+// =&gt; -2
+```
+
+```javascript
+maxValue([], &quot;score&quot;)
+// =&gt; null
+```
+
+```javascript
+maxValue([
+  { score: 10 },
+  { score: &quot;bad&quot; },
+  { score: 20 }
+], &quot;score&quot;)
+// =&gt; 20
+```
+
+Final implementation:
+
+```javascript
+export function maxValue(rows, column) {
+  const values = rows.map(row =&gt; row[column]).filter(value =&gt; typeof value === &quot;number&quot; &amp;&amp;!Number.isNaN(value));
+
+  if (values.length === 0) {
+    return null;
+  }
+
+  return Math.max(...values);
+}
+```
+
+The important TDD pattern here is that the implementation grew **only because a test exposed a missing behavior**. You avoided guessing requirements up front and let the tests drive the design.</pre></details>
+      
+      <table class="assertions"><thead><tr><th>#</th><th></th><th>Assertion</th><th>Evidence</th></tr></thead><tbody>
+        <tr class="ok">
+          <td class="num">1</td>
+          <td><span class='check'>✓</span></td>
+          <td>Presents a failing test BEFORE any implementation code (strict red-green order)</td>
+          <td><span class="evidence">The output shows a test block under &quot;1. Start with the first test&quot; and only afterward says &quot;## 2. Write the simplest implementation&quot; with creation of maxValue.js. It explicitly states: &quot;It fails because maxValue does not exist yet.&quot;</span></td>
+        </tr>
+
+        <tr class="ok">
+          <td class="num">2</td>
+          <td><span class='check'>✓</span></td>
+          <td>Tests cover edge cases beyond the happy path (e.g. empty input, missing/non-numeric column values)</td>
+          <td><span class="evidence">The output adds tests for negative numbers, an empty array (`test(&quot;returns null when rows are empty&quot;`), and non-numeric values (`test(&quot;ignores non-numeric values&quot;`).</span></td>
+        </tr>
+
+        <tr class="ok">
+          <td class="num">3</td>
+          <td><span class='check'>✓</span></td>
+          <td>Implementation is presented as the step that makes tests pass, not written first</td>
+          <td><span class="evidence">After the initial failing test, the output says &quot;Now create maxValue.js&quot; and later updates the implementation only after new tests fail, e.g. &quot;Now update the implementation&quot;.</span></td>
+        </tr></tbody></table>
+      <details class="judge"><summary>judge prompt</summary><pre>You are grading an agentskills.io evaluation run.
+Grading principles:
+- Require concrete evidence for every PASS; quote or reference the output.
+- Do not give the benefit of the doubt.
+- PASS an assertion only if every condition in the assertion text holds.
+- A label without substance is a FAIL.
+- Tool calls (when present) are authoritative evidence of model behavior.
+Return STRICT JSON only. No markdown. Shape:
+{&quot;assertion_results&quot;:[{&quot;text&quot;:&quot;...&quot;,&quot;passed&quot;:true,&quot;evidence&quot;:&quot;...&quot;}],&quot;summary&quot;:{&quot;passed&quot;:0,&quot;failed&quot;:0,&quot;total&quot;:0,&quot;pass_rate&quot;:0}}
+Rules:
+- Include every assertion exactly once and copy the full assertion text verbatim into text.
+- Use short concrete evidence: quote, snippet, or file reference.
+- Summary may be included, but it will be recomputed by the caller.
+Assertions:
+[
+  &quot;Presents a failing test BEFORE any implementation code (strict red-green order)&quot;,
+  &quot;Tests cover edge cases beyond the happy path (e.g. empty input, missing/non-numeric column values)&quot;,
+  &quot;Implementation is presented as the step that makes tests pass, not written first&quot;
+]
+Model output:
+A good test-first (TDD) workflow is:
+
+1. **Write a test that describes the behavior you want**
+2. **Run it and see it fail**
+3. **Write the smallest implementation that makes it pass**
+4. **Refactor while keeping tests green**
+
+Let's build `maxValue(rows, column)` that finds the maximum numeric value in a column.
+
+Assume we have a test runner like Jest.
+
+## 1. Start with the first test
+
+First define the expected behavior:
+
+- Given rows of objects
+- Given a column name
+- Return the largest numeric value in that column
+
+Create a test:
+
+```javascript
+// maxValue.test.js
+
+import { maxValue } from &quot;./maxValue&quot;;
+
+test(&quot;returns the maximum value in a numeric column&quot;, () =&gt; {
+  const rows = [
+    { score: 10 },
+    { score: 25 },
+    { score: 15 }
+  ];
+
+  expect(maxValue(rows, &quot;score&quot;)).toBe(25);
+});
+```
+
+Run the test.
+
+It fails because `maxValue` does not exist yet. That failure is useful: it confirms the test is actually checking something.
+
+---
+
+## 2. Write the simplest implementation
+
+Now create `maxValue.js`:
+
+```javascript
+export function maxValue(rows, column) {
+  return Math.max(...rows.map(row =&gt; row[column]));
+}
+```
+
+Run the test again.
+
+It passes.
+
+At this point we have the smallest working solution.
+
+---
+
+## 3. Add another test: negative values
+
+A good TDD habit is to add edge cases before changing code.
+
+What happens with negative numbers?
+
+```javascript
+test(&quot;handles negative numbers&quot;, () =&gt; {
+  const rows = [
+    { temperature: -5 },
+    { temperature: -2 },
+    { temperature: -10 }
+  ];
+
+  expect(maxValue(rows, &quot;temperature&quot;)).toBe(-2);
+});
+```
+
+The current implementation passes because `Math.max` handles negatives.
+
+---
+
+## 4. Add a test for an empty array
+
+Now decide what should happen if there are no rows.
+
+A reasonable API choice:
+
+- Return `null` because there is no maximum value.
+
+Write the test:
+
+```javascript
+test(&quot;returns null when rows are empty&quot;, () =&gt; {
+  expect(maxValue([], &quot;score&quot;)).toBeNull();
+});
+```
+
+This fails because:
+
+```javascript
+Math.max(...[])
+```
+
+returns `-Infinity`.
+
+Now update the implementation:
+
+```javascript
+export function maxValue(rows, column) {
+  if (rows.length === 0) {
+    return null;
+  }
+
+  return Math.max(...rows.map(row =&gt; row[column]));
+}
+```
+
+Run tests again. They pass.
+
+---
+
+## 5. Add a test for missing/non-numeric values
+
+The function says it accepts a **numeric column**, so we need to decide how strict to be.
+
+For example:
+
+```javascript
+test(&quot;ignores non-numeric values&quot;, () =&gt; {
+  const rows = [
+    { score: 10 },
+    { score: &quot;not a number&quot; },
+    { score: 20 }
+  ];
+
+  expect(maxValue(rows, &quot;score&quot;)).toBe(20);
+});
+```
+
+Now the implementation needs to filter:
+
+```javascript
+export function maxValue(rows, column) {
+  const values = rows.map(row =&gt; row[column]).filter(value =&gt; typeof value === &quot;number&quot; &amp;&amp;!Number.isNaN(value));
+
+  if (values.length === 0) {
+    return null;
+  }
+
+  return Math.max(...values);
+}
+```
+
+---
+
+## 6. Final test suite
+
+You now have tests covering:
+
+```javascript
+maxValue([
+  { score: 10 },
+  { score: 25 }
+], &quot;score&quot;)
+// =&gt; 25
+```
+
+```javascript
+maxValue([
+  { score: -5 },
+  { score: -2 }
+], &quot;score&quot;)
+// =&gt; -2
+```
+
+```javascript
+maxValue([], &quot;score&quot;)
+// =&gt; null
+```
+
+```javascript
+maxValue([
+  { score: 10 },
+  { score: &quot;bad&quot; },
+  { score: 20 }
+], &quot;score&quot;)
+// =&gt; 20
+```
+
+Final implementation:
+
+```javascript
+export function maxValue(rows, column) {
+  const values = rows.map(row =&gt; row[column]).filter(value =&gt; typeof value === &quot;number&quot; &amp;&amp;!Number.isNaN(value));
+
+  if (values.length === 0) {
+    return null;
+  }
+
+  return Math.max(...values);
+}
+```
+
+The important TDD pattern here is that the implementation grew **only because a test exposed a missing behavior**. You avoided guessing requirements up front and let the tests drive the design.
+Output files:
+No output files were captured.</pre></details>
+    </section>
+  </div>
+    </details>
+  </div>
+    </article>
+  
+      </main>
+</body>
+</html>

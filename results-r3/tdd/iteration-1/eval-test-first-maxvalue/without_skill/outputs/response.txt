@@ -1,0 +1,206 @@
+A good test-first (TDD) workflow is:
+
+1. **Write a test that describes the behavior you want**
+2. **Run it and see it fail**
+3. **Write the smallest implementation that makes it pass**
+4. **Refactor while keeping tests green**
+
+Let's build `maxValue(rows, column)` that finds the maximum numeric value in a column.
+
+Assume we have a test runner like Jest.
+
+## 1. Start with the first test
+
+First define the expected behavior:
+
+- Given rows of objects
+- Given a column name
+- Return the largest numeric value in that column
+
+Create a test:
+
+```javascript
+// maxValue.test.js
+
+import { maxValue } from "./maxValue";
+
+test("returns the maximum value in a numeric column", () => {
+  const rows = [
+    { score: 10 },
+    { score: 25 },
+    { score: 15 }
+  ];
+
+  expect(maxValue(rows, "score")).toBe(25);
+});
+```
+
+Run the test.
+
+It fails because `maxValue` does not exist yet. That failure is useful: it confirms the test is actually checking something.
+
+---
+
+## 2. Write the simplest implementation
+
+Now create `maxValue.js`:
+
+```javascript
+export function maxValue(rows, column) {
+  return Math.max(...rows.map(row => row[column]));
+}
+```
+
+Run the test again.
+
+It passes.
+
+At this point we have the smallest working solution.
+
+---
+
+## 3. Add another test: negative values
+
+A good TDD habit is to add edge cases before changing code.
+
+What happens with negative numbers?
+
+```javascript
+test("handles negative numbers", () => {
+  const rows = [
+    { temperature: -5 },
+    { temperature: -2 },
+    { temperature: -10 }
+  ];
+
+  expect(maxValue(rows, "temperature")).toBe(-2);
+});
+```
+
+The current implementation passes because `Math.max` handles negatives.
+
+---
+
+## 4. Add a test for an empty array
+
+Now decide what should happen if there are no rows.
+
+A reasonable API choice:
+
+- Return `null` because there is no maximum value.
+
+Write the test:
+
+```javascript
+test("returns null when rows are empty", () => {
+  expect(maxValue([], "score")).toBeNull();
+});
+```
+
+This fails because:
+
+```javascript
+Math.max(...[])
+```
+
+returns `-Infinity`.
+
+Now update the implementation:
+
+```javascript
+export function maxValue(rows, column) {
+  if (rows.length === 0) {
+    return null;
+  }
+
+  return Math.max(...rows.map(row => row[column]));
+}
+```
+
+Run tests again. They pass.
+
+---
+
+## 5. Add a test for missing/non-numeric values
+
+The function says it accepts a **numeric column**, so we need to decide how strict to be.
+
+For example:
+
+```javascript
+test("ignores non-numeric values", () => {
+  const rows = [
+    { score: 10 },
+    { score: "not a number" },
+    { score: 20 }
+  ];
+
+  expect(maxValue(rows, "score")).toBe(20);
+});
+```
+
+Now the implementation needs to filter:
+
+```javascript
+export function maxValue(rows, column) {
+  const values = rows.map(row => row[column]).filter(value => typeof value === "number" &&!Number.isNaN(value));
+
+  if (values.length === 0) {
+    return null;
+  }
+
+  return Math.max(...values);
+}
+```
+
+---
+
+## 6. Final test suite
+
+You now have tests covering:
+
+```javascript
+maxValue([
+  { score: 10 },
+  { score: 25 }
+], "score")
+// => 25
+```
+
+```javascript
+maxValue([
+  { score: -5 },
+  { score: -2 }
+], "score")
+// => -2
+```
+
+```javascript
+maxValue([], "score")
+// => null
+```
+
+```javascript
+maxValue([
+  { score: 10 },
+  { score: "bad" },
+  { score: 20 }
+], "score")
+// => 20
+```
+
+Final implementation:
+
+```javascript
+export function maxValue(rows, column) {
+  const values = rows.map(row => row[column]).filter(value => typeof value === "number" &&!Number.isNaN(value));
+
+  if (values.length === 0) {
+    return null;
+  }
+
+  return Math.max(...values);
+}
+```
+
+The important TDD pattern here is that the implementation grew **only because a test exposed a missing behavior**. You avoided guessing requirements up front and let the tests drive the design.

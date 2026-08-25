@@ -1,0 +1,25 @@
+{
+  "assertion_results": [
+    {
+      "text": "Provides specific colors or values, not just adjectives like 'muted blue'",
+      "passed": true,
+      "evidence": "The palette table provides named colors with hex values, e.g. Canvas `#0F172A`, Accent `#22D3EE`, Text Primary `#E6EDF3`."
+    },
+    {
+      "text": "Assigns functional roles to each color (background, text, accent, code blocks)",
+      "passed": true,
+      "evidence": "The table maps roles such as \"Main dark background / chrome,\" \"Headings and key content,\" \"Links, active states, highlights,\" and \"Cards, code panels, sidebars\" to colors."
+    },
+    {
+      "text": "Addresses readability/contrast for long-form reading",
+      "passed": true,
+      "evidence": "The output states documentation is \"a long-reading environment\" and the palette is designed to be \"low-fatigue\"; it also explains text/surface separation with `#0F172A` → `#172033` and contrasts like amber for semantic hierarchy."
+    }
+  ],
+  "summary": {
+    "passed": 3,
+    "failed": 0,
+    "total": 3,
+    "pass_rate": 1
+  }
+}

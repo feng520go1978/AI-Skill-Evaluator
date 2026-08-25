@@ -1,0 +1,25 @@
+{
+  "assertion_results": [
+    {
+      "text": "Diagnostic steps appear in a logical ordered sequence covering the three failure domains (network/SFTP, file format/transformation, database)",
+      "passed": true,
+      "evidence": "The runbook orders recovery as \"2. Recover from an SFTP download failure\", \"3. Recover from a CSV transformation failure\", and \"4. Recover from a Postgres load failure\" after identifying the failure stage."
+    },
+    {
+      "text": "Each step indicates how to determine success or failure",
+      "passed": true,
+      "evidence": "Each recovery section includes a \"Completion criteria\" statement, e.g. \"All required CSV files are present locally and the importer can access the SFTP source\" and \"CSV files transform successfully into load-ready output files.\""
+    },
+    {
+      "text": "No critical steps left implicit (e.g. does not assume the reader knows where logs live)",
+      "passed": true,
+      "evidence": "The runbook states preconditions to \"Confirm access to: Import job logs and monitoring dashboard\" and instructs operators to \"Open the importer logs for the failed nightly run.\""
+    }
+  ],
+  "summary": {
+    "passed": 3,
+    "failed": 0,
+    "total": 3,
+    "pass_rate": 1
+  }
+}
