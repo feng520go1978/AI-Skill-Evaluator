@@ -1,0 +1,25 @@
+{
+  "assertion_results": [
+    {
+      "text": "Recommends NOT using a real SMTP server for the primary unit tests",
+      "passed": true,
+      "evidence": "\"I generally would not use a real SMTP server for most tests\" and \"test the signup-to-email trigger with a fake\""
+    },
+    {
+      "text": "Asserts on what was sent (recipient/content/calls) via a mock or spy",
+      "passed": true,
+      "evidence": "\"replace it with a fake/mock\" and \"then sendWelcomeEmail() is called with the correct user/email/template data\"; integration checks \"recipient address\", \"subject\", and \"HTML/text body\""
+    },
+    {
+      "text": "Suggests isolating side effect from logic so the core decision can be tested purely",
+      "passed": true,
+      "evidence": "\"Keep the email sender behind an interface, then replace it with a fake/mock\" and \"This catches the important business behavior without involving SMTP\""
+    }
+  ],
+  "summary": {
+    "passed": 3,
+    "failed": 0,
+    "total": 3,
+    "pass_rate": 1
+  }
+}

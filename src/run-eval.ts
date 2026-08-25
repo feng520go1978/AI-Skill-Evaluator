@@ -154,7 +154,17 @@ function mergeParams(
   return any ? merged : undefined;
 }
 
-function timingFrom(result: ProviderResult): { total_tokens: number; duration_ms: number; cost_usd: number } {
+function round6(value: number): number {
+  return Math.round(value * 1_000_000) / 1_000_000;
+}
+
+function timingFrom(result: ProviderResult): {
+  total_tokens: number;
+  duration_ms: number;
+  cost_usd: number;
+  judge_cost_usd?: number;
+  judge_tokens?: number;
+} {
   return {
     total_tokens: (result.inputTokens ?? 0) + (result.outputTokens ?? 0),
     duration_ms: result.latencyMs ?? 0,
@@ -225,7 +235,7 @@ export async function runEval(args: RunEvalArgs): Promise<RunEvalResult> {
         : args.eval.expected_output
           ? [`The output satisfies this expected output: ${args.eval.expected_output}`]
           : [];
-    const { grading, judgePrompt } = await gradeOutputs({
+    const { grading, judgePrompt, judgeCost } = await gradeOutputs({
       modelOutput: rawOutput,
       assertions,
       toolCalls,
@@ -235,6 +245,8 @@ export async function runEval(args: RunEvalArgs): Promise<RunEvalResult> {
       gradingPrompt: args.gradingPrompt,
     });
     const timing = timingFrom(completion);
+    timing.judge_cost_usd = round6(judgeCost.costUsd);
+    timing.judge_tokens = judgeCost.inputTokens + judgeCost.outputTokens;
     writeRunArtifacts(
       runDir,
       timing,

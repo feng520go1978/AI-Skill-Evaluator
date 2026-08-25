@@ -1,0 +1,77 @@
+For a **developer-tool documentation site**, I’d avoid the usual “dark navy + neon green” developer cliché unless the product itself is cyber/security-focused. Documentation is a place where people spend hours reading, searching, and debugging — the palette should feel **precise, calm, technical, and trustworthy**.
+
+Here’s a direction I’d use:
+
+## Palette: “Instrument Panel”
+
+| Role | Color | Hex | Purpose |
+|---|---|---|---|
+| Ink | Deep Graphite | `#16181D` | Primary text, headings, code emphasis |
+| Paper | Cool Mist | `#F4F6F8` | Main documentation background |
+| Panel | Soft Slate | `#E7EBF0` | Cards, sidebars, code containers |
+| Signal | Electric Teal | `#00B8A9` | Links, active states, success indicators |
+| Accent | Compiler Blue | `#3B82F6` | Primary actions, navigation highlights |
+| Warning | Amber Trace | `#D97706` | Warnings, deprecation notices |
+| Error | Runtime Red | `#DC2626` | Errors, failed builds |
+| Code Void | Near Black | `#0D1117` | Code blocks |
+
+## Rationale
+
+### 1. Cool neutrals create a “workbench” feeling
+Documentation is a tool, not a marketing page. The neutral foundation (`#F4F6F8`, `#E7EBF0`) keeps long reading sessions comfortable while giving UI elements clear separation.
+
+It borrows from IDE environments: panels, canvases, and terminals all have distinct surfaces.
+
+### 2. Teal as the signature color
+Most developer products default to purple, blue, or neon green. Teal feels technical without feeling like a gaming dashboard.
+
+Use it sparingly:
+- current page indicator
+- API method labels
+- “copy succeeded” states
+- interactive examples
+
+It becomes the site’s visual fingerprint.
+
+### 3. Blue handles navigation and trust
+Blue is familiar territory for:
+- links
+- buttons
+- documentation hierarchy
+- references
+
+Using blue as a utility color rather than the entire brand keeps it from feeling like every other SaaS dashboard.
+
+### 4. Dark code blocks preserve developer context
+Code should feel like a separate environment. The near-black surface (`#0D1117`) creates a visual boundary between explanation and execution.
+
+Pair it with:
+- muted gray comments
+- teal strings
+- blue keywords
+- amber warnings
+
+Think “terminal,” not “black rectangle.”
+
+## Suggested usage ratio
+
+```
+70%  Cool neutrals
+20%  Graphite text + code surfaces
+8%   Blue navigation accents
+2%   Teal signature moments
+```
+
+The trick is restraint: the memorable element should be the **teal signal language**, not a rainbow of UI states.
+
+## Typography pairing
+
+To complete the feel:
+
+- **Display / headings:** `IBM Plex Sans` or `Söhne` — technical but human
+- **Body:** `Inter` — excellent for dense documentation
+- **Code:** `JetBrains Mono` — readable, unmistakably developer-oriented
+
+A nice extra touch: use slightly tighter heading tracking and generous line-height in body copy. Developer docs are read like reference material, not scanned like landing pages.
+
+Overall mood: **“a precision instrument developers trust”** — closer to an IDE workspace than a startup homepage.

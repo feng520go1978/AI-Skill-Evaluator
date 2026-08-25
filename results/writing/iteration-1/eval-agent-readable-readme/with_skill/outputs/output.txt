@@ -1,0 +1,70 @@
+:::writing{id="48291" variant="document" title="Running deploykit CLI"}
+# Running `deploykit`
+
+`deploykit` is the command-line interface for managing deployment workflows. Use the commands below in order when creating, reviewing, applying, or recovering deployment changes.
+
+## Command flow
+
+### 1. Initialize a deployment workspace
+
+Run `init` before using other deployment commands.
+
+```bash
+deploykit init
+```
+
+Use this command to create the local deployment configuration and any required state files.
+
+Completion criteria: the repository contains the generated `deploykit` configuration required for planning.
+
+### 2. Review planned changes
+
+Run `plan` to calculate the deployment actions without applying them.
+
+```bash
+deploykit plan
+```
+
+Use the output to verify what resources, files, or services will change.
+
+Completion criteria: the plan output has been reviewed and the proposed changes are understood.
+
+### 3. Apply deployment changes
+
+Run `apply` to execute the deployment plan.
+
+```bash
+deploykit apply
+```
+
+Only run this after confirming the plan is correct.
+
+Completion criteria: deployment actions complete successfully and the target environment matches the intended state.
+
+### 4. Roll back a deployment
+
+Run `rollback` to revert the most recent deployment when recovery is required.
+
+```bash
+deploykit rollback
+```
+
+Use rollback when an applied change needs to be undone.
+
+Completion criteria: the previous deployment state has been restored or rollback reports the remaining recovery actions.
+
+## Common workflow
+
+```bash
+deploykit init
+deploykit plan
+deploykit apply
+```
+
+If an applied deployment must be reverted:
+
+```bash
+deploykit rollback
+```
+
+When modifying deployment behavior, verify the full command flow (`init` → `plan` → `apply` and rollback handling) before considering the change complete.:::

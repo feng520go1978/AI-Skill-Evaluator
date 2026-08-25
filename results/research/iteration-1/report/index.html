@@ -1,0 +1,3164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Agent Skills Eval report</title>
+  <style>
+  :root {
+    --fg: #1a1f24;
+    --muted: #6a737d;
+    --bg: #ffffff;
+    --bg-alt: #f6f8fa;
+    --border: #e1e4e8;
+    --ok: #1a7f37;
+    --warn: #b08800;
+    --bad: #cf222e;
+    --ok-bg: #dafbe1;
+    --warn-bg: #fff8c5;
+    --bad-bg: #ffebe9;
+    --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 14px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; color: var(--fg); background: var(--bg); }
+  header.hero { background: linear-gradient(180deg, #fafbfc 0%, #f0f2f5 100%); border-bottom: 1px solid var(--border); padding: 24px 32px; }
+  header.hero h1 { margin: 0 0 4px; font-size: 22px; }
+  header.hero .meta { color: var(--muted); font-size: 13px; }
+  header.hero .totals { margin-top: 16px; display: flex; gap: 16px; flex-wrap: wrap; }
+  header.hero .stat { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 12px 16px; min-width: 120px; }
+  header.hero .stat .label { display: block; font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
+  header.hero .stat .value { display: block; font-size: 22px; font-weight: 600; margin-top: 2px; }
+  header.hero .stat.ok .value { color: var(--ok); }
+  header.hero .stat.bad .value { color: var(--bad); }
+  main { padding: 24px 32px; max-width: 1200px; margin: 0 auto; }
+  h2 { margin: 0 0 4px; font-size: 18px; }
+  .muted { color: var(--muted); font-size: 12px; }
+  table.summary { width: 100%; border-collapse: collapse; margin-bottom: 32px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+  table.summary th, table.summary td { padding: 10px 12px; border-bottom: 1px solid var(--border); text-align: left; }
+  table.summary th { background: var(--bg-alt); font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); }
+  table.summary td.num { text-align: right; font-variant-numeric: tabular-nums; }
+  table.summary tr.skill-row.bad { background: var(--bad-bg); }
+  table.summary tr.skill-row.warn { background: var(--warn-bg); }
+  table.summary tr.skill-row.ok td { background: transparent; }
+  table.summary tr.skill-row a { color: var(--fg); text-decoration: none; font-weight: 500; }
+  table.summary tr.skill-row a:hover { text-decoration: underline; }
+  .bar { width: 100px; height: 10px; background: var(--bg-alt); border-radius: 5px; overflow: hidden; }
+  .bar .fill { height: 100%; }
+  .bar.ok .fill { background: var(--ok); }
+  .bar.warn .fill { background: var(--warn); }
+  .bar.bad .fill { background: var(--bad); }
+  article.skill { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 20px; margin-bottom: 20px; }
+  article.skill header h2 .badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: 500; vertical-align: middle; margin-left: 8px; }
+  article.skill header h2 .badge.ok { background: var(--ok-bg); color: var(--ok); }
+  article.skill header h2 .badge.warn { background: var(--warn-bg); color: var(--warn); }
+  article.skill header h2 .badge.bad { background: var(--bad-bg); color: var(--bad); }
+  article.skill .delta { margin-top: 8px; font-size: 13px; }
+  article.skill .delta.ok { color: var(--ok); }
+  article.skill .delta.bad { color: var(--bad); }
+  details.eval { border: 1px solid var(--border); border-radius: 6px; margin-top: 12px; }
+  details.eval > summary { padding: 10px 14px; cursor: pointer; display: flex; gap: 10px; align-items: center; }
+  details.eval[open] > summary { border-bottom: 1px solid var(--border); }
+  details.eval.bad > summary { background: var(--bad-bg); }
+  details.eval.ok > summary { background: var(--ok-bg); }
+  details.eval .eval-status { font-weight: 600; }
+  details.eval.bad .eval-status { color: var(--bad); }
+  details.eval.ok .eval-status { color: var(--ok); }
+  .eval-body { padding: 12px 16px; }
+  .run { padding: 12px 0; border-top: 1px dashed var(--border); }
+  .run:first-child { border-top: none; padding-top: 0; }
+  .run-head { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+  .mode { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.04em; }
+  .mode-with_skill { background: #ddf4ff; color: #0969da; }
+  .mode-without_skill { background: #fff1e5; color: #bc4c00; }
+  .status.ok { color: var(--ok); font-weight: 600; }
+  .status.bad { color: var(--bad); font-weight: 600; }
+  .run details > summary { cursor: pointer; font-size: 12px; color: var(--muted); padding: 4px 0; }
+  .run details[open] > summary { color: var(--fg); }
+  .run pre { background: var(--bg-alt); border: 1px solid var(--border); border-radius: 6px; padding: 10px 12px; font-family: var(--mono); font-size: 12px; line-height: 1.45; overflow-x: auto; white-space: pre-wrap; word-break: break-word; max-height: 400px; overflow-y: auto; }
+  table.assertions { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 13px; }
+  table.assertions th, table.assertions td { padding: 6px 8px; border-bottom: 1px solid var(--border); text-align: left; vertical-align: top; }
+  table.assertions th { background: var(--bg-alt); font-size: 11px; text-transform: uppercase; color: var(--muted); }
+  table.assertions tr.bad td { background: var(--bad-bg); }
+  table.assertions .check { color: var(--ok); font-weight: 600; }
+  table.assertions .x { color: var(--bad); font-weight: 600; }
+  table.assertions .evidence { color: var(--muted); font-size: 12px; }
+  details.tools { margin: 12px 0; }
+  details.tools > summary { cursor: pointer; font-size: 12px; color: var(--muted); padding: 4px 0; }
+  details.tools[open] > summary { color: var(--fg); font-weight: 500; }
+  table.tool-calls { width: 100%; border-collapse: collapse; margin: 6px 0 8px; font-size: 13px; }
+  table.tool-calls th, table.tool-calls td { padding: 6px 8px; border-bottom: 1px solid var(--border); text-align: left; vertical-align: top; }
+  table.tool-calls th { background: var(--bg-alt); font-size: 11px; text-transform: uppercase; color: var(--muted); }
+  table.tool-calls .tool-name { font-family: var(--mono); color: #b08800; font-weight: 600; }
+  pre.tool-args { background: var(--bg-alt); border: 1px solid var(--border); border-radius: 4px; padding: 6px 8px; margin: 0; font-family: var(--mono); font-size: 12px; line-height: 1.4; overflow-x: auto; white-space: pre-wrap; word-break: break-word; max-height: 240px; overflow-y: auto; }
+  .empty { padding: 60px 20px; text-align: center; color: var(--muted); }
+</style>
+</head>
+<body>
+  <header class="hero">
+    <h1>Agent Skills Eval report</h1>
+    <div class="meta">
+      generated 2026-08-25T09:18:42.701Z
+      · target <code>auto</code>
+      · judge <code>auto</code>
+    </div>
+    <div class="totals">
+      <div class="stat"><span class="label">skills</span><span class="value">1</span></div>
+      <div class="stat"><span class="label">evals</span><span class="value">3</span></div>
+      <div class="stat ok"><span class="label">passed</span><span class="value">8</span></div>
+      <div class="stat bad"><span class="label">failed</span><span class="value">1</span></div>
+      <div class="stat ok"><span class="label">pass rate</span><span class="value">88.9%</span></div>
+    </div>
+  </header>
+  <main>
+        <table class="summary">
+          <thead>
+            <tr>
+              <th>Skill</th>
+              <th class="num">Evals</th>
+              <th class="num">Passed</th>
+              <th class="num">Pass rate</th>
+              <th></th>
+              <th class="num">Avg time</th>
+              <th class="num">Avg tokens</th>
+            </tr>
+          </thead>
+          <tbody>
+    <tr class="skill-row ok">
+      <td><a href="#skill-research">research</a>
+          <div class="muted"></div></td>
+      <td class="num">3</td>
+      <td class="num">8/9</td>
+      <td class="num">88.9%</td>
+      <td class="bar-cell"><div class="bar ok"><div class="fill" style="width:89%"></div></div></td>
+      <td class="num">20ms</td>
+      <td class="num">1388</td>
+    </tr>
+  </tbody>
+        </table>
+        
+    <article class="skill" id="skill-research">
+      <header>
+        <h2>research <span class="badge ok">88.9%</span></h2>
+        <div class="muted"></div>
+        <div class="muted">8/9 assertions · 3 evals · 20ms avg · 1388 tokens avg</div>
+        <div class="delta ok">Δ vs baseline: pass-rate +7.41pp · time +3.90s · tokens +181.44</div>
+      </header>
+      <div class="evals">
+    <details class="eval bad">
+      <summary>
+        <span class="eval-status">✗</span>
+        <span class="eval-name">eval-conflicting-sources</span>
+        <span class="muted">3/6 assertions</span>
+      </summary>
+      <div class="eval-body">
+    <section class="run">
+      <header class="run-head">
+        <span class="mode mode-with_skill">with_skill</span>
+        <span class="status bad">FAIL</span>
+        <span class="muted">13ms · 1011 tokens · 2/3</span>
+      </header>
+      <details class="prompt"><summary>system prompt</summary><pre>&lt;skill name=&quot;research&quot;&gt;
+&lt;description&gt;Investigate a question against high-trust primary sources and capture the findings as a Markdown file in the repo. Use when the user wants a topic researched, docs or API facts gathered, or reading legwork delegated to a background agent.&lt;/description&gt;
+&lt;instructions&gt;
+Spin up a **background agent** to do the research, so you keep working while it reads.
+
+Its job:
+
+1. Investigate the question against **primary sources** (official docs, source code, specs, first-party APIs), not a secondary write-up of them. Follow every claim back to the source that owns it.
+2. Write the findings to a single Markdown file, citing each claim's source.
+3. Save it where the repo already keeps such notes; match the existing convention, and if there is none, put it somewhere sensible and say where.
+&lt;/instructions&gt;
+&lt;/skill&gt;</pre></details>
+      <details class="prompt" open><summary>user prompt</summary><pre>Source A says library X is fastest; Source B says library Y is fastest. Both cite benchmarks. Walk me through how you'd resolve this conflict.</pre></details>
+      <details class="output" open><summary>output</summary><pre>search(&quot;Source A says library X is fastest; Source B says library Y is fastest. Both cite benchmarks. Walk me through how you'd resolve this conflict.&quot;)fast|benchmark methodology reproducibility library performance comparison
+I’d treat this less like “which source is right?” and more like “what exactly did each source prove?” A benchmark conflict is usually a **scope or methodology conflict**, not a simple factual contradiction. 
+
+My process would be:
+
+### 1. Define what “fastest” means
+First I’d pin down the claim:
+
+- Fastest for **what workload**?
+  - Startup time?
+  - Single request latency?
+  - Throughput under load?
+  - Large datasets?
+  - Small operations?
+  - Memory-constrained environments?
+- Fastest under **which metric**?
+  - Mean runtime?
+  - p95/p99 latency?
+  - Operations per second?
+  - Total cost including memory/CPU?
+
+It’s common for X to win one metric while Y wins another.
+
+---
+
+### 2. Inspect the benchmark design, not just the winner
+I’d compare the benchmark setups side-by-side:
+
+| Question | Source A | Source B |
+|---|---|---|
+| Library versions |? |? |
+| Hardware |? |? |
+| OS/compiler/runtime |? |? |
+| Dataset/workload |? |? |
+| Configuration flags |? |? |
+| Warmup/caching behavior |? |? |
+| Number of runs |? |? |
+| Statistical reporting |? |? |
+
+A benchmark result is only meaningful relative to its experimental conditions. Differences in workload, environment, measurement method, or optimization settings can completely change the outcome. 
+
+---
+
+### 3. Check for incentives and benchmark bias
+I’d ask:
+
+- Was Source A produced by the authors of library X?
+- Was Source B produced by the authors of library Y?
+- Did either benchmark exclude cases where the other library performs well?
+- Were defaults used, or were libraries tuned by experts?
+
+A benchmark can be technically correct but still answer a narrow question chosen to favor a particular tool.
+
+---
+
+### 4. Reproduce both benchmarks if possible
+The strongest resolution is:
+
+1. Run X and Y using Source A’s benchmark.
+2. Run X and Y using Source B’s benchmark.
+3. Run a third, neutral workload representing the actual use case.
+
+Then classify results:
+
+- **X wins everywhere** → strong evidence X is faster.
+- **Y wins everywhere** → strong evidence Y is faster.
+- **Each wins its own benchmark** → the claim “X is fastest” is too broad.
+- **Results are close** → performance difference may not matter operationally.
+
+Reproducibility matters because benchmark conclusions are much stronger when another party can rerun the same experiment and get comparable results. 
+
+---
+
+### 5. Look for the hidden variable
+If results disagree, I’d search for the thing that changed:
+
+- Dataset size
+- Data distribution
+- CPU architecture
+- Thread count
+- Compiler optimizations
+- GPU/accelerator usage
+- Network conditions
+- Cache effects
+- Default settings
+- Version differences
+
+Often the “winner” is really:
+
+&gt; “Library X is fastest for workload A on environment B with configuration C.”
+
+not:
+
+&gt; “Library X is universally fastest.”
+
+---
+
+### 6. Make the conclusion conditional
+The final answer I’d give would probably look like:
+
+&gt; “Source A and Source B are both correct within their tested conditions. Source A shows X has better performance for [workload]. Source B shows Y wins for [different workload]. For our use case—[specific workload]—the relevant benchmark is [one], so we should choose [X/Y].”
+
+The key move is refusing to collapse two different experiments into one universal ranking. A benchmark is evidence about a defined scenario, not a permanent leaderboard. </pre></details>
+      
+      <table class="assertions"><thead><tr><th>#</th><th></th><th>Assertion</th><th>Evidence</th></tr></thead><tbody>
+        <tr class="ok">
+          <td class="num">1</td>
+          <td><span class='check'>✓</span></td>
+          <td>Examines benchmark methodology differences before trusting either claim</td>
+          <td><span class="evidence">The output says 'I’d compare the benchmark setups side-by-side' and lists 'Library versions', 'Hardware', 'Dataset/workload', 'Configuration flags', 'Warmup/caching behavior', 'Number of runs', and 'Statistical reporting' before deciding.</span></td>
+        </tr>
+
+        <tr class="bad">
+          <td class="num">2</td>
+          <td><span class='x'>✗</span></td>
+          <td>Flags potential bias (vendor-published benchmarks, outdated versions, non-matching workload)</td>
+          <td><span class="evidence">The output flags possible bias from authors of library X/Y and non-matching workloads ('Was Source A produced by the authors of library X?'), and mentions versions, but it does not specifically flag outdated versions as a bias factor.</span></td>
+        </tr>
+
+        <tr class="ok">
+          <td class="num">3</td>
+          <td><span class='check'>✓</span></td>
+          <td>Concludes with reproducing the benchmark against one's own real workload as the deciding step</td>
+          <td><span class="evidence">The output says 'Run X and Y using Source A’s benchmark', 'Run X and Y using Source B’s benchmark', and 'Run a third, neutral workload representing the actual use case' before choosing based on the use case.</span></td>
+        </tr></tbody></table>
+      <details class="judge"><summary>judge prompt</summary><pre>You are grading an agentskills.io evaluation run.
+Grading principles:
+- Require concrete evidence for every PASS; quote or reference the output.
+- Do not give the benefit of the doubt.
+- PASS an assertion only if every condition in the assertion text holds.
+- A label without substance is a FAIL.
+- Tool calls (when present) are authoritative evidence of model behavior.
+Return STRICT JSON only. No markdown. Shape:
+{&quot;assertion_results&quot;:[{&quot;text&quot;:&quot;...&quot;,&quot;passed&quot;:true,&quot;evidence&quot;:&quot;...&quot;}],&quot;summary&quot;:{&quot;passed&quot;:0,&quot;failed&quot;:0,&quot;total&quot;:0,&quot;pass_rate&quot;:0}}
+Rules:
+- Include every assertion exactly once and copy the full assertion text verbatim into text.
+- Use short concrete evidence: quote, snippet, or file reference.
+- Summary may be included, but it will be recomputed by the caller.
+Assertions:
+[
+  &quot;Examines benchmark methodology differences before trusting either claim&quot;,
+  &quot;Flags potential bias (vendor-published benchmarks, outdated versions, non-matching workload)&quot;,
+  &quot;Concludes with reproducing the benchmark against one's own real workload as the deciding step&quot;
+]
+Model output:
+search(&quot;Source A says library X is fastest; Source B says library Y is fastest. Both cite benchmarks. Walk me through how you'd resolve this conflict.&quot;)fast|benchmark methodology reproducibility library performance comparison
+I’d treat this less like “which source is right?” and more like “what exactly did each source prove?” A benchmark conflict is usually a **scope or methodology conflict**, not a simple factual contradiction. 
+
+My process would be:
+
+### 1. Define what “fastest” means
+First I’d pin down the claim:
+
+- Fastest for **what workload**?
+  - Startup time?
+  - Single request latency?
+  - Throughput under load?
+  - Large datasets?
+  - Small operations?
+  - Memory-constrained environments?
+- Fastest under **which metric**?
+  - Mean runtime?
+  - p95/p99 latency?
+  - Operations per second?
+  - Total cost including memory/CPU?
+
+It’s common for X to win one metric while Y wins another.
+
+---
+
+### 2. Inspect the benchmark design, not just the winner
+I’d compare the benchmark setups side-by-side:
+
+| Question | Source A | Source B |
+|---|---|---|
+| Library versions |? |? |
+| Hardware |? |? |
+| OS/compiler/runtime |? |? |
+| Dataset/workload |? |? |
+| Configuration flags |? |? |
+| Warmup/caching behavior |? |? |
+| Number of runs |? |? |
+| Statistical reporting |? |? |
+
+A benchmark result is only meaningful relative to its experimental conditions. Differences in workload, environment, measurement method, or optimization settings can completely change the outcome. 
+
+---
+
+### 3. Check for incentives and benchmark bias
+I’d ask:
+
+- Was Source A produced by the authors of library X?
+- Was Source B produced by the authors of library Y?
+- Did either benchmark exclude cases where the other library performs well?
+- Were defaults used, or were libraries tuned by experts?
+
+A benchmark can be technically correct but still answer a narrow question chosen to favor a particular tool.
+
+---
+
+### 4. Reproduce both benchmarks if possible
+The strongest resolution is:
+
+1. Run X and Y using Source A’s benchmark.
+2. Run X and Y using Source B’s benchmark.
+3. Run a third, neutral workload representing the actual use case.
+
+Then classify results:
+
+- **X wins everywhere** → strong evidence X is faster.
+- **Y wins everywhere** → strong evidence Y is faster.
+- **Each wins its own benchmark** → the claim “X is fastest” is too broad.
+- **Results are close** → performance difference may not matter operationally.
+
+Reproducibility matters because benchmark conclusions are much stronger when another party can rerun the same experiment and get comparable results. 
+
+---
+
+### 5. Look for the hidden variable
+If results disagree, I’d search for the thing that changed:
+
+- Dataset size
+- Data distribution
+- CPU architecture
+- Thread count
+- Compiler optimizations
+- GPU/accelerator usage
+- Network conditions
+- Cache effects
+- Default settings
+- Version differences
+
+Often the “winner” is really:
+
+&gt; “Library X is fastest for workload A on environment B with configuration C.”
+
+not:
+
+&gt; “Library X is universally fastest.”
+
+---
+
+### 6. Make the conclusion conditional
+The final answer I’d give would probably look like:
+
+&gt; “Source A and Source B are both correct within their tested conditions. Source A shows X has better performance for [workload]. Source B shows Y wins for [different workload]. For our use case—[specific workload]—the relevant benchmark is [one], so we should choose [X/Y].”
+
+The key move is refusing to collapse two different experiments into one universal ranking. A benchmark is evidence about a defined scenario, not a permanent leaderboard. 
+Output files:
+No output files were captured.</pre></details>
+    </section>
+  
+
+    <section class="run">
+      <header class="run-head">
+        <span class="mode mode-without_skill">without_skill</span>
+        <span class="status bad">FAIL</span>
+        <span class="muted">19ms · 785 tokens · 1/3</span>
+      </header>
+      
+      <details class="prompt" open><summary>user prompt</summary><pre>Source A says library X is fastest; Source B says library Y is fastest. Both cite benchmarks. Walk me through how you'd resolve this conflict.</pre></details>
+      <details class="output" open><summary>output</summary><pre>search(&quot;Source A says library X is fastest; Source B says library Y is fastest. Both cite benchmarks. Walk me through how you'd resolve this conflict.&quot;)slow|how to compare conflicting software benchmarks methodology
+I’d treat this as a **benchmark validity problem**, not a “who is right?” problem. Two credible benchmarks can disagree because they may be measuring different things. I’d resolve it systematically:
+
+### 1. Define what “fastest” actually means
+First I’d ask: fastest **at what?**
+
+Examples:
+- Startup time?
+- Throughput (operations/sec)?
+- Latency (time per request)?
+- Memory efficiency?
+- Large workloads vs small workloads?
+- Single-threaded vs multi-threaded?
+- Real-world application performance?
+
+A library can win one metric and lose another. A benchmark is only meaningful if its workload and metric match the decision you care about. Good benchmarking requires clear, representative, repeatable comparisons rather than a single number. 
+
+---
+
+### 2. Inspect both benchmark setups
+I’d compare Source A and Source B line by line:
+
+| Question | Why it matters |
+|---|---|
+| Same hardware? | CPU, RAM, GPU, OS differences can flip results |
+| Same library versions? | Performance changes across releases |
+| Same compiler/runtime settings? | Optimization flags matter |
+| Same input data? | Some libraries favor certain workloads |
+| Same warm-up procedure? | JIT caches and initialization can distort results |
+| Same measurement method? | Wall-clock time vs CPU time vs throughput differ |
+
+A lot of benchmark conflicts disappear here.
+
+---
+
+### 3. Check for benchmark bias
+I’d look for whether either benchmark accidentally favors one implementation.
+
+Examples:
+- The test uses tiny inputs, where startup overhead dominates.
+- The test uses artificial operations that don’t resemble production.
+- One library has optimized code paths for the benchmark.
+- One benchmark excludes setup costs that users actually pay.
+- Results report averages but hide variance or outliers.
+
+Benchmarks can be misleading when they measure a narrow workload rather than the real target workload. 
+
+---
+
+### 4. Reproduce both benchmarks
+If the code is available, I’d run:
+
+1. Source A’s benchmark unchanged.
+2. Source B’s benchmark unchanged.
+3. A neutral benchmark I design.
+
+The goal is not “prove A wrong” or “prove B wrong”; it is to identify the conditions under which each wins.
+
+---
+
+### 5. Use a workload matrix instead of one winner
+I’d build something like:
+
+| Workload | Winner |
+|---|---|
+| Small objects | X |
+| Huge datasets | Y |
+| High concurrency | X |
+| Low latency | Y |
+| Production-like workload |? |
+
+Often the real conclusion becomes:
+
+&gt; “Library X is fastest for workload A; Library Y is fastest for workload B.”
+
+That is much more actionable than declaring a universal champion.
+
+---
+
+### 6. Weight results by the actual use case
+If I’m choosing a library for a project, I’d assign importance:
+
+- 70%: performance on my real workload
+- 20%: maintainability/ecosystem
+- 10%: benchmark edge cases
+
+A 5% benchmark advantage may not matter if the slower library is easier to operate or more reliable.
+
+---
+
+### 7. Document the uncertainty
+The final conclusion might be:
+
+&gt; “Source A is correct under CPU-bound batch processing. Source B is correct under latency-sensitive workloads. Neither benchmark establishes that one library is universally fastest.”
+
+The key move is to stop treating “fastest” as a property of the library alone. It is usually a property of **library + workload + environment + measurement method**.</pre></details>
+      
+      <table class="assertions"><thead><tr><th>#</th><th></th><th>Assertion</th><th>Evidence</th></tr></thead><tbody>
+        <tr class="ok">
+          <td class="num">1</td>
+          <td><span class='check'>✓</span></td>
+          <td>Examines benchmark methodology differences before trusting either claim</td>
+          <td><span class="evidence">The response says “I’d treat this as a benchmark validity problem, not a ‘who is right?’ problem” and compares “Same hardware,” “Same library versions,” “Same input data,” and “Same measurement method” before accepting a winner.</span></td>
+        </tr>
+
+        <tr class="bad">
+          <td class="num">2</td>
+          <td><span class='x'>✗</span></td>
+          <td>Flags potential bias (vendor-published benchmarks, outdated versions, non-matching workload)</td>
+          <td><span class="evidence">The response flags narrow/artificial workloads and version differences (“Same library versions? Performance changes across releases”), but it does not mention vendor-published benchmarks as a possible source of bias.</span></td>
+        </tr>
+
+        <tr class="bad">
+          <td class="num">3</td>
+          <td><span class='x'>✗</span></td>
+          <td>Concludes with reproducing the benchmark against one's own real workload as the deciding step</td>
+          <td><span class="evidence">The response recommends reproducing Source A and Source B benchmarks and says “70%: performance on my real workload,” but its conclusion is about workload/environment dependence rather than stating reproduction against one's own real workload is the deciding step.</span></td>
+        </tr></tbody></table>
+      <details class="judge"><summary>judge prompt</summary><pre>You are grading an agentskills.io evaluation run.
+Grading principles:
+- Require concrete evidence for every PASS; quote or reference the output.
+- Do not give the benefit of the doubt.
+- PASS an assertion only if every condition in the assertion text holds.
+- A label without substance is a FAIL.
+- Tool calls (when present) are authoritative evidence of model behavior.
+Return STRICT JSON only. No markdown. Shape:
+{&quot;assertion_results&quot;:[{&quot;text&quot;:&quot;...&quot;,&quot;passed&quot;:true,&quot;evidence&quot;:&quot;...&quot;}],&quot;summary&quot;:{&quot;passed&quot;:0,&quot;failed&quot;:0,&quot;total&quot;:0,&quot;pass_rate&quot;:0}}
+Rules:
+- Include every assertion exactly once and copy the full assertion text verbatim into text.
+- Use short concrete evidence: quote, snippet, or file reference.
+- Summary may be included, but it will be recomputed by the caller.
+Assertions:
+[
+  &quot;Examines benchmark methodology differences before trusting either claim&quot;,
+  &quot;Flags potential bias (vendor-published benchmarks, outdated versions, non-matching workload)&quot;,
+  &quot;Concludes with reproducing the benchmark against one's own real workload as the deciding step&quot;
+]
+Model output:
+search(&quot;Source A says library X is fastest; Source B says library Y is fastest. Both cite benchmarks. Walk me through how you'd resolve this conflict.&quot;)slow|how to compare conflicting software benchmarks methodology
+I’d treat this as a **benchmark validity problem**, not a “who is right?” problem. Two credible benchmarks can disagree because they may be measuring different things. I’d resolve it systematically:
+
+### 1. Define what “fastest” actually means
+First I’d ask: fastest **at what?**
+
+Examples:
+- Startup time?
+- Throughput (operations/sec)?
+- Latency (time per request)?
+- Memory efficiency?
+- Large workloads vs small workloads?
+- Single-threaded vs multi-threaded?
+- Real-world application performance?
+
+A library can win one metric and lose another. A benchmark is only meaningful if its workload and metric match the decision you care about. Good benchmarking requires clear, representative, repeatable comparisons rather than a single number. 
+
+---
+
+### 2. Inspect both benchmark setups
+I’d compare Source A and Source B line by line:
+
+| Question | Why it matters |
+|---|---|
+| Same hardware? | CPU, RAM, GPU, OS differences can flip results |
+| Same library versions? | Performance changes across releases |
+| Same compiler/runtime settings? | Optimization flags matter |
+| Same input data? | Some libraries favor certain workloads |
+| Same warm-up procedure? | JIT caches and initialization can distort results |
+| Same measurement method? | Wall-clock time vs CPU time vs throughput differ |
+
+A lot of benchmark conflicts disappear here.
+
+---
+
+### 3. Check for benchmark bias
+I’d look for whether either benchmark accidentally favors one implementation.
+
+Examples:
+- The test uses tiny inputs, where startup overhead dominates.
+- The test uses artificial operations that don’t resemble production.
+- One library has optimized code paths for the benchmark.
+- One benchmark excludes setup costs that users actually pay.
+- Results report averages but hide variance or outliers.
+
+Benchmarks can be misleading when they measure a narrow workload rather than the real target workload. 
+
+---
+
+### 4. Reproduce both benchmarks
+If the code is available, I’d run:
+
+1. Source A’s benchmark unchanged.
+2. Source B’s benchmark unchanged.
+3. A neutral benchmark I design.
+
+The goal is not “prove A wrong” or “prove B wrong”; it is to identify the conditions under which each wins.
+
+---
+
+### 5. Use a workload matrix instead of one winner
+I’d build something like:
+
+| Workload | Winner |
+|---|---|
+| Small objects | X |
+| Huge datasets | Y |
+| High concurrency | X |
+| Low latency | Y |
+| Production-like workload |? |
+
+Often the real conclusion becomes:
+
+&gt; “Library X is fastest for workload A; Library Y is fastest for workload B.”
+
+That is much more actionable than declaring a universal champion.
+
+---
+
+### 6. Weight results by the actual use case
+If I’m choosing a library for a project, I’d assign importance:
+
+- 70%: performance on my real workload
+- 20%: maintainability/ecosystem
+- 10%: benchmark edge cases
+
+A 5% benchmark advantage may not matter if the slower library is easier to operate or more reliable.
+
+---
+
+### 7. Document the uncertainty
+The final conclusion might be:
+
+&gt; “Source A is correct under CPU-bound batch processing. Source B is correct under latency-sensitive workloads. Neither benchmark establishes that one library is universally fastest.”
+
+The key move is to stop treating “fastest” as a property of the library alone. It is usually a property of **library + workload + environment + measurement method**.
+Output files:
+No output files were captured.</pre></details>
+    </section>
+  </div>
+    </details>
+  
+
+    <details class="eval ok">
+      <summary>
+        <span class="eval-status">✓</span>
+        <span class="eval-name">eval-research-framework</span>
+        <span class="muted">6/6 assertions</span>
+      </summary>
+      <div class="eval-body">
+    <section class="run">
+      <header class="run-head">
+        <span class="mode mode-with_skill">with_skill</span>
+        <span class="status ok">PASS</span>
+        <span class="muted">29ms · 1415 tokens · 3/3</span>
+      </header>
+      <details class="prompt"><summary>system prompt</summary><pre>&lt;skill name=&quot;research&quot;&gt;
+&lt;description&gt;Investigate a question against high-trust primary sources and capture the findings as a Markdown file in the repo. Use when the user wants a topic researched, docs or API facts gathered, or reading legwork delegated to a background agent.&lt;/description&gt;
+&lt;instructions&gt;
+Spin up a **background agent** to do the research, so you keep working while it reads.
+
+Its job:
+
+1. Investigate the question against **primary sources** (official docs, source code, specs, first-party APIs), not a secondary write-up of them. Follow every claim back to the source that owns it.
+2. Write the findings to a single Markdown file, citing each claim's source.
+3. Save it where the repo already keeps such notes; match the existing convention, and if there is none, put it somewhere sensible and say where.
+&lt;/instructions&gt;
+&lt;/skill&gt;</pre></details>
+      <details class="prompt" open><summary>user prompt</summary><pre>Research question: Is WebSocket or Server-Sent Events better for a live dashboard? Before answering, lay out HOW you would research this: information sources and verification steps.</pre></details>
+      <details class="output" open><summary>output</summary><pre>search(&quot;Research question: Is WebSocket or Server-Sent Events better for a live dashboard? Before answering, lay out HOW you would research this: information sources and verification steps.&quot;)slow|WebSocket Server-Sent Events official specifications comparison
+I would research this as a **technology selection decision**, not as a “which protocol is faster?” question. The answer depends heavily on the dashboard’s behavior: update direction, latency needs, scale, browser constraints, and operational complexity.
+
+## Research plan
+
+### 1. Define the dashboard requirements first
+
+Before comparing technologies, I would write down the workload:
+
+- **Data flow**
+  - Is it only server → browser updates?
+  - Do users need to send frequent messages back?
+- **Latency target**
+  - Is “within 1 second” acceptable?
+  - Is sub-100ms interaction required?
+- **Update pattern**
+  - Occasional events (alerts, notifications)?
+  - Continuous streams (metrics, logs, telemetry)?
+- **Scale**
+  - Number of concurrent viewers
+  - Events per second
+  - Number of dashboards per user
+- **Deployment environment**
+  - HTTP/1.1 or HTTP/2?
+  - Load balancers/proxies involved?
+  - Cloud infrastructure?
+- **Reliability requirements**
+  - Automatic reconnect?
+  - Missed event recovery?
+  - Ordering guarantees?
+
+This prevents a misleading benchmark where the “winner” solves the wrong problem.
+
+---
+
+## 2. Primary information sources
+
+I would prioritize sources that define or implement the protocols.
+
+### Protocol specifications
+
+**WebSocket**
+- Read the official WebSocket specification:
+  - RFC 6455 (WebSocket Protocol)
+  - Verify:
+    - Full-duplex communication model
+    - Handshake process
+    - Message framing
+    - Browser/server responsibilities
+
+
+
+**Server-Sent Events (SSE)**
+- Read the HTML Living Standard / WHATWG SSE specification.
+- Verify:
+  - EventSource API behavior
+  - Reconnection semantics
+  - Event format
+  - Browser support
+
+
+
+---
+
+## 3. Compare technical characteristics from first principles
+
+I would build a comparison matrix:
+
+| Area | Question to verify |
+|---|---|
+| Direction | Can the client send data over the same channel? |
+| Transport | Does it stay on HTTP or upgrade to another protocol? |
+| Latency | What overhead exists before messages arrive? |
+| Payload | Text only or binary support? |
+| Reconnection | Built-in behavior or application-managed? |
+| Scaling | How do proxies, load balancers, and servers handle connections? |
+| Complexity | How much state management does the application need? |
+| Browser support | What limitations exist? |
+
+Expected baseline findings:
+
+- WebSockets provide **two-way communication** and are designed for persistent, bidirectional messaging. 
+- SSE provides **server-to-browser streaming** over HTTP and is designed for server push. 
+
+---
+
+## 4. Validate with real implementation evidence
+
+I would inspect production examples:
+
+### SSE examples
+Look at systems where:
+- dashboards receive metrics
+- logs stream to browsers
+- AI responses stream tokens
+- notifications update UI
+
+Questions:
+- How do they handle reconnects?
+- How do they resume missed events?
+- How do they authenticate connections?
+
+### WebSocket examples
+Look at:
+- collaborative editors
+- multiplayer applications
+- trading interfaces
+- chat systems
+
+Questions:
+- How do they manage connection state?
+- How do they handle dropped clients?
+- How do they scale connection counts?
+
+---
+
+## 5. Run controlled benchmarks
+
+I would not rely only on blog comparisons. I would create a small test application implementing both.
+
+Measure:
+
+### Client experience
+- Message delivery latency
+- Jitter
+- Reconnect time
+- Browser memory usage
+
+### Server impact
+- CPU per connection
+- Memory per connection
+- Messages/sec
+- Connection churn behavior
+
+### Network behavior
+- Bytes transferred
+- Proxy compatibility
+- Behavior behind a CDN/load balancer
+
+The benchmark scenarios:
+
+1. **Simple dashboard**
+   - 10 metrics/sec
+   - 10,000 viewers
+
+2. **High-frequency telemetry**
+   - 1,000+ events/sec
+
+3. **Interactive dashboard**
+   - Users send commands/filter changes frequently
+
+---
+
+## 6. Verify operational concerns
+
+I would specifically test:
+
+### Infrastructure compatibility
+- Nginx
+- AWS ALB/API Gateway
+- Kubernetes ingress
+- Cloudflare/CDNs
+
+### Failure modes
+- Mobile network switching
+- Browser sleep/wake
+- Server restart
+- Network interruption
+
+### Security
+Check:
+- Authentication methods
+- Authorization per stream
+- Connection exhaustion risks
+- Origin validation
+
+---
+
+## 7. Decision criteria
+
+After gathering evidence, I would decide using rules like:
+
+### Likely SSE choice
+If the dashboard is:
+
+- mostly server → browser
+- displaying metrics, alerts, logs, status
+- okay with second-level latency
+- wants simpler HTTP infrastructure
+
+SSE is probably the better fit. 
+
+### Likely WebSocket choice
+If the dashboard is:
+
+- interactive in both directions
+- sending commands continuously
+- requiring very low latency
+- maintaining shared real-time state
+
+WebSocket is likely better. 
+
+---
+
+## Final research output I would produce
+
+The final answer would contain:
+
+1. Dashboard requirements summary  
+2. SSE vs WebSocket architecture comparison  
+3. Benchmark results  
+4. Operational tradeoffs  
+5. Recommendation with assumptions  
+6. “Choose the other one if…” decision boundaries  
+
+The key hypothesis I would test is:
+
+&gt; For a typical monitoring/analytics dashboard where users mostly consume live data, SSE may be simpler and sufficient; WebSockets become preferable when the dashboard becomes an interactive real-time application. 
+
+I would verify that hypothesis against specifications, implementation behavior, and measured performance before making the recommendation.</pre></details>
+      
+      <table class="assertions"><thead><tr><th>#</th><th></th><th>Assertion</th><th>Evidence</th></tr></thead><tbody>
+        <tr class="ok">
+          <td class="num">1</td>
+          <td><span class='check'>✓</span></td>
+          <td>Proposes consulting primary/high-trust sources (protocol specs, official docs) before secondary sources like blogs</td>
+          <td><span class="evidence">The output has a &quot;Primary information sources&quot; section stating &quot;I would prioritize sources that define or implement the protocols&quot; and lists RFC 6455 and the WHATWG SSE specification. It also states &quot;I would not rely only on blog comparisons.&quot;</span></td>
+        </tr>
+
+        <tr class="ok">
+          <td class="num">2</td>
+          <td><span class='check'>✓</span></td>
+          <td>Identifies at least 3 concrete technical comparison dimensions (e.g. directionality, reconnection, proxies)</td>
+          <td><span class="evidence">The comparison matrix includes multiple concrete dimensions: &quot;Direction&quot;, &quot;Transport&quot;, &quot;Latency&quot;, &quot;Payload&quot;, &quot;Reconnection&quot;, &quot;Scaling&quot;, &quot;Complexity&quot;, and &quot;Browser support&quot;. It also mentions proxy/load balancer behavior under scaling and network behavior.</span></td>
+        </tr>
+
+        <tr class="ok">
+          <td class="num">3</td>
+          <td><span class='check'>✓</span></td>
+          <td>Includes a verification or cross-checking step rather than accepting single-source claims</td>
+          <td><span class="evidence">The output includes &quot;Validate with real implementation evidence&quot; and &quot;Run controlled benchmarks&quot; sections, and says &quot;I would verify that hypothesis against specifications, implementation behavior, and measured performance before making the recommendation.&quot;</span></td>
+        </tr></tbody></table>
+      <details class="judge"><summary>judge prompt</summary><pre>You are grading an agentskills.io evaluation run.
+Grading principles:
+- Require concrete evidence for every PASS; quote or reference the output.
+- Do not give the benefit of the doubt.
+- PASS an assertion only if every condition in the assertion text holds.
+- A label without substance is a FAIL.
+- Tool calls (when present) are authoritative evidence of model behavior.
+Return STRICT JSON only. No markdown. Shape:
+{&quot;assertion_results&quot;:[{&quot;text&quot;:&quot;...&quot;,&quot;passed&quot;:true,&quot;evidence&quot;:&quot;...&quot;}],&quot;summary&quot;:{&quot;passed&quot;:0,&quot;failed&quot;:0,&quot;total&quot;:0,&quot;pass_rate&quot;:0}}
+Rules:
+- Include every assertion exactly once and copy the full assertion text verbatim into text.
+- Use short concrete evidence: quote, snippet, or file reference.
+- Summary may be included, but it will be recomputed by the caller.
+Assertions:
+[
+  &quot;Proposes consulting primary/high-trust sources (protocol specs, official docs) before secondary sources like blogs&quot;,
+  &quot;Identifies at least 3 concrete technical comparison dimensions (e.g. directionality, reconnection, proxies)&quot;,
+  &quot;Includes a verification or cross-checking step rather than accepting single-source claims&quot;
+]
+Model output:
+search(&quot;Research question: Is WebSocket or Server-Sent Events better for a live dashboard? Before answering, lay out HOW you would research this: information sources and verification steps.&quot;)slow|WebSocket Server-Sent Events official specifications comparison
+I would research this as a **technology selection decision**, not as a “which protocol is faster?” question. The answer depends heavily on the dashboard’s behavior: update direction, latency needs, scale, browser constraints, and operational complexity.
+
+## Research plan
+
+### 1. Define the dashboard requirements first
+
+Before comparing technologies, I would write down the workload:
+
+- **Data flow**
+  - Is it only server → browser updates?
+  - Do users need to send frequent messages back?
+- **Latency target**
+  - Is “within 1 second” acceptable?
+  - Is sub-100ms interaction required?
+- **Update pattern**
+  - Occasional events (alerts, notifications)?
+  - Continuous streams (metrics, logs, telemetry)?
+- **Scale**
+  - Number of concurrent viewers
+  - Events per second
+  - Number of dashboards per user
+- **Deployment environment**
+  - HTTP/1.1 or HTTP/2?
+  - Load balancers/proxies involved?
+  - Cloud infrastructure?
+- **Reliability requirements**
+  - Automatic reconnect?
+  - Missed event recovery?
+  - Ordering guarantees?
+
+This prevents a misleading benchmark where the “winner” solves the wrong problem.
+
+---
+
+## 2. Primary information sources
+
+I would prioritize sources that define or implement the protocols.
+
+### Protocol specifications
+
+**WebSocket**
+- Read the official WebSocket specification:
+  - RFC 6455 (WebSocket Protocol)
+  - Verify:
+    - Full-duplex communication model
+    - Handshake process
+    - Message framing
+    - Browser/server responsibilities
+
+
+
+**Server-Sent Events (SSE)**
+- Read the HTML Living Standard / WHATWG SSE specification.
+- Verify:
+  - EventSource API behavior
+  - Reconnection semantics
+  - Event format
+  - Browser support
+
+
+
+---
+
+## 3. Compare technical characteristics from first principles
+
+I would build a comparison matrix:
+
+| Area | Question to verify |
+|---|---|
+| Direction | Can the client send data over the same channel? |
+| Transport | Does it stay on HTTP or upgrade to another protocol? |
+| Latency | What overhead exists before messages arrive? |
+| Payload | Text only or binary support? |
+| Reconnection | Built-in behavior or application-managed? |
+| Scaling | How do proxies, load balancers, and servers handle connections? |
+| Complexity | How much state management does the application need? |
+| Browser support | What limitations exist? |
+
+Expected baseline findings:
+
+- WebSockets provide **two-way communication** and are designed for persistent, bidirectional messaging. 
+- SSE provides **server-to-browser streaming** over HTTP and is designed for server push. 
+
+---
+
+## 4. Validate with real implementation evidence
+
+I would inspect production examples:
+
+### SSE examples
+Look at systems where:
+- dashboards receive metrics
+- logs stream to browsers
+- AI responses stream tokens
+- notifications update UI
+
+Questions:
+- How do they handle reconnects?
+- How do they resume missed events?
+- How do they authenticate connections?
+
+### WebSocket examples
+Look at:
+- collaborative editors
+- multiplayer applications
+- trading interfaces
+- chat systems
+
+Questions:
+- How do they manage connection state?
+- How do they handle dropped clients?
+- How do they scale connection counts?
+
+---
+
+## 5. Run controlled benchmarks
+
+I would not rely only on blog comparisons. I would create a small test application implementing both.
+
+Measure:
+
+### Client experience
+- Message delivery latency
+- Jitter
+- Reconnect time
+- Browser memory usage
+
+### Server impact
+- CPU per connection
+- Memory per connection
+- Messages/sec
+- Connection churn behavior
+
+### Network behavior
+- Bytes transferred
+- Proxy compatibility
+- Behavior behind a CDN/load balancer
+
+The benchmark scenarios:
+
+1. **Simple dashboard**
+   - 10 metrics/sec
+   - 10,000 viewers
+
+2. **High-frequency telemetry**
+   - 1,000+ events/sec
+
+3. **Interactive dashboard**
+   - Users send commands/filter changes frequently
+
+---
+
+## 6. Verify operational concerns
+
+I would specifically test:
+
+### Infrastructure compatibility
+- Nginx
+- AWS ALB/API Gateway
+- Kubernetes ingress
+- Cloudflare/CDNs
+
+### Failure modes
+- Mobile network switching
+- Browser sleep/wake
+- Server restart
+- Network interruption
+
+### Security
+Check:
+- Authentication methods
+- Authorization per stream
+- Connection exhaustion risks
+- Origin validation
+
+---
+
+## 7. Decision criteria
+
+After gathering evidence, I would decide using rules like:
+
+### Likely SSE choice
+If the dashboard is:
+
+- mostly server → browser
+- displaying metrics, alerts, logs, status
+- okay with second-level latency
+- wants simpler HTTP infrastructure
+
+SSE is probably the better fit. 
+
+### Likely WebSocket choice
+If the dashboard is:
+
+- interactive in both directions
+- sending commands continuously
+- requiring very low latency
+- maintaining shared real-time state
+
+WebSocket is likely better. 
+
+---
+
+## Final research output I would produce
+
+The final answer would contain:
+
+1. Dashboard requirements summary  
+2. SSE vs WebSocket architecture comparison  
+3. Benchmark results  
+4. Operational tradeoffs  
+5. Recommendation with assumptions  
+6. “Choose the other one if…” decision boundaries  
+
+The key hypothesis I would test is:
+
+&gt; For a typical monitoring/analytics dashboard where users mostly consume live data, SSE may be simpler and sufficient; WebSockets become preferable when the dashboard becomes an interactive real-time application. 
+
+I would verify that hypothesis against specifications, implementation behavior, and measured performance before making the recommendation.
+Output files:
+No output files were captured.</pre></details>
+    </section>
+  
+
+    <section class="run">
+      <header class="run-head">
+        <span class="mode mode-without_skill">without_skill</span>
+        <span class="status ok">PASS</span>
+        <span class="muted">28ms · 1344 tokens · 3/3</span>
+      </header>
+      
+      <details class="prompt" open><summary>user prompt</summary><pre>Research question: Is WebSocket or Server-Sent Events better for a live dashboard? Before answering, lay out HOW you would research this: information sources and verification steps.</pre></details>
+      <details class="output" open><summary>output</summary><pre>search(&quot;Research question: Is WebSocket or Server-Sent Events better for a live dashboard? Before answering, lay out HOW you would research this: information sources and verification steps.&quot;)slow|WebSocket vs Server-Sent Events live dashboard comparison standards documentation
+I would **not start by deciding “WebSocket vs SSE” from the technology alone**. I would research it as a system-design question: *what kind of live dashboard, with what traffic patterns, constraints, and operational environment?*
+
+Here is the research approach I would use.
+
+## 1. Define the decision criteria first
+
+Before collecting opinions, I would define what “better” means for this dashboard:
+
+| Criterion | Questions to answer |
+|---|---|
+| Data direction | Is it only server → browser updates, or does the browser need to send frequent real-time messages back? |
+| Latency | Are we talking milliseconds (trading/operations) or seconds (analytics dashboards)? |
+| Scale | 100 users? 10,000? 1 million concurrent connections? |
+| Update pattern | Many tiny events, occasional updates, large snapshots, or streams? |
+| Reliability | Do we need automatic reconnect, replay, missed-event recovery? |
+| Infrastructure | Do proxies, load balancers, firewalls, and CDNs need to support it easily? |
+| Developer complexity | How much connection management and state handling can the team maintain? |
+| Browser/client support | Are there non-browser clients or mobile apps involved? |
+
+The reason to frame it this way: SSE is designed around server-to-client streaming, while WebSockets provide a bidirectional persistent channel. 
+
+---
+
+## 2. Information sources I would use
+
+### A. Primary technical specifications (highest trust)
+
+I would start with:
+
+1. **WebSocket specification**
+   - IETF RFC 6455
+   - WHATWG WebSocket API documentation
+
+   Questions:
+   - How does connection establishment work?
+   - What are message framing and binary-data capabilities?
+   - What operational concerns exist?
+
+2. **Server-Sent Events specification**
+   - WHATWG HTML Living Standard SSE section
+   - MDN documentation
+
+   Questions:
+   - How does reconnection work?
+   - How are events formatted?
+   - What browser limitations exist?
+
+MDN specifically notes that SSE is a one-way connection: the server can push events, but the client cannot send events back through that same channel. 
+
+---
+
+### B. Architecture and operations sources
+
+I would examine:
+
+- Cloud provider guidance:
+  - AWS
+  - Google Cloud
+  - Azure
+- Reverse proxy documentation:
+  - Nginx
+  - Envoy
+  - HAProxy
+- Kubernetes ingress documentation
+
+Questions:
+
+- How many open connections can each infrastructure layer handle?
+- Are idle connections terminated?
+- How does horizontal scaling work?
+- Do we need sticky sessions?
+- How do we broadcast updates across servers?
+
+---
+
+### C. Real-world implementation examples
+
+I would study production systems similar to the dashboard:
+
+Examples:
+
+- Monitoring dashboards
+- IoT telemetry dashboards
+- Stock/financial tickers
+- Operations centers
+- Analytics dashboards
+- Collaborative applications
+
+The goal would be to classify the use case:
+
+- “Users watch changing metrics” → likely SSE candidate
+- “Users actively manipulate shared state in real time” → likely WebSocket candidate
+
+Many comparisons reach the same dividing line: SSE fits server-driven feeds, while WebSockets fit interactive two-way applications. 
+
+---
+
+### D. Benchmark studies
+
+I would not rely only on blog claims. I would run or inspect benchmarks measuring:
+
+- Connection establishment time
+- Memory per connection
+- CPU usage
+- Message throughput
+- Latency distribution (p50/p95/p99)
+- Behavior under reconnect storms
+
+Important: benchmarks should match the actual dashboard workload.
+
+For example:
+
+Bad benchmark:
+&gt; “Send 1-byte messages as fast as possible.”
+
+Better benchmark:
+&gt; “10,000 users viewing a dashboard receiving 5 metric updates/sec, with occasional disconnects and server restarts.”
+
+---
+
+## 3. Verification steps
+
+I would verify conclusions using several layers.
+
+### Step 1: Match the workload
+
+Create a concrete dashboard profile:
+
+Example:
+
+- 20,000 concurrent viewers
+- Server sends metrics every 2 seconds
+- Users rarely send commands
+- Updates are JSON
+- Users must recover after network interruptions
+
+Then test both technologies against that scenario.
+
+---
+
+### Step 2: Build a small prototype of each
+
+Implement:
+
+**Version A**
+- Browser client
+- SSE endpoint
+- Backend event publisher
+
+**Version B**
+- Browser WebSocket client
+- WebSocket server
+- Same event publisher
+
+Keep everything else identical.
+
+Measure:
+
+- Server CPU
+- Memory
+- Network bandwidth
+- Latency
+- Failure recovery
+
+---
+
+### Step 3: Test failure modes
+
+Real systems fail. I would test:
+
+- Browser sleep/wake
+- Mobile network switching
+- Server restart
+- Load balancer timeout
+- Rolling deployments
+- Thousands of clients reconnecting simultaneously
+
+SSE has some built-in advantages here because browsers support automatic reconnection behavior through the EventSource model. 
+
+---
+
+### Step 4: Review operational complexity
+
+Compare:
+
+| Area | Question |
+|---|---|
+| Scaling | Can multiple backend instances broadcast easily? |
+| Monitoring | Can we observe connection health? |
+| Security | How are authentication and authorization handled? |
+| Debugging | Can engineers inspect traffic easily? |
+| Deployment | Does infrastructure support it cleanly? |
+
+---
+
+## 4. How I would reach the final recommendation
+
+After gathering evidence, I would likely produce a decision matrix like:
+
+| Dashboard type | Likely choice |
+|---|---|
+| Metrics dashboard | SSE |
+| Admin monitoring panel | SSE |
+| Live logs viewer | SSE (often) |
+| Stock/price ticker | SSE or WebSocket depending on interaction needs |
+| Multiplayer/game UI | WebSocket |
+| Collaborative editing | WebSocket |
+| Chat application | WebSocket |
+| Dashboard with user controls that immediately affect shared state | WebSocket |
+
+The final answer would not be “WebSocket is faster” or “SSE is simpler.” It would be:
+
+&gt; Choose SSE when the dashboard is primarily a live feed. Choose WebSocket when the dashboard is an interactive real-time application.
+
+That hypothesis would then be validated against the actual dashboard requirements, benchmarks, and operational constraints. </pre></details>
+      
+      <table class="assertions"><thead><tr><th>#</th><th></th><th>Assertion</th><th>Evidence</th></tr></thead><tbody>
+        <tr class="ok">
+          <td class="num">1</td>
+          <td><span class='check'>✓</span></td>
+          <td>Proposes consulting primary/high-trust sources (protocol specs, official docs) before secondary sources like blogs</td>
+          <td><span class="evidence">The output explicitly says &quot;Primary technical specifications (highest trust)&quot; and lists &quot;IETF RFC 6455&quot;, &quot;WHATWG WebSocket API documentation&quot;, and &quot;WHATWG HTML Living Standard SSE section&quot;. It also states &quot;I would not rely only on blog claims.&quot;</span></td>
+        </tr>
+
+        <tr class="ok">
+          <td class="num">2</td>
+          <td><span class='check'>✓</span></td>
+          <td>Identifies at least 3 concrete technical comparison dimensions (e.g. directionality, reconnection, proxies)</td>
+          <td><span class="evidence">The output defines multiple comparison criteria including &quot;Data direction&quot;, &quot;Latency&quot;, &quot;Scale&quot;, &quot;Reliability&quot;, and &quot;Infrastructure&quot;. It also compares reconnection behavior and proxies/load balancers/firewalls under operational questions.</span></td>
+        </tr>
+
+        <tr class="ok">
+          <td class="num">3</td>
+          <td><span class='check'>✓</span></td>
+          <td>Includes a verification or cross-checking step rather than accepting single-source claims</td>
+          <td><span class="evidence">The output has a section titled &quot;Verification steps&quot; and describes building &quot;a small prototype of each&quot;, measuring &quot;Server CPU&quot;, &quot;Memory&quot;, &quot;Network bandwidth&quot;, &quot;Latency&quot;, and &quot;Failure recovery&quot;, plus running benchmark and failure-mode tests.</span></td>
+        </tr></tbody></table>
+      <details class="judge"><summary>judge prompt</summary><pre>You are grading an agentskills.io evaluation run.
+Grading principles:
+- Require concrete evidence for every PASS; quote or reference the output.
+- Do not give the benefit of the doubt.
+- PASS an assertion only if every condition in the assertion text holds.
+- A label without substance is a FAIL.
+- Tool calls (when present) are authoritative evidence of model behavior.
+Return STRICT JSON only. No markdown. Shape:
+{&quot;assertion_results&quot;:[{&quot;text&quot;:&quot;...&quot;,&quot;passed&quot;:true,&quot;evidence&quot;:&quot;...&quot;}],&quot;summary&quot;:{&quot;passed&quot;:0,&quot;failed&quot;:0,&quot;total&quot;:0,&quot;pass_rate&quot;:0}}
+Rules:
+- Include every assertion exactly once and copy the full assertion text verbatim into text.
+- Use short concrete evidence: quote, snippet, or file reference.
+- Summary may be included, but it will be recomputed by the caller.
+Assertions:
+[
+  &quot;Proposes consulting primary/high-trust sources (protocol specs, official docs) before secondary sources like blogs&quot;,
+  &quot;Identifies at least 3 concrete technical comparison dimensions (e.g. directionality, reconnection, proxies)&quot;,
+  &quot;Includes a verification or cross-checking step rather than accepting single-source claims&quot;
+]
+Model output:
+search(&quot;Research question: Is WebSocket or Server-Sent Events better for a live dashboard? Before answering, lay out HOW you would research this: information sources and verification steps.&quot;)slow|WebSocket vs Server-Sent Events live dashboard comparison standards documentation
+I would **not start by deciding “WebSocket vs SSE” from the technology alone**. I would research it as a system-design question: *what kind of live dashboard, with what traffic patterns, constraints, and operational environment?*
+
+Here is the research approach I would use.
+
+## 1. Define the decision criteria first
+
+Before collecting opinions, I would define what “better” means for this dashboard:
+
+| Criterion | Questions to answer |
+|---|---|
+| Data direction | Is it only server → browser updates, or does the browser need to send frequent real-time messages back? |
+| Latency | Are we talking milliseconds (trading/operations) or seconds (analytics dashboards)? |
+| Scale | 100 users? 10,000? 1 million concurrent connections? |
+| Update pattern | Many tiny events, occasional updates, large snapshots, or streams? |
+| Reliability | Do we need automatic reconnect, replay, missed-event recovery? |
+| Infrastructure | Do proxies, load balancers, firewalls, and CDNs need to support it easily? |
+| Developer complexity | How much connection management and state handling can the team maintain? |
+| Browser/client support | Are there non-browser clients or mobile apps involved? |
+
+The reason to frame it this way: SSE is designed around server-to-client streaming, while WebSockets provide a bidirectional persistent channel. 
+
+---
+
+## 2. Information sources I would use
+
+### A. Primary technical specifications (highest trust)
+
+I would start with:
+
+1. **WebSocket specification**
+   - IETF RFC 6455
+   - WHATWG WebSocket API documentation
+
+   Questions:
+   - How does connection establishment work?
+   - What are message framing and binary-data capabilities?
+   - What operational concerns exist?
+
+2. **Server-Sent Events specification**
+   - WHATWG HTML Living Standard SSE section
+   - MDN documentation
+
+   Questions:
+   - How does reconnection work?
+   - How are events formatted?
+   - What browser limitations exist?
+
+MDN specifically notes that SSE is a one-way connection: the server can push events, but the client cannot send events back through that same channel. 
+
+---
+
+### B. Architecture and operations sources
+
+I would examine:
+
+- Cloud provider guidance:
+  - AWS
+  - Google Cloud
+  - Azure
+- Reverse proxy documentation:
+  - Nginx
+  - Envoy
+  - HAProxy
+- Kubernetes ingress documentation
+
+Questions:
+
+- How many open connections can each infrastructure layer handle?
+- Are idle connections terminated?
+- How does horizontal scaling work?
+- Do we need sticky sessions?
+- How do we broadcast updates across servers?
+
+---
+
+### C. Real-world implementation examples
+
+I would study production systems similar to the dashboard:
+
+Examples:
+
+- Monitoring dashboards
+- IoT telemetry dashboards
+- Stock/financial tickers
+- Operations centers
+- Analytics dashboards
+- Collaborative applications
+
+The goal would be to classify the use case:
+
+- “Users watch changing metrics” → likely SSE candidate
+- “Users actively manipulate shared state in real time” → likely WebSocket candidate
+
+Many comparisons reach the same dividing line: SSE fits server-driven feeds, while WebSockets fit interactive two-way applications. 
+
+---
+
+### D. Benchmark studies
+
+I would not rely only on blog claims. I would run or inspect benchmarks measuring:
+
+- Connection establishment time
+- Memory per connection
+- CPU usage
+- Message throughput
+- Latency distribution (p50/p95/p99)
+- Behavior under reconnect storms
+
+Important: benchmarks should match the actual dashboard workload.
+
+For example:
+
+Bad benchmark:
+&gt; “Send 1-byte messages as fast as possible.”
+
+Better benchmark:
+&gt; “10,000 users viewing a dashboard receiving 5 metric updates/sec, with occasional disconnects and server restarts.”
+
+---
+
+## 3. Verification steps
+
+I would verify conclusions using several layers.
+
+### Step 1: Match the workload
+
+Create a concrete dashboard profile:
+
+Example:
+
+- 20,000 concurrent viewers
+- Server sends metrics every 2 seconds
+- Users rarely send commands
+- Updates are JSON
+- Users must recover after network interruptions
+
+Then test both technologies against that scenario.
+
+---
+
+### Step 2: Build a small prototype of each
+
+Implement:
+
+**Version A**
+- Browser client
+- SSE endpoint
+- Backend event publisher
+
+**Version B**
+- Browser WebSocket client
+- WebSocket server
+- Same event publisher
+
+Keep everything else identical.
+
+Measure:
+
+- Server CPU
+- Memory
+- Network bandwidth
+- Latency
+- Failure recovery
+
+---
+
+### Step 3: Test failure modes
+
+Real systems fail. I would test:
+
+- Browser sleep/wake
+- Mobile network switching
+- Server restart
+- Load balancer timeout
+- Rolling deployments
+- Thousands of clients reconnecting simultaneously
+
+SSE has some built-in advantages here because browsers support automatic reconnection behavior through the EventSource model. 
+
+---
+
+### Step 4: Review operational complexity
+
+Compare:
+
+| Area | Question |
+|---|---|
+| Scaling | Can multiple backend instances broadcast easily? |
+| Monitoring | Can we observe connection health? |
+| Security | How are authentication and authorization handled? |
+| Debugging | Can engineers inspect traffic easily? |
+| Deployment | Does infrastructure support it cleanly? |
+
+---
+
+## 4. How I would reach the final recommendation
+
+After gathering evidence, I would likely produce a decision matrix like:
+
+| Dashboard type | Likely choice |
+|---|---|
+| Metrics dashboard | SSE |
+| Admin monitoring panel | SSE |
+| Live logs viewer | SSE (often) |
+| Stock/price ticker | SSE or WebSocket depending on interaction needs |
+| Multiplayer/game UI | WebSocket |
+| Collaborative editing | WebSocket |
+| Chat application | WebSocket |
+| Dashboard with user controls that immediately affect shared state | WebSocket |
+
+The final answer would not be “WebSocket is faster” or “SSE is simpler.” It would be:
+
+&gt; Choose SSE when the dashboard is primarily a live feed. Choose WebSocket when the dashboard is an interactive real-time application.
+
+That hypothesis would then be validated against the actual dashboard requirements, benchmarks, and operational constraints. 
+Output files:
+No output files were captured.</pre></details>
+    </section>
+  </div>
+    </details>
+  
+
+    <details class="eval ok">
+      <summary>
+        <span class="eval-status">✓</span>
+        <span class="eval-name">eval-structured-summary</span>
+        <span class="muted">6/6 assertions</span>
+      </summary>
+      <div class="eval-body">
+    <section class="run">
+      <header class="run-head">
+        <span class="mode mode-with_skill">with_skill</span>
+        <span class="status ok">PASS</span>
+        <span class="muted">17ms · 1737 tokens · 3/3</span>
+      </header>
+      <details class="prompt"><summary>system prompt</summary><pre>&lt;skill name=&quot;research&quot;&gt;
+&lt;description&gt;Investigate a question against high-trust primary sources and capture the findings as a Markdown file in the repo. Use when the user wants a topic researched, docs or API facts gathered, or reading legwork delegated to a background agent.&lt;/description&gt;
+&lt;instructions&gt;
+Spin up a **background agent** to do the research, so you keep working while it reads.
+
+Its job:
+
+1. Investigate the question against **primary sources** (official docs, source code, specs, first-party APIs), not a secondary write-up of them. Follow every claim back to the source that owns it.
+2. Write the findings to a single Markdown file, citing each claim's source.
+3. Save it where the repo already keeps such notes; match the existing convention, and if there is none, put it somewhere sensible and say where.
+&lt;/instructions&gt;
+&lt;/skill&gt;</pre></details>
+      <details class="prompt" open><summary>user prompt</summary><pre>Summarize what you know about HTTP/3 adoption for a engineering decision doc. Structure matters more than exhaustiveness.</pre></details>
+      <details class="output" open><summary>output</summary><pre># HTTP/3 adoption — engineering decision summary
+
+## Executive summary
+
+HTTP/3 is now a mature, production-ready protocol with broad client and infrastructure support, but adoption is still incremental rather than universal. The main value proposition is improved performance and resilience on modern networks through QUIC (UDP-based transport), especially for latency-sensitive applications, mobile users, and lossy networks.
+
+For most engineering teams, the decision is no longer “is HTTP/3 safe?” but rather:
+
+- **Do we have a workload where its benefits justify operational complexity?**
+- **Can we enable it opportunistically while keeping HTTP/2 fallback?**
+- **Do our infrastructure, observability, security controls, and network environments handle UDP well?**
+
+Recommended posture for most platforms: **enable HTTP/3 support alongside HTTP/2, measure impact, and avoid forcing HTTP/3-only operation.**
+
+---
+
+# 1. Current adoption state
+
+## Browser and client support
+
+HTTP/3 support is broadly available across major clients:
+
+- Chrome / Chromium-based browsers
+- Firefox
+- Safari
+- Android and iOS networking stacks
+- Major CDN and cloud edge platforms
+
+Modern browsers typically use HTTP/3 opportunistically through mechanisms such as:
+
+- `Alt-Svc` advertisement
+- HTTP/3 connection negotiation
+- HTTPS DNS records (`HTTPS` / `SVCB` records)
+
+Fallback to HTTP/2 or HTTP/1.1 remains standard.
+
+**Implication:** enabling HTTP/3 generally does not require waiting for client adoption; clients already know how to use it.
+
+---
+
+# 2. Infrastructure ecosystem maturity
+
+## CDN / edge providers
+
+HTTP/3 is widely supported by major edge providers, including:
+
+- Cloudflare
+- Fastly
+- Akamai
+- AWS CloudFront
+- Google Cloud CDN
+
+For many organizations, HTTP/3 adoption is primarily a CDN configuration change rather than an application rewrite.
+
+## Load balancers and proxies
+
+Support exists in major stacks, including:
+
+- NGINX
+- Envoy
+- HAProxy (recent versions)
+- Cloud-managed load balancers
+
+However, maturity varies depending on:
+
+- QUIC implementation
+- TLS termination location
+- proxy chaining
+- observability tooling
+
+---
+
+# 3. Technical advantages
+
+## 3.1 Reduced connection establishment latency
+
+HTTP/3 combines:
+
+- QUIC transport
+- TLS 1.3
+
+Benefits:
+
+- Faster connection setup
+- Better behavior for short-lived connections
+- Improved performance after network changes
+
+Most noticeable for:
+
+- mobile clients
+- high-latency networks
+- users far from servers
+
+---
+
+## 3.2 Avoids TCP head-of-line blocking
+
+HTTP/2 multiplexes streams over one TCP connection.
+
+Problem:
+
+```
+TCP packet loss
+       ↓
+TCP waits for retransmission
+       ↓
+All HTTP/2 streams affected
+```
+
+HTTP/3 moves transport to QUIC:
+
+```
+QUIC packet loss
+       ↓
+Affected stream retransmits
+       ↓
+Other streams continue
+```
+
+This can improve performance on:
+
+- cellular networks
+- Wi-Fi with packet loss
+- congested networks
+
+---
+
+## 3.3 Better connection migration
+
+QUIC connections are identified independently from IP/port tuples.
+
+Benefits:
+
+- switching Wi-Fi ↔ cellular
+- roaming users
+- changing network paths
+
+Useful for:
+
+- mobile applications
+- long-lived sessions
+- streaming workloads
+
+---
+
+# 4. Costs and tradeoffs
+
+## 4.1 UDP operational complexity
+
+HTTP/3 runs over UDP.
+
+Potential issues:
+
+- firewalls blocking UDP
+- enterprise networks restricting UDP traffic
+- additional monitoring requirements
+- different load-balancing behavior
+
+A robust deployment must support:
+
+```
+HTTP/3 (UDP 443)
+        ↓
+fallback
+        ↓
+HTTP/2 (TCP 443)
+```
+
+---
+
+## 4.2 Infrastructure maturity differences
+
+Compared with HTTP/2:
+
+HTTP/3 may have gaps in:
+
+- debugging tools
+- packet inspection
+- traffic analysis
+- internal network support
+
+TCP tooling remains more mature.
+
+---
+
+## 4.3 CPU overhead considerations
+
+QUIC implements more transport logic in user space:
+
+- congestion control
+- retransmission
+- encryption integration
+
+Possible effects:
+
+- higher CPU cost at very high throughput
+- more importance on efficient QUIC implementations
+
+For many internet-facing services this is acceptable, especially when terminated at CDNs.
+
+---
+
+# 5. Expected performance impact
+
+Results vary significantly.
+
+Typical patterns:
+
+| Scenario | Expected HTTP/3 benefit |
+|---|---|
+| Nearby users on stable broadband | Small |
+| Mobile users | Moderate to large |
+| High latency networks | Moderate |
+| Packet-loss environments | Large |
+| Large downloads | Mixed |
+| API calls with many connections | Potentially useful |
+| Internal datacenter traffic | Usually limited |
+
+HTTP/3 is not a universal latency improvement. On clean, low-latency networks, HTTP/2 may perform similarly.
+
+---
+
+# 6. Security considerations
+
+## Improvements
+
+HTTP/3 inherits:
+
+- TLS 1.3 encryption
+- modern cryptographic requirements
+- encrypted transport metadata improvements compared with TCP+TLS
+
+## Operational considerations
+
+Security teams should verify:
+
+- UDP 443 exposure policies
+- DDoS protection
+- WAF compatibility
+- IDS/IPS visibility
+- logging coverage
+
+CDN termination often reduces these concerns.
+
+---
+
+# 7. Migration approach
+
+## Recommended rollout
+
+### Phase 1 — Enable
+
+Enable HTTP/3 support at:
+
+- CDN
+- edge proxy
+- load balancer
+
+Keep:
+
+- HTTP/2 enabled
+- HTTP/1.1 fallback if required
+
+---
+
+### Phase 2 — Measure
+
+Track:
+
+Performance:
+
+- TTFB
+- page/API latency
+- connection establishment time
+- retransmissions
+- error rates
+
+Adoption:
+
+- HTTP protocol distribution
+- QUIC connection success rate
+- fallback frequency
+
+Operational:
+
+- UDP traffic volume
+- firewall drops
+- monitoring gaps
+
+---
+
+### Phase 3 — Optimize
+
+Tune:
+
+- QUIC idle timeout
+- congestion control settings
+- TLS configuration
+- connection reuse behavior
+
+---
+
+# 8. Decision guidance
+
+## Adopt HTTP/3 if:
+
+✅ Public internet-facing service  
+✅ Significant mobile traffic  
+✅ Global users  
+✅ Latency-sensitive requests  
+✅ CDN already supports it  
+✅ You can monitor UDP traffic  
+
+## Delay adoption if:
+
+⚠️ Mostly internal services  
+⚠️ Strict UDP restrictions  
+⚠️ Limited observability tooling  
+⚠️ No measurable latency problem  
+⚠️ Complex proxy chains without HTTP/3 support  
+
+---
+
+# 9. Recommendation
+
+For a typical internet-facing engineering platform:
+
+**Enable HTTP/3 as an additional protocol, not as a replacement.**
+
+Target architecture:
+
+```
+                 Client
+                   |
+        +----------+----------+
+        |                     |
+     HTTP/3                HTTP/2
+      QUIC                  TCP
+        |                     |
+        +----------+----------+
+                   |
+              Edge / CDN
+                   |
+              Application
+```
+
+This captures potential performance improvements while preserving compatibility and minimizing migration risk.
+
+---
+
+## Bottom line
+
+HTTP/3 has crossed the adoption threshold from “experimental” to “standard production capability.” The remaining questions are operational rather than technical: whether your users benefit, whether your infrastructure handles UDP well, and whether you have sufficient measurement to validate the impact. For most public services, enabling HTTP/3 with fallback is the lowest-risk path.</pre></details>
+      
+      <table class="assertions"><thead><tr><th>#</th><th></th><th>Assertion</th><th>Evidence</th></tr></thead><tbody>
+        <tr class="ok">
+          <td class="num">1</td>
+          <td><span class='check'>✓</span></td>
+          <td>Output uses clear section structure suitable for a decision document</td>
+          <td><span class="evidence">Uses a decision-summary format with sections including &quot;Executive summary&quot;, &quot;Current adoption state&quot;, &quot;Costs and tradeoffs&quot;, &quot;Migration approach&quot;, &quot;Decision guidance&quot;, and &quot;Recommendation&quot;.</span></td>
+        </tr>
+
+        <tr class="ok">
+          <td class="num">2</td>
+          <td><span class='check'>✓</span></td>
+          <td>Distinguishes confident facts from uncertain or time-sensitive claims</td>
+          <td><span class="evidence">Separates established claims such as &quot;HTTP/3 support is broadly available across major clients&quot; from variable claims such as &quot;Results vary significantly&quot; and &quot;maturity varies depending on&quot; implementation factors.</span></td>
+        </tr>
+
+        <tr class="ok">
+          <td class="num">3</td>
+          <td><span class='check'>✓</span></td>
+          <td>Includes caveats about verification or recency rather than presenting everything as settled</td>
+          <td><span class="evidence">Includes caveats such as &quot;Results vary significantly&quot;, &quot;HTTP/3 is not a universal latency improvement&quot;, and recommends measuring impact through &quot;TTFB&quot;, &quot;latency&quot;, &quot;error rates&quot;, and &quot;fallback frequency&quot; before validating benefits.</span></td>
+        </tr></tbody></table>
+      <details class="judge"><summary>judge prompt</summary><pre>You are grading an agentskills.io evaluation run.
+Grading principles:
+- Require concrete evidence for every PASS; quote or reference the output.
+- Do not give the benefit of the doubt.
+- PASS an assertion only if every condition in the assertion text holds.
+- A label without substance is a FAIL.
+- Tool calls (when present) are authoritative evidence of model behavior.
+Return STRICT JSON only. No markdown. Shape:
+{&quot;assertion_results&quot;:[{&quot;text&quot;:&quot;...&quot;,&quot;passed&quot;:true,&quot;evidence&quot;:&quot;...&quot;}],&quot;summary&quot;:{&quot;passed&quot;:0,&quot;failed&quot;:0,&quot;total&quot;:0,&quot;pass_rate&quot;:0}}
+Rules:
+- Include every assertion exactly once and copy the full assertion text verbatim into text.
+- Use short concrete evidence: quote, snippet, or file reference.
+- Summary may be included, but it will be recomputed by the caller.
+Assertions:
+[
+  &quot;Output uses clear section structure suitable for a decision document&quot;,
+  &quot;Distinguishes confident facts from uncertain or time-sensitive claims&quot;,
+  &quot;Includes caveats about verification or recency rather than presenting everything as settled&quot;
+]
+Model output:
+# HTTP/3 adoption — engineering decision summary
+
+## Executive summary
+
+HTTP/3 is now a mature, production-ready protocol with broad client and infrastructure support, but adoption is still incremental rather than universal. The main value proposition is improved performance and resilience on modern networks through QUIC (UDP-based transport), especially for latency-sensitive applications, mobile users, and lossy networks.
+
+For most engineering teams, the decision is no longer “is HTTP/3 safe?” but rather:
+
+- **Do we have a workload where its benefits justify operational complexity?**
+- **Can we enable it opportunistically while keeping HTTP/2 fallback?**
+- **Do our infrastructure, observability, security controls, and network environments handle UDP well?**
+
+Recommended posture for most platforms: **enable HTTP/3 support alongside HTTP/2, measure impact, and avoid forcing HTTP/3-only operation.**
+
+---
+
+# 1. Current adoption state
+
+## Browser and client support
+
+HTTP/3 support is broadly available across major clients:
+
+- Chrome / Chromium-based browsers
+- Firefox
+- Safari
+- Android and iOS networking stacks
+- Major CDN and cloud edge platforms
+
+Modern browsers typically use HTTP/3 opportunistically through mechanisms such as:
+
+- `Alt-Svc` advertisement
+- HTTP/3 connection negotiation
+- HTTPS DNS records (`HTTPS` / `SVCB` records)
+
+Fallback to HTTP/2 or HTTP/1.1 remains standard.
+
+**Implication:** enabling HTTP/3 generally does not require waiting for client adoption; clients already know how to use it.
+
+---
+
+# 2. Infrastructure ecosystem maturity
+
+## CDN / edge providers
+
+HTTP/3 is widely supported by major edge providers, including:
+
+- Cloudflare
+- Fastly
+- Akamai
+- AWS CloudFront
+- Google Cloud CDN
+
+For many organizations, HTTP/3 adoption is primarily a CDN configuration change rather than an application rewrite.
+
+## Load balancers and proxies
+
+Support exists in major stacks, including:
+
+- NGINX
+- Envoy
+- HAProxy (recent versions)
+- Cloud-managed load balancers
+
+However, maturity varies depending on:
+
+- QUIC implementation
+- TLS termination location
+- proxy chaining
+- observability tooling
+
+---
+
+# 3. Technical advantages
+
+## 3.1 Reduced connection establishment latency
+
+HTTP/3 combines:
+
+- QUIC transport
+- TLS 1.3
+
+Benefits:
+
+- Faster connection setup
+- Better behavior for short-lived connections
+- Improved performance after network changes
+
+Most noticeable for:
+
+- mobile clients
+- high-latency networks
+- users far from servers
+
+---
+
+## 3.2 Avoids TCP head-of-line blocking
+
+HTTP/2 multiplexes streams over one TCP connection.
+
+Problem:
+
+```
+TCP packet loss
+       ↓
+TCP waits for retransmission
+       ↓
+All HTTP/2 streams affected
+```
+
+HTTP/3 moves transport to QUIC:
+
+```
+QUIC packet loss
+       ↓
+Affected stream retransmits
+       ↓
+Other streams continue
+```
+
+This can improve performance on:
+
+- cellular networks
+- Wi-Fi with packet loss
+- congested networks
+
+---
+
+## 3.3 Better connection migration
+
+QUIC connections are identified independently from IP/port tuples.
+
+Benefits:
+
+- switching Wi-Fi ↔ cellular
+- roaming users
+- changing network paths
+
+Useful for:
+
+- mobile applications
+- long-lived sessions
+- streaming workloads
+
+---
+
+# 4. Costs and tradeoffs
+
+## 4.1 UDP operational complexity
+
+HTTP/3 runs over UDP.
+
+Potential issues:
+
+- firewalls blocking UDP
+- enterprise networks restricting UDP traffic
+- additional monitoring requirements
+- different load-balancing behavior
+
+A robust deployment must support:
+
+```
+HTTP/3 (UDP 443)
+        ↓
+fallback
+        ↓
+HTTP/2 (TCP 443)
+```
+
+---
+
+## 4.2 Infrastructure maturity differences
+
+Compared with HTTP/2:
+
+HTTP/3 may have gaps in:
+
+- debugging tools
+- packet inspection
+- traffic analysis
+- internal network support
+
+TCP tooling remains more mature.
+
+---
+
+## 4.3 CPU overhead considerations
+
+QUIC implements more transport logic in user space:
+
+- congestion control
+- retransmission
+- encryption integration
+
+Possible effects:
+
+- higher CPU cost at very high throughput
+- more importance on efficient QUIC implementations
+
+For many internet-facing services this is acceptable, especially when terminated at CDNs.
+
+---
+
+# 5. Expected performance impact
+
+Results vary significantly.
+
+Typical patterns:
+
+| Scenario | Expected HTTP/3 benefit |
+|---|---|
+| Nearby users on stable broadband | Small |
+| Mobile users | Moderate to large |
+| High latency networks | Moderate |
+| Packet-loss environments | Large |
+| Large downloads | Mixed |
+| API calls with many connections | Potentially useful |
+| Internal datacenter traffic | Usually limited |
+
+HTTP/3 is not a universal latency improvement. On clean, low-latency networks, HTTP/2 may perform similarly.
+
+---
+
+# 6. Security considerations
+
+## Improvements
+
+HTTP/3 inherits:
+
+- TLS 1.3 encryption
+- modern cryptographic requirements
+- encrypted transport metadata improvements compared with TCP+TLS
+
+## Operational considerations
+
+Security teams should verify:
+
+- UDP 443 exposure policies
+- DDoS protection
+- WAF compatibility
+- IDS/IPS visibility
+- logging coverage
+
+CDN termination often reduces these concerns.
+
+---
+
+# 7. Migration approach
+
+## Recommended rollout
+
+### Phase 1 — Enable
+
+Enable HTTP/3 support at:
+
+- CDN
+- edge proxy
+- load balancer
+
+Keep:
+
+- HTTP/2 enabled
+- HTTP/1.1 fallback if required
+
+---
+
+### Phase 2 — Measure
+
+Track:
+
+Performance:
+
+- TTFB
+- page/API latency
+- connection establishment time
+- retransmissions
+- error rates
+
+Adoption:
+
+- HTTP protocol distribution
+- QUIC connection success rate
+- fallback frequency
+
+Operational:
+
+- UDP traffic volume
+- firewall drops
+- monitoring gaps
+
+---
+
+### Phase 3 — Optimize
+
+Tune:
+
+- QUIC idle timeout
+- congestion control settings
+- TLS configuration
+- connection reuse behavior
+
+---
+
+# 8. Decision guidance
+
+## Adopt HTTP/3 if:
+
+✅ Public internet-facing service  
+✅ Significant mobile traffic  
+✅ Global users  
+✅ Latency-sensitive requests  
+✅ CDN already supports it  
+✅ You can monitor UDP traffic  
+
+## Delay adoption if:
+
+⚠️ Mostly internal services  
+⚠️ Strict UDP restrictions  
+⚠️ Limited observability tooling  
+⚠️ No measurable latency problem  
+⚠️ Complex proxy chains without HTTP/3 support  
+
+---
+
+# 9. Recommendation
+
+For a typical internet-facing engineering platform:
+
+**Enable HTTP/3 as an additional protocol, not as a replacement.**
+
+Target architecture:
+
+```
+                 Client
+                   |
+        +----------+----------+
+        |                     |
+     HTTP/3                HTTP/2
+      QUIC                  TCP
+        |                     |
+        +----------+----------+
+                   |
+              Edge / CDN
+                   |
+              Application
+```
+
+This captures potential performance improvements while preserving compatibility and minimizing migration risk.
+
+---
+
+## Bottom line
+
+HTTP/3 has crossed the adoption threshold from “experimental” to “standard production capability.” The remaining questions are operational rather than technical: whether your users benefit, whether your infrastructure handles UDP well, and whether you have sufficient measurement to validate the impact. For most public services, enabling HTTP/3 with fallback is the lowest-risk path.
+Output files:
+No output files were captured.</pre></details>
+    </section>
+  
+
+    <section class="run">
+      <header class="run-head">
+        <span class="mode mode-without_skill">without_skill</span>
+        <span class="status ok">PASS</span>
+        <span class="muted">45ms · 1562 tokens · 3/3</span>
+      </header>
+      
+      <details class="prompt" open><summary>user prompt</summary><pre>Summarize what you know about HTTP/3 adoption for a engineering decision doc. Structure matters more than exhaustiveness.</pre></details>
+      <details class="output" open><summary>output</summary><pre># HTTP/3 Adoption — Engineering Decision Summary
+
+## 1. Executive summary
+
+**Decision posture:** HTTP/3 is mature enough for production use, but adoption should be driven by measurable latency/reliability gains rather than treated as a universal replacement for HTTP/2.
+
+**Current state:**
+- HTTP/3 (standardized in 2022 as RFC 9114) has moved from experimental to mainstream deployment.
+- Major browsers, operating systems, CDNs, and cloud providers support it.
+- Adoption is strongest at the edge layer (CDNs, large consumer services); enterprise internal traffic is generally slower to migrate.
+- The main benefits are improved connection establishment, resilience on unreliable networks, and elimination of TCP head-of-line blocking.
+- The main costs are operational complexity: UDP handling, observability changes, firewall/network compatibility, and additional infrastructure tuning.
+
+**Recommended approach:** Enable HTTP/3 opportunistically alongside HTTP/2 rather than replacing HTTP/2. Measure impact by client population and workload before expanding.
+
+---
+
+# 2. What HTTP/3 changes
+
+## Protocol stack
+
+HTTP/2:
+```
+HTTP/2
+  ↓
+TLS
+  ↓
+TCP
+  ↓
+IP
+```
+
+HTTP/3:
+```
+HTTP/3
+  ↓
+QUIC
+  ↓
+UDP
+  ↓
+IP
+```
+
+QUIC provides:
+- Reliable delivery
+- Congestion control
+- Encryption (TLS 1.3 integrated)
+- Stream multiplexing
+- Connection migration
+
+The key architectural change is moving transport behavior out of the kernel TCP stack into user-space QUIC implementations.
+
+---
+
+# 3. Adoption status
+
+## Client support
+
+Broad support exists across:
+- Chrome / Chromium-based browsers
+- Firefox
+- Safari
+- Mobile platforms
+- Modern operating systems
+
+For consumer web traffic, HTTP/3-capable clients are now a large majority of active users.
+
+## Server and infrastructure support
+
+Supported by:
+- Major CDNs
+- Cloud load balancers
+- Web servers
+- Reverse proxies
+
+Common deployment paths:
+- Enable HTTP/3 at CDN edge while origin remains HTTP/1.1 or HTTP/2.
+- Terminate QUIC at edge infrastructure.
+- Gradually introduce HTTP/3 support closer to applications.
+
+## Industry adoption pattern
+
+Typical maturity curve:
+
+| Layer | Adoption |
+|---|---|
+| CDN edge | High |
+| Public APIs | Medium |
+| Consumer websites | Medium–High |
+| Internal services | Low–Medium |
+| Service-to-service RPC | Low |
+
+Most organizations do not need every internal service to speak HTTP/3.
+
+---
+
+# 4. Expected benefits
+
+## 4.1 Faster connection setup
+
+QUIC combines transport and cryptographic negotiation.
+
+Potential improvements:
+- Fewer round trips for new connections
+- Better performance for short-lived requests
+- Improved mobile experience
+
+Most noticeable for:
+- Mobile users
+- High-latency networks
+- Users frequently creating new connections
+
+---
+
+## 4.2 Better behavior on lossy networks
+
+TCP suffers when packet loss affects one connection stream.
+
+QUIC provides independent streams:
+- Loss on one stream does not block unrelated streams.
+- Better performance on Wi-Fi/mobile networks.
+
+Potential beneficiaries:
+- Mobile applications
+- Video streaming
+- Interactive applications
+
+---
+
+## 4.3 Connection migration
+
+QUIC connections are not tied to a TCP 4-tuple.
+
+Example:
+- User switches from cellular → Wi-Fi.
+- Existing connection can continue.
+
+Useful for:
+- Mobile apps
+- Long-lived connections
+- Real-time workloads
+
+---
+
+## 5. Limitations and tradeoffs
+
+## 5.1 Operational complexity
+
+HTTP/3 introduces:
+
+- UDP traffic requirements
+- New metrics
+- New debugging tools
+- Different packet behavior
+
+Teams need to update:
+- Firewalls
+- Load balancers
+- Network monitoring
+- Security controls
+
+---
+
+## 5.2 UDP concerns
+
+Some networks:
+- Block UDP
+- Rate-limit UDP
+- Inspect TCP better than UDP
+
+Mitigation:
+- Keep HTTP/2 fallback enabled.
+- Use Alt-Svc negotiation.
+- Monitor fallback rates.
+
+---
+
+## 5.3 CPU and infrastructure costs
+
+QUIC implementations run partly in user space.
+
+Potential impacts:
+- More CPU overhead compared with optimized TCP stacks.
+- More tuning required at high throughput.
+
+Large providers have optimized this heavily, but smaller deployments may see different results.
+
+---
+
+## 5.4 Debugging differences
+
+Existing TCP tools are less useful.
+
+Examples:
+- Packet captures are encrypted and QUIC-specific.
+- Traditional TCP latency analysis does not directly apply.
+
+Teams need:
+- QUIC-aware telemetry
+- Application-level metrics
+- Connection lifecycle visibility
+
+---
+
+# 6. Workloads most likely to benefit
+
+## Strong candidates
+
+### Consumer-facing websites
+Benefits:
+- Faster first loads
+- Better mobile performance
+- Global user improvements
+
+### APIs with many short requests
+Benefits:
+- Reduced handshake cost
+- Better latency for geographically distributed clients
+
+### Real-time applications
+
+Examples:
+- Collaboration tools
+- Gaming
+- Live communication
+
+Benefits:
+- Better handling of network changes and loss.
+
+---
+
+# 7. Workloads with limited benefit
+
+## Stable internal services
+
+If traffic is:
+- Low latency already
+- Same datacenter
+- Reliable network
+
+HTTP/3 may provide little improvement.
+
+## Large bulk transfers
+
+Benefits may be workload-dependent:
+- Congestion control improvements can help.
+- But raw throughput gains are not guaranteed.
+
+## Existing HTTP/2 deployments with warm connections
+
+Many HTTP/3 advantages appear during:
+- Connection setup
+- Network transitions
+- Packet loss
+
+Long-lived, stable HTTP/2 connections may see smaller gains.
+
+---
+
+# 8. Migration considerations
+
+## Recommended deployment model
+
+1. Enable HTTP/3 at the edge.
+2. Keep HTTP/2 fallback.
+3. Measure:
+   - Request latency
+   - Error rates
+   - Connection success
+   - CPU usage
+   - UDP reachability
+4. Expand based on observed gains.
+
+---
+
+## Architecture questions
+
+Before enabling:
+
+### Infrastructure
+- Does our CDN/load balancer support HTTP/3?
+- Can we terminate QUIC at the edge?
+- Do security systems allow UDP/443?
+
+### Observability
+- Can we distinguish HTTP/2 vs HTTP/3 traffic?
+- Do dashboards track protocol-level performance?
+
+### Reliability
+- What percentage of clients successfully negotiate HTTP/3?
+- What is fallback behavior?
+
+---
+
+# 9. Decision framework
+
+| Question | Recommendation |
+|---|---|
+| Public internet-facing service? | Strong candidate |
+| Mobile-heavy user base? | Strong candidate |
+| Global users/high latency? | Strong candidate |
+| Internal microservices only? | Usually defer |
+| Need zero infrastructure changes? | Defer |
+| CDN already supports HTTP/3? | Enable experimentally |
+
+---
+
+# 10. Suggested engineering decision
+
+**Adopt HTTP/3 as an optional transport protocol, not a forced migration.**
+
+Initial rollout:
+- Enable HTTP/3 on public endpoints.
+- Maintain HTTP/2 compatibility.
+- Track performance differences.
+- Avoid migrating internal service meshes unless measurements justify it.
+
+Success criteria:
+- Lower p95/p99 latency for applicable clients.
+- No increase in error rates.
+- Acceptable CPU/network overhead.
+- Stable observability and operations.
+
+**Bottom line:** HTTP/3 is no longer a speculative technology. The engineering question is less “is HTTP/3 ready?” and more “where does the operational cost pay back through measurable user or system improvements?”</pre></details>
+      
+      <table class="assertions"><thead><tr><th>#</th><th></th><th>Assertion</th><th>Evidence</th></tr></thead><tbody>
+        <tr class="ok">
+          <td class="num">1</td>
+          <td><span class='check'>✓</span></td>
+          <td>Output uses clear section structure suitable for a decision document</td>
+          <td><span class="evidence">Uses a structured decision format with sections including &quot;Executive summary&quot;, &quot;Adoption status&quot;, &quot;Limitations and tradeoffs&quot;, &quot;Migration considerations&quot;, &quot;Decision framework&quot;, and &quot;Suggested engineering decision&quot;.</span></td>
+        </tr>
+
+        <tr class="ok">
+          <td class="num">2</td>
+          <td><span class='check'>✓</span></td>
+          <td>Distinguishes confident facts from uncertain or time-sensitive claims</td>
+          <td><span class="evidence">Separates established statements such as &quot;HTTP/3 (standardized in 2022 as RFC 9114) has moved from experimental to mainstream deployment&quot; from uncertain outcomes using language such as &quot;Potential improvements&quot;, &quot;Potential impacts&quot;, and &quot;Benefits may be workload-dependent&quot;.</span></td>
+        </tr>
+
+        <tr class="ok">
+          <td class="num">3</td>
+          <td><span class='check'>✓</span></td>
+          <td>Includes caveats about verification or recency rather than presenting everything as settled</td>
+          <td><span class="evidence">Includes verification-oriented caveats such as &quot;Measure impact by client population and workload before expanding&quot;, &quot;Track performance differences&quot;, &quot;Expand based on observed gains&quot;, and &quot;raw throughput gains are not guaranteed&quot;.</span></td>
+        </tr></tbody></table>
+      <details class="judge"><summary>judge prompt</summary><pre>You are grading an agentskills.io evaluation run.
+Grading principles:
+- Require concrete evidence for every PASS; quote or reference the output.
+- Do not give the benefit of the doubt.
+- PASS an assertion only if every condition in the assertion text holds.
+- A label without substance is a FAIL.
+- Tool calls (when present) are authoritative evidence of model behavior.
+Return STRICT JSON only. No markdown. Shape:
+{&quot;assertion_results&quot;:[{&quot;text&quot;:&quot;...&quot;,&quot;passed&quot;:true,&quot;evidence&quot;:&quot;...&quot;}],&quot;summary&quot;:{&quot;passed&quot;:0,&quot;failed&quot;:0,&quot;total&quot;:0,&quot;pass_rate&quot;:0}}
+Rules:
+- Include every assertion exactly once and copy the full assertion text verbatim into text.
+- Use short concrete evidence: quote, snippet, or file reference.
+- Summary may be included, but it will be recomputed by the caller.
+Assertions:
+[
+  &quot;Output uses clear section structure suitable for a decision document&quot;,
+  &quot;Distinguishes confident facts from uncertain or time-sensitive claims&quot;,
+  &quot;Includes caveats about verification or recency rather than presenting everything as settled&quot;
+]
+Model output:
+# HTTP/3 Adoption — Engineering Decision Summary
+
+## 1. Executive summary
+
+**Decision posture:** HTTP/3 is mature enough for production use, but adoption should be driven by measurable latency/reliability gains rather than treated as a universal replacement for HTTP/2.
+
+**Current state:**
+- HTTP/3 (standardized in 2022 as RFC 9114) has moved from experimental to mainstream deployment.
+- Major browsers, operating systems, CDNs, and cloud providers support it.
+- Adoption is strongest at the edge layer (CDNs, large consumer services); enterprise internal traffic is generally slower to migrate.
+- The main benefits are improved connection establishment, resilience on unreliable networks, and elimination of TCP head-of-line blocking.
+- The main costs are operational complexity: UDP handling, observability changes, firewall/network compatibility, and additional infrastructure tuning.
+
+**Recommended approach:** Enable HTTP/3 opportunistically alongside HTTP/2 rather than replacing HTTP/2. Measure impact by client population and workload before expanding.
+
+---
+
+# 2. What HTTP/3 changes
+
+## Protocol stack
+
+HTTP/2:
+```
+HTTP/2
+  ↓
+TLS
+  ↓
+TCP
+  ↓
+IP
+```
+
+HTTP/3:
+```
+HTTP/3
+  ↓
+QUIC
+  ↓
+UDP
+  ↓
+IP
+```
+
+QUIC provides:
+- Reliable delivery
+- Congestion control
+- Encryption (TLS 1.3 integrated)
+- Stream multiplexing
+- Connection migration
+
+The key architectural change is moving transport behavior out of the kernel TCP stack into user-space QUIC implementations.
+
+---
+
+# 3. Adoption status
+
+## Client support
+
+Broad support exists across:
+- Chrome / Chromium-based browsers
+- Firefox
+- Safari
+- Mobile platforms
+- Modern operating systems
+
+For consumer web traffic, HTTP/3-capable clients are now a large majority of active users.
+
+## Server and infrastructure support
+
+Supported by:
+- Major CDNs
+- Cloud load balancers
+- Web servers
+- Reverse proxies
+
+Common deployment paths:
+- Enable HTTP/3 at CDN edge while origin remains HTTP/1.1 or HTTP/2.
+- Terminate QUIC at edge infrastructure.
+- Gradually introduce HTTP/3 support closer to applications.
+
+## Industry adoption pattern
+
+Typical maturity curve:
+
+| Layer | Adoption |
+|---|---|
+| CDN edge | High |
+| Public APIs | Medium |
+| Consumer websites | Medium–High |
+| Internal services | Low–Medium |
+| Service-to-service RPC | Low |
+
+Most organizations do not need every internal service to speak HTTP/3.
+
+---
+
+# 4. Expected benefits
+
+## 4.1 Faster connection setup
+
+QUIC combines transport and cryptographic negotiation.
+
+Potential improvements:
+- Fewer round trips for new connections
+- Better performance for short-lived requests
+- Improved mobile experience
+
+Most noticeable for:
+- Mobile users
+- High-latency networks
+- Users frequently creating new connections
+
+---
+
+## 4.2 Better behavior on lossy networks
+
+TCP suffers when packet loss affects one connection stream.
+
+QUIC provides independent streams:
+- Loss on one stream does not block unrelated streams.
+- Better performance on Wi-Fi/mobile networks.
+
+Potential beneficiaries:
+- Mobile applications
+- Video streaming
+- Interactive applications
+
+---
+
+## 4.3 Connection migration
+
+QUIC connections are not tied to a TCP 4-tuple.
+
+Example:
+- User switches from cellular → Wi-Fi.
+- Existing connection can continue.
+
+Useful for:
+- Mobile apps
+- Long-lived connections
+- Real-time workloads
+
+---
+
+## 5. Limitations and tradeoffs
+
+## 5.1 Operational complexity
+
+HTTP/3 introduces:
+
+- UDP traffic requirements
+- New metrics
+- New debugging tools
+- Different packet behavior
+
+Teams need to update:
+- Firewalls
+- Load balancers
+- Network monitoring
+- Security controls
+
+---
+
+## 5.2 UDP concerns
+
+Some networks:
+- Block UDP
+- Rate-limit UDP
+- Inspect TCP better than UDP
+
+Mitigation:
+- Keep HTTP/2 fallback enabled.
+- Use Alt-Svc negotiation.
+- Monitor fallback rates.
+
+---
+
+## 5.3 CPU and infrastructure costs
+
+QUIC implementations run partly in user space.
+
+Potential impacts:
+- More CPU overhead compared with optimized TCP stacks.
+- More tuning required at high throughput.
+
+Large providers have optimized this heavily, but smaller deployments may see different results.
+
+---
+
+## 5.4 Debugging differences
+
+Existing TCP tools are less useful.
+
+Examples:
+- Packet captures are encrypted and QUIC-specific.
+- Traditional TCP latency analysis does not directly apply.
+
+Teams need:
+- QUIC-aware telemetry
+- Application-level metrics
+- Connection lifecycle visibility
+
+---
+
+# 6. Workloads most likely to benefit
+
+## Strong candidates
+
+### Consumer-facing websites
+Benefits:
+- Faster first loads
+- Better mobile performance
+- Global user improvements
+
+### APIs with many short requests
+Benefits:
+- Reduced handshake cost
+- Better latency for geographically distributed clients
+
+### Real-time applications
+
+Examples:
+- Collaboration tools
+- Gaming
+- Live communication
+
+Benefits:
+- Better handling of network changes and loss.
+
+---
+
+# 7. Workloads with limited benefit
+
+## Stable internal services
+
+If traffic is:
+- Low latency already
+- Same datacenter
+- Reliable network
+
+HTTP/3 may provide little improvement.
+
+## Large bulk transfers
+
+Benefits may be workload-dependent:
+- Congestion control improvements can help.
+- But raw throughput gains are not guaranteed.
+
+## Existing HTTP/2 deployments with warm connections
+
+Many HTTP/3 advantages appear during:
+- Connection setup
+- Network transitions
+- Packet loss
+
+Long-lived, stable HTTP/2 connections may see smaller gains.
+
+---
+
+# 8. Migration considerations
+
+## Recommended deployment model
+
+1. Enable HTTP/3 at the edge.
+2. Keep HTTP/2 fallback.
+3. Measure:
+   - Request latency
+   - Error rates
+   - Connection success
+   - CPU usage
+   - UDP reachability
+4. Expand based on observed gains.
+
+---
+
+## Architecture questions
+
+Before enabling:
+
+### Infrastructure
+- Does our CDN/load balancer support HTTP/3?
+- Can we terminate QUIC at the edge?
+- Do security systems allow UDP/443?
+
+### Observability
+- Can we distinguish HTTP/2 vs HTTP/3 traffic?
+- Do dashboards track protocol-level performance?
+
+### Reliability
+- What percentage of clients successfully negotiate HTTP/3?
+- What is fallback behavior?
+
+---
+
+# 9. Decision framework
+
+| Question | Recommendation |
+|---|---|
+| Public internet-facing service? | Strong candidate |
+| Mobile-heavy user base? | Strong candidate |
+| Global users/high latency? | Strong candidate |
+| Internal microservices only? | Usually defer |
+| Need zero infrastructure changes? | Defer |
+| CDN already supports HTTP/3? | Enable experimentally |
+
+---
+
+# 10. Suggested engineering decision
+
+**Adopt HTTP/3 as an optional transport protocol, not a forced migration.**
+
+Initial rollout:
+- Enable HTTP/3 on public endpoints.
+- Maintain HTTP/2 compatibility.
+- Track performance differences.
+- Avoid migrating internal service meshes unless measurements justify it.
+
+Success criteria:
+- Lower p95/p99 latency for applicable clients.
+- No increase in error rates.
+- Acceptable CPU/network overhead.
+- Stable observability and operations.
+
+**Bottom line:** HTTP/3 is no longer a speculative technology. The engineering question is less “is HTTP/3 ready?” and more “where does the operational cost pay back through measurable user or system improvements?”
+Output files:
+No output files were captured.</pre></details>
+    </section>
+  </div>
+    </details>
+  </div>
+    </article>
+  
+      </main>
+</body>
+</html>

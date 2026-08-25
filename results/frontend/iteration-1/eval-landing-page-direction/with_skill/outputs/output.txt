@@ -1,0 +1,185 @@
+For an indie note-taking app for writers, I’d avoid the usual “AI productivity dashboard” aesthetic and design it around the feeling writers are actually chasing: **a quiet room, a blank page, and the moment an idea starts moving.**
+
+## Design direction: “The Writer’s Studio”
+
+### Core idea
+The landing page should feel less like software marketing and more like entering a personal writing space. The product is a tool, but the emotional promise is **focus, ownership, and craft**.
+
+The visual reference points would be:
+- a well-used notebook on a wooden desk
+- a novelist’s manuscript margin notes
+- a minimalist publishing studio
+- a late-night writing session with a warm lamp
+
+Not “beige AI startup.” More tactile, more literary.
+
+---
+
+## Visual system
+
+### Palette
+
+A restrained palette built around paper, ink, and physical materials:
+
+- **Ivory paper** — `#F5F0E6`  
+  The canvas background, softer than pure white.
+
+- **Charcoal ink** — `#191816`  
+  Primary text, strong but not harsh.
+
+- **Faded graphite** — `#6E6860`  
+  Secondary text and metadata.
+
+- **Oxidized copper** — `#B56A3B`  
+  A single accent for buttons, highlights, and active states.
+
+- **Deep moss** — `#344238`  
+  Used sparingly for a sense of calm and depth.
+
+The risk: make it feel like an actual writing environment rather than a SaaS template.
+
+---
+
+## Typography
+
+Typography should carry the personality.
+
+**Display face:**
+- ["brand","Fraunces","variable serif typeface"] or another expressive serif  
+  Used only for the hero and major statements.
+
+Large, slightly imperfect-feeling headlines:
+> “Your thoughts deserve a quieter place.”
+
+**Body:**
+- ["brand","Inter","sans-serif typeface"] or a similarly neutral humanist sans  
+  Keeps the interface explanations readable.
+
+**Utility text:**
+- A small mono font for details like word counts, dates, revision history:
+  ```
+  Draft 047 · 2,381 words · Edited 8 min ago
+  ```
+
+The contrast between literary serif and practical utility type reinforces “writer + tool.”
+
+---
+
+## Layout concept
+
+I’d make the hero a visual thesis, not a generic feature pitch.
+
+```
+------------------------------------------------
+
+        A quieter place
+        for unfinished ideas.
+
+        Write. Organize. Return.
+        Your notes become your next story.
+
+                  [ Start writing ]
+
+        ┌───────────────────────┐
+        │                       │
+        │  Chapter 3            │
+        │                       │
+        │  The rain had stopped │
+        │  but the city hadn't  │
+        │  learned silence yet. │
+        │                       │
+        └───────────────────────┘
+
+        "12,482 words captured this month"
+
+------------------------------------------------
+```
+
+The product screenshot should look like a real writer’s workspace, not a fake app card floating over gradients.
+
+---
+
+## Signature element
+
+The memorable detail: **a living manuscript margin.**
+
+Instead of standard feature cards, the page occasionally shows handwritten-style annotations appearing beside product screenshots:
+
+> “Find this idea later”  
+> “Character notes”  
+> “Rewrite this paragraph”
+
+The annotations connect the digital tool to the physical habits writers already have.
+
+It gives the page a recognizable identity without turning it into a scrapbook.
+
+---
+
+## Sections
+
+### 1. Hero — “The first page”
+A large writing canvas immediately visible. The visitor understands the product within seconds.
+
+### 2. Problem — “Writing gets scattered”
+Show fragments:
+- notes app snippets
+- browser tabs
+- paper scraps
+- half-finished drafts
+
+Then show the app bringing them together.
+
+### 3. Features — “Tools that disappear”
+Avoid feature grids. Writers don’t buy “AI-powered organization.” They buy fewer interruptions.
+
+Use editorial-style sections:
+
+**Capture**
+> Catch the sentence before it disappears.
+
+**Shape**
+> Turn fragments into outlines.
+
+**Return**
+> Always find where you left off.
+
+### 4. Community / trust
+Show excerpts from fictional writers’ workflows rather than generic testimonials.
+
+Example:
+```
+Maya — novelist
+
+Drafting:
+43 notes
+7 scenes
+2 possible endings
+```
+
+---
+
+## Motion
+
+Keep animation rare and intentional:
+
+- A cursor blinking in the hero document
+- Notes gently rearranging into a structure
+- A page turning transition between sections
+
+Avoid floating blobs, gradient animations, and excessive parallax. Those make creative tools feel like every other startup.
+
+---
+
+## One deliberate aesthetic risk
+
+I’d make the app screenshot slightly imperfect:
+- visible cursor position
+- realistic unfinished sentences
+- messy notes
+- crossed-out ideas
+
+Most software pages show polished empty states. For writers, the magic is in the mess before the finished work.
+
+The page’s message becomes:
+
+**“This is not where your perfect writing appears. This is where it begins.”**

@@ -1,0 +1,38 @@
+{
+  "skill_name": "tdd",
+  "evals": [
+    {
+      "id": 1,
+      "name": "test-first-maxvalue",
+      "prompt": "I need a JavaScript function `maxValue(rows, column)` that takes an array of objects and returns the max value of a given numeric column. Walk me through building this test-first.",
+      "expected_output": "Genuine TDD flow: starts by writing a failing test (red) before any implementation, includes edge cases in tests (empty array, missing column, non-numeric values), then minimal implementation to pass (green), then refactor.",
+      "assertions": [
+        "Presents a failing test BEFORE any implementation code (strict red-green order)",
+        "Tests cover edge cases beyond the happy path (e.g. empty input, missing/non-numeric column values)",
+        "Implementation is presented as the step that makes tests pass, not written first"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "regression-tests",
+      "prompt": "Here's a buggy function: function slugify(t){return t.toLowerCase().replace(' ','-')} — it's used on user-typed titles. What regression tests would you write before fixing it?",
+      "expected_output": "Identifies the bug scope (only replaces FIRST space) and writes test cases exposing it: multi-word titles, repeated spaces, leading/trailing spaces, punctuation, unicode/empty string. Tests written before the fix.",
+      "assertions": [
+        "Includes a test case with MULTIPLE spaces or multiple words that exposes the single-replace bug",
+        "Covers additional edge cases: at minimum empty string and special characters or unicode",
+        "States these tests should fail against the current implementation before the fix is made"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "mock-strategy",
+      "prompt": "I'm testing a function that sends a welcome email after user signup. Should I use a real SMTP server, and what's your approach?",
+      "expected_output": "Recommends mocking/faking the email transport in unit tests rather than real SMTP; asserts on the call (recipient, content) rather than delivery; may suggest separating pure logic from side effects; mentions integration test with fake/stub provider.",
+      "assertions": [
+        "Recommends NOT using a real SMTP server for the primary unit tests",
+        "Asserts on what was sent (recipient/content/calls) via a mock or spy",
+        "Suggests isolating side effect from logic so the core decision can be tested purely"
+      ]
+    }
+  ]
+}

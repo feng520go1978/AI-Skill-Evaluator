@@ -1,0 +1,25 @@
+{
+  "assertion_results": [
+    {
+      "text": "Proposes consulting primary/high-trust sources (protocol specs, official docs) before secondary sources like blogs",
+      "passed": true,
+      "evidence": "The output has a \"Primary information sources\" section stating \"I would prioritize sources that define or implement the protocols\" and lists RFC 6455 and the WHATWG SSE specification. It also states \"I would not rely only on blog comparisons.\""
+    },
+    {
+      "text": "Identifies at least 3 concrete technical comparison dimensions (e.g. directionality, reconnection, proxies)",
+      "passed": true,
+      "evidence": "The comparison matrix includes multiple concrete dimensions: \"Direction\", \"Transport\", \"Latency\", \"Payload\", \"Reconnection\", \"Scaling\", \"Complexity\", and \"Browser support\". It also mentions proxy/load balancer behavior under scaling and network behavior."
+    },
+    {
+      "text": "Includes a verification or cross-checking step rather than accepting single-source claims",
+      "passed": true,
+      "evidence": "The output includes \"Validate with real implementation evidence\" and \"Run controlled benchmarks\" sections, and says \"I would verify that hypothesis against specifications, implementation behavior, and measured performance before making the recommendation.\""
+    }
+  ],
+  "summary": {
+    "passed": 3,
+    "failed": 0,
+    "total": 3,
+    "pass_rate": 1
+  }
+}

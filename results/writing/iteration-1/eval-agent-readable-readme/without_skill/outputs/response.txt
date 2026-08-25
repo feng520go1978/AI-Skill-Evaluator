@@ -1,0 +1,106 @@
+:::writing{variant="document" id="58391" title="deploykit CLI usage README section"}
+# Running `deploykit`
+
+`deploykit` is the deployment workflow CLI used to initialize, preview, execute, and recover deployments.
+
+AI coding agents working in this repository should use the following command flow:
+
+1. Initialize deployment configuration with `init`.
+2. Review planned changes with `plan`.
+3. Execute the deployment with `apply`.
+4. Restore a previous state with `rollback` when required.
+
+## Commands
+
+### `deploykit init`
+
+Initialize `deploykit` for the current repository or environment.
+
+```bash
+deploykit init
+```
+
+Use this command when setting up `deploykit` in a new checkout or when deployment metadata has not yet been created.
+
+Expected results:
+- Creates required local configuration files.
+- Detects or prepares deployment state.
+- Leaves the repository ready for planning.
+
+---
+
+### `deploykit plan`
+
+Generate a deployment plan without making changes.
+
+```bash
+deploykit plan
+```
+
+Use `plan` before every deployment to understand what `apply` will change.
+
+Review:
+- Resources that will be created, updated, or removed.
+- Configuration differences.
+- Any warnings or required manual steps.
+
+Do not skip this step when making non-trivial deployment changes.
+
+---
+
+### `deploykit apply`
+
+Apply the generated deployment changes.
+
+```bash
+deploykit apply
+```
+
+Use `apply` only after reviewing the output from `deploykit plan`.
+
+Before running:
+- Confirm the working tree contains the intended changes.
+- Verify the target environment is correct.
+- Ensure required credentials and environment variables are available.
+
+---
+
+### `deploykit rollback`
+
+Rollback a deployment to a previous known state.
+
+```bash
+deploykit rollback
+```
+
+Use `rollback` when a deployment introduces problems or when restoring the previous state is safer than applying a new fix.
+
+Before rolling back:
+- Identify the deployment version or state to restore.
+- Confirm rollback impact.
+- Capture relevant logs if investigating a failure.
+
+---
+
+## Typical workflow
+
+```bash
+deploykit init
+deploykit plan
+deploykit apply
+```
+
+If a deployment needs to be reverted:
+
+```bash
+deploykit rollback
+```
+
+## Guidance for AI coding agents
+
+When modifying deployment-related code:
+
+- Run `deploykit plan` before suggesting or executing deployment changes.
+- Avoid running `deploykit apply` unless explicitly requested or the repository workflow requires it.
+- Use `deploykit rollback` only when a rollback is part of the intended recovery procedure.
+- Include command output and errors when reporting deployment issues.:::

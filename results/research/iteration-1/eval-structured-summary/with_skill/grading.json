@@ -1,0 +1,25 @@
+{
+  "assertion_results": [
+    {
+      "text": "Output uses clear section structure suitable for a decision document",
+      "passed": true,
+      "evidence": "Uses a decision-summary format with sections including \"Executive summary\", \"Current adoption state\", \"Costs and tradeoffs\", \"Migration approach\", \"Decision guidance\", and \"Recommendation\"."
+    },
+    {
+      "text": "Distinguishes confident facts from uncertain or time-sensitive claims",
+      "passed": true,
+      "evidence": "Separates established claims such as \"HTTP/3 support is broadly available across major clients\" from variable claims such as \"Results vary significantly\" and \"maturity varies depending on\" implementation factors."
+    },
+    {
+      "text": "Includes caveats about verification or recency rather than presenting everything as settled",
+      "passed": true,
+      "evidence": "Includes caveats such as \"Results vary significantly\", \"HTTP/3 is not a universal latency improvement\", and recommends measuring impact through \"TTFB\", \"latency\", \"error rates\", and \"fallback frequency\" before validating benefits."
+    }
+  ],
+  "summary": {
+    "passed": 3,
+    "failed": 0,
+    "total": 3,
+    "pass_rate": 1
+  }
+}

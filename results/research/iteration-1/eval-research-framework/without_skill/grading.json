@@ -1,0 +1,25 @@
+{
+  "assertion_results": [
+    {
+      "text": "Proposes consulting primary/high-trust sources (protocol specs, official docs) before secondary sources like blogs",
+      "passed": true,
+      "evidence": "The output explicitly says \"Primary technical specifications (highest trust)\" and lists \"IETF RFC 6455\", \"WHATWG WebSocket API documentation\", and \"WHATWG HTML Living Standard SSE section\". It also states \"I would not rely only on blog claims.\""
+    },
+    {
+      "text": "Identifies at least 3 concrete technical comparison dimensions (e.g. directionality, reconnection, proxies)",
+      "passed": true,
+      "evidence": "The output defines multiple comparison criteria including \"Data direction\", \"Latency\", \"Scale\", \"Reliability\", and \"Infrastructure\". It also compares reconnection behavior and proxies/load balancers/firewalls under operational questions."
+    },
+    {
+      "text": "Includes a verification or cross-checking step rather than accepting single-source claims",
+      "passed": true,
+      "evidence": "The output has a section titled \"Verification steps\" and describes building \"a small prototype of each\", measuring \"Server CPU\", \"Memory\", \"Network bandwidth\", \"Latency\", and \"Failure recovery\", plus running benchmark and failure-mode tests."
+    }
+  ],
+  "summary": {
+    "passed": 3,
+    "failed": 0,
+    "total": 3,
+    "pass_rate": 1
+  }
+}

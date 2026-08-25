@@ -1,0 +1,25 @@
+{
+  "assertion_results": [
+    {
+      "text": "Commands are documented with explicit invocation syntax and expected outcome per command",
+      "passed": true,
+      "evidence": "Each command has explicit CLI syntax blocks such as `deploykit init`, `deploykit plan`, `deploykit apply`, and `deploykit rollback`, followed by \"Completion criteria\" sections describing expected outcomes."
+    },
+    {
+      "text": "Preconditions or ordering constraints are stated explicitly (e.g. must run init before apply)",
+      "passed": true,
+      "evidence": "The output states \"Run `init` before using other deployment commands\" and later states \"Only run this after confirming the plan is correct\" for apply. The common workflow also shows `init` → `plan` → `apply`."
+    },
+    {
+      "text": "Writing avoids ambiguous pronouns/vague references that would confuse an automated reader",
+      "passed": true,
+      "evidence": "The commands and workflow use explicit names such as \"deploykit init\", \"deploykit plan\", and \"deploykit apply\"; references like \"the plan\" and \"the target environment\" have clear antecedents in the surrounding command sections."
+    }
+  ],
+  "summary": {
+    "passed": 3,
+    "failed": 0,
+    "total": 3,
+    "pass_rate": 1
+  }
+}

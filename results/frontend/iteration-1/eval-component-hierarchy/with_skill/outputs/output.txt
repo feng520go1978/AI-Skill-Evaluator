@@ -1,0 +1,231 @@
+For a 3-tier pricing page with FAQ, I’d structure it around one primary decision: **help visitors quickly identify the right plan, then remove purchase friction**. The hierarchy should make comparison effortless while giving the recommended tier the strongest visual gravity.
+
+## Component hierarchy
+
+```
+PricingPage
+│
+├── PricingHero
+│   ├── Eyebrow ("Simple pricing" / audience qualifier)
+│   ├── Heading
+│   ├── Supporting copy
+│   └── BillingToggle (Monthly / Annual)
+│
+├── PricingGrid
+│   │
+│   ├── PricingCard (Tier 1: Starter)
+│   │   ├── TierName
+│   │   ├── Description
+│   │   ├── Price
+│   │   ├── BillingNote
+│   │   ├── FeatureList
+│   │   │   └── FeatureItem[]
+│   │   └── CTAButton
+│   │
+│   ├── PricingCard (Tier 2: Pro / Recommended)
+│   │   ├── RecommendedBadge
+│   │   ├── TierName
+│   │   ├── Description
+│   │   ├── Price
+│   │   ├── BillingNote
+│   │   ├── FeatureList
+│   │   └── CTAButton
+│   │
+│   └── PricingCard (Tier 3: Enterprise)
+│       ├── TierName
+│       ├── Description
+│       ├── Price / Custom Label
+│       ├── FeatureList
+│       └── CTAButton
+│
+├── ComparisonSection (optional)
+│   ├── FeatureCategories
+│   └── ComparisonTable
+│
+├── TrustSection
+│   ├── CustomerLogos
+│   ├── Testimonial
+│   └── Security / Compliance Notes
+│
+└── FAQSection
+    ├── FAQHeader
+    └── AccordionList
+        └── FAQItem[]
+```
+
+---
+
+## Visual emphasis strategy
+
+### 1. Hero: establish confidence, not hype
+
+**Goal:** get users into comparison mode.
+
+Layout:
+
+```
+                 Pricing
+
+        Plans that scale with your work
+
+    Choose a plan that fits today.
+    Upgrade when your team grows.
+
+          Monthly  ● Annual
+```
+
+Keep the hero compact. The pricing cards should arrive quickly; users came to compare, not read a manifesto.
+
+---
+
+### 2. Pricing cards: create a clear hierarchy
+
+Use **one visual winner**: the recommended plan.
+
+Example emphasis:
+
+```
+┌──────────┐  ┌──────────────────┐  ┌──────────┐
+│ Starter  │  │ ★ MOST POPULAR   │  │Enterprise│
+│          │  │      Pro         │  │          │
+│  $19     │  │      $49         │  │ Custom   │
+│          │  │                  │  │          │
+│ Features │  │  Features        │  │ Features │
+│          │  │                  │  │          │
+│  Button  │  │  Button          │  │ Button   │
+└──────────┘  └──────────────────┘  └──────────┘
+```
+
+Recommended tier treatments:
+- Slightly larger card (5–10% scale difference)
+- Elevated position or stronger border
+- Persistent badge ("Most popular")
+- Strongest CTA contrast
+- More generous spacing
+
+Avoid making every card flashy. If everything screams, nothing is heard.
+
+---
+
+### 3. Tier positioning
+
+Each tier should answer a different buyer mindset:
+
+| Tier | Buyer question | Visual role |
+|---|---|---|
+| Starter | "Can I try this?" | Lowest friction |
+| Pro | "Is this worth paying for?" | Hero choice |
+| Enterprise | "Can this support my organization?" | Confidence + flexibility |
+
+---
+
+### 4. Feature list design
+
+Don’t make users read three walls of text.
+
+Use:
+
+```
+✓ Unlimited projects
+✓ Team collaboration
+✓ Analytics dashboard
+✓ Priority support
+```
+
+For differences:
+
+- Put unique benefits first
+- Avoid repeating identical features across all tiers
+- Use subtle dividers between feature groups
+
+Example:
+
+```
+Core features
+─────────────
+✓ Projects
+✓ Storage
+✓ Integrations
+
+Advanced features
+────────────────
+✓ Automation
+✓ Reporting
+✓ API access
+```
+
+---
+
+## FAQ hierarchy
+
+The FAQ should not compete with pricing. It exists to remove objections.
+
+Structure:
+
+```
+FAQ
+
+Before you choose
+
+▼ Can I change plans later?
+▼ What happens after my trial?
+▼ Do you offer refunds?
+▼ Is my data secure?
+▼ Do you support integrations?
+```
+
+Prioritize questions based on purchase blockers:
+1. Cost/billing
+2. Switching plans
+3. Cancellation
+4. Security
+5. Technical limitations
+
+---
+
+## Suggested component behavior
+
+### PricingCard states
+
+```
+Default
+ └── Hover elevation
+
+Recommended
+ ├── Highlight border
+ ├── Badge
+ └── Primary CTA
+
+Enterprise
+ └── Contact CTA
+```
+
+### Responsive behavior
+
+Desktop:
+
+```
+[Starter] [Pro] [Enterprise]
+```
+
+Mobile:
+
+```
+[Pro]          ← recommended first
+[Starter]
+[Enterprise]
+```
+
+The recommended option should appear first on small screens because most users scan vertically.
+
+---
+
+## Signature design idea
+
+Instead of the common "three floating cards on a gradient background," make the pricing area feel like a **decision board**:
+
+- Cards sit on a structured grid
+- A subtle vertical marker connects each tier to its audience ("Individuals → Teams → Organizations")
+- The Pro tier becomes the visual midpoint and anchor
+
+The page then communicates: **these are not three products competing for attention; they are three stages of growth.**

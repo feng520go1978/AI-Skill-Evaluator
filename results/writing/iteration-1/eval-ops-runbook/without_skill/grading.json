@@ -1,0 +1,25 @@
+{
+  "assertion_results": [
+    {
+      "text": "Diagnostic steps appear in a logical ordered sequence covering the three failure domains (network/SFTP, file format/transformation, database)",
+      "passed": true,
+      "evidence": "The runbook has ordered sections: \"# 2. Diagnose SFTP Download Failures\", \"# 3. Diagnose CSV Transformation Failures\", and \"# 4. Diagnose PostgreSQL Load Failures\"."
+    },
+    {
+      "text": "Each step indicates how to determine success or failure",
+      "passed": false,
+      "evidence": "Although many steps contain checks such as \"Confirm the SFTP server is reachable\" and \"Check database connectivity\", not every diagnostic step defines an explicit success/failure determination criterion; for example, \"## 3.1 Review transformation logs\" only says to look for errors."
+    },
+    {
+      "text": "No critical steps left implicit (e.g. does not assume the reader knows where logs live)",
+      "passed": false,
+      "evidence": "The runbook instructs operators to \"Check the importer logs\" and \"Review logs\" but does not specify where those logs are located or how to access them."
+    }
+  ],
+  "summary": {
+    "passed": 1,
+    "failed": 2,
+    "total": 3,
+    "pass_rate": 0.3333333333333333
+  }
+}

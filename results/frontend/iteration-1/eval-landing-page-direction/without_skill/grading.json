@@ -1,0 +1,25 @@
+{
+  "assertion_results": [
+    {
+      "text": "Commits to a SPECIFIC direction rather than listing generic options or hedging",
+      "passed": true,
+      "evidence": "The output commits to a \"quiet editorial studio\" direction and says it should be \"somewhere between a beloved literary magazine, a beautifully designed notebook, and a modern writing tool.\""
+    },
+    {
+      "text": "Typography and color choices are concrete (named characteristics, not just 'nice fonts')",
+      "passed": true,
+      "evidence": "The output specifies \"Warm parchment / ivory background,\" \"Deep charcoal text,\" \"Muted forest green, burgundy, or ink blue as accents,\" and \"Elegant serif for headlines\" paired with \"Clean sans-serif for UI and navigation.\""
+    },
+    {
+      "text": "Design choices are explicitly connected to the target audience (writers) rather than generic best practices",
+      "passed": true,
+      "evidence": "The output repeatedly ties choices to writers, e.g. \"Writers spend hours staring at the interface\" and \"A writer’s first emotional connection is with language. The typography itself should communicate: this app respects words.\""
+    }
+  ],
+  "summary": {
+    "passed": 3,
+    "failed": 0,
+    "total": 3,
+    "pass_rate": 1
+  }
+}

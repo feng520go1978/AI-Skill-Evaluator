@@ -1,0 +1,21 @@
+[
+  {
+    "skill": "tdd",
+    "dimensions": {
+      "capability": 78,
+      "lift": 0,
+      "cost": 100,
+      "speed": 97,
+      "stability": 0,
+      "security": 100
+    },
+    "overall": 53.1,
+    "verdict": "CAUTION",
+    "reasons": [
+      "weak lift over baseline: -11pp",
+      "skill made outputs WORSE than baseline — consider uninstalling",
+      "unstable: pass-rate stddev 0.31 across runs"
+    ],
+    "securityFindings": []
+  }
+]

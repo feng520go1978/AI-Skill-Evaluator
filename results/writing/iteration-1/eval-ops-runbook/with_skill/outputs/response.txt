@@ -1,0 +1,142 @@
+:::writing{variant="document" id="48391" title="Runbook: Recovering a Failed Nightly Data Import"}
+# Runbook: Recovering a Failed Nightly Data Import
+
+## Purpose
+
+Restore a failed nightly import by identifying the failure point, correcting the issue, rerunning the affected stage, and confirming that the data load completed successfully.
+
+## Scope
+
+Use this runbook when the nightly importer fails during one of these stages:
+
+1. SFTP file retrieval
+2. CSV transformation
+3. PostgreSQL loading
+
+## Prerequisites
+
+- Confirm access to:
+  - Importer logs and monitoring dashboard
+  - SFTP server
+  - Import job host or scheduler
+  - PostgreSQL database
+- Confirm the expected import date and source file naming convention.
+- Record the incident start time and any error messages before making changes.
+
+## Recovery Steps
+
+### 1. Identify the failed import run
+
+1. Open the importer logs for the failed nightly run.
+2. Identify:
+   - Import run ID
+   - Failure timestamp
+   - Pipeline stage that failed
+   - Error message
+   - Source files involved
+3. Confirm whether the failure is transient or requires a correction.
+
+Completion criteria:
+- The failed stage and cause category are identified.
+
+---
+
+### 2. Check SFTP file availability
+
+1. Connect to the SFTP server.
+2. Verify that the expected CSV files exist for the failed import date.
+3. Confirm:
+   - File names match the expected pattern.
+   - Files are complete and not still uploading.
+   - File sizes are within expected ranges.
+4. If files are missing:
+   - Confirm whether the upstream system delivered the files.
+   - Request file delivery or restore the missing files according to the upstream process.
+5. If files are corrupted or incomplete:
+   - Obtain replacement files.
+   - Remove or quarantine the invalid files according to the import procedure.
+
+Completion criteria:
+- Required source files are present, readable, and ready for processing.
+
+---
+
+### 3. Retry the SFTP extraction stage
+
+1. Run the importer validation command or extraction-only job if available.
+2. Confirm that the importer can authenticate to SFTP.
+3. Verify that the expected files are downloaded to the import staging location.
+4. Review logs for successful file retrieval.
+
+Completion criteria:
+- Source CSV files are available in the local staging area.
+
+---
+
+### 4. Validate and repair CSV transformation failures
+
+1. Review transformation logs for:
+   - Invalid CSV formatting
+   - Missing columns
+   - Unexpected data types
+   - Encoding issues
+   - Invalid values
+2. Inspect the failed CSV rows identified in the logs.
+3. Correct the source file or transformation configuration if authorized.
+4. Re-run the transformation step.
+5. Confirm that transformed output files are generated.
+
+Completion criteria:
+- Transformed CSV files pass validation and are ready for database loading.
+
+---
+
+### 5. Resolve PostgreSQL load failures
+
+1. Review database load errors.
+2. Check for common causes:
+   - Duplicate records
+   - Constraint violations
+   - Missing tables or columns
+   - Database connection failures
+   - Insufficient storage
+3. Correct the issue:
+   - Remove duplicate staging records if approved.
+   - Apply required schema changes through the normal deployment process.
+   - Restore database connectivity.
+   - Free required database resources.
+4. Retry the load step.
+5. Confirm that the transaction completed successfully.
+
+Completion criteria:
+- Data has been loaded into PostgreSQL without errors.
+
+---
+
+### 6. Verify the completed import
+
+1. Confirm the importer reports a successful completion status.
+2. Verify:
+   - Expected record counts were loaded.
+   - No rejected records remain unexplained.
+   - Import timestamps match the expected run window.
+   - Downstream systems can access the refreshed data.
+3. Compare loaded counts against the previous successful run if available.
+
+Completion criteria:
+- The nightly import is complete and validated.
+
+---
+
+### 7. Close the incident
+
+1. Record:
+   - Root cause
+   - Resolution steps taken
+   - Time to recovery
+   - Any manual interventions performed
+2. Attach relevant logs and error messages.
+3. Create follow-up work items for recurring failures or required automation improvements.
+
+Completion criteria:
+- Incident notes are complete and future corrective actions are tracked.:::

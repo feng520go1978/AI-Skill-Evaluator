@@ -1,0 +1,25 @@
+{
+  "assertion_results": [
+    {
+      "text": "States which pricing tier receives emphasis and by what visual mechanism",
+      "passed": true,
+      "evidence": "The output states: \"Make the middle tier the visual anchor\" and identifies the \"Recommended tier treatment\" as \"Slightly larger card (5–10% scale difference)\", \"Elevated position\", \"Stronger border/shadow\", \"Accent background or gradient\", and \"'Most popular' badge\"."
+    },
+    {
+      "text": "Maintains structural consistency across the three tiers while differentiating emphasis",
+      "passed": true,
+      "evidence": "The component hierarchy shows all three tiers using PricingCard with shared elements: \"TierHeader\", \"Price\", \"Description\", \"FeatureList\", and CTA elements. Differentiation is shown by Pro having \"PopularBadge\" and \"PrimaryCTAButton\" while Starter and Enterprise use supporting/contact CTAs."
+    },
+    {
+      "text": "FAQ treatment is deliberately de-emphasized relative to pricing tiers with a stated reason",
+      "passed": true,
+      "evidence": "The output places \"FAQSection\" after \"PricingGrid\" and states: \"Place FAQ after pricing, not before.\" It gives the reason as the decision flow: \"What are my options? → Which plan fits me? → What about my concerns? → Conversion\"."
+    }
+  ],
+  "summary": {
+    "passed": 3,
+    "failed": 0,
+    "total": 3,
+    "pass_rate": 1
+  }
+}

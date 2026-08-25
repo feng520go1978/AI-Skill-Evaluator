@@ -1,0 +1,19 @@
+[
+  {
+    "skill": "writing-for-agents",
+    "dimensions": {
+      "capability": 89,
+      "lift": 100,
+      "cost": 88,
+      "speed": 100,
+      "stability": 37,
+      "security": 100
+    },
+    "overall": 85.5,
+    "verdict": "PASS",
+    "reasons": [
+      "unstable: pass-rate stddev 0.16 across runs"
+    ],
+    "securityFindings": []
+  }
+]

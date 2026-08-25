@@ -1,0 +1,48 @@
+A more implementation-ready requirement should define **what to measure, what to change, and what “done” means**. For example:
+
+```text
+Improve the dashboard’s performance and visual design.
+
+Performance requirements:
+1. Reduce initial dashboard load time:
+   - Measure current load time using Lighthouse Performance score and browser DevTools.
+   - Achieve a Lighthouse Performance score of at least 90 on desktop.
+   - Reduce Largest Contentful Paint (LCP) to under 2.5 seconds on a standard broadband connection.
+2. Optimize loading behavior:
+   - Lazy-load dashboard components that are below the initial viewport.
+   - Defer non-critical JavaScript until after the main dashboard content renders.
+   - Remove unused dependencies from the dashboard bundle.
+   - Compress and optimize all dashboard images and static assets.
+3. Improve data fetching:
+   - Identify API calls blocking initial render.
+   - Display the dashboard shell immediately and load data asynchronously.
+   - Add loading states for widgets while data is being fetched.
+   - Avoid duplicate API requests during initial page load.
+
+Visual design requirements:
+1. Update the dashboard layout:
+   - Use a consistent grid system with aligned cards and equal spacing.
+   - Ensure all widgets have consistent padding, borders, and typography.
+   - Improve whitespace so the page does not feel crowded.
+2. Improve usability:
+   - Add clear visual hierarchy:
+     - Page title at the top.
+     - Primary metrics highlighted above secondary information.
+     - Related charts grouped together.
+   - Ensure buttons, filters, and controls have consistent styling.
+   - Add hover and focus states for interactive elements.
+3. Improve accessibility:
+   - Maintain WCAG AA color contrast standards.
+   - Ensure all interactive elements are keyboard accessible.
+   - Add accessible labels to charts and controls.
+
+Acceptance criteria:
+- Dashboard loads within 2.5 seconds on a standard desktop test environment.
+- Lighthouse Performance score is ≥90.
+- No dashboard widget causes layout shifts during loading.
+- All existing dashboard functionality continues working.
+- Visual review confirms consistent spacing, typography, and component styling across all dashboard sections.
+- Changes include updated tests for any modified components.
+```
+
+This gives an AI coding agent enough information to inspect the app, make changes, and verify completion without needing to guess what “faster” or “nicer” means.

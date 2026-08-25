@@ -1,0 +1,52 @@
+Following TDD, I’d first pin down the **public behavior** of `slugify` rather than test the current implementation. The current function only replaces the first literal space, so the regression tests should capture the cases users are likely to hit.
+
+Assuming the desired slug rules are: lowercase, convert word separators to `-`, and handle normal user input, I’d start with:
+
+```js
+describe("slugify", () => {
+  test("lowercases titles", () => {
+    expect(slugify("Hello World")).toBe("hello-world");
+  });
+
+  test("replaces multiple spaces with hyphens", () => {
+    expect(slugify("Hello Big World")).toBe("hello-big-world");
+  });
+
+  test("handles leading and trailing spaces", () => {
+    expect(slugify("  Hello World  ")).toBe("hello-world");
+  });
+
+  test("handles tabs and newlines as whitespace", () => {
+    expect(slugify("Hello\tWorld\nAgain")).toBe("hello-world-again");
+  });
+
+  test("does not change already lowercase single words", () => {
+    expect(slugify("hello")).toBe("hello");
+  });
+
+  test("handles punctuation in titles", () => {
+    expect(slugify("Hello, World!")).toBe("hello-world");
+  });
+
+  test("handles repeated separators cleanly", () => {
+    expect(slugify("Hello   World")).toBe("hello-world");
+  });
+});
+```
+
+The **first failing test I’d probably write** is:
+
+```js
+test("replaces multiple spaces with hyphens", () => {
+  expect(slugify("Hello Big World")).toBe("hello-big-world");
+});
+```
+
+because it directly exposes the current bug:
+
+```js
+"Hello Big World"
+  -> "hello-big world" // only first space replaced
+```
+
+Then I’d add the edge cases one at a time as the implementation reveals what “slug” means for the product. For example, whether `"C++ Guide"` becomes `"c-guide"`, `"c-guide"` or `"c-guide"` depends on the existing URL conventions, so I wouldn’t invent those tests until that behavior is agreed. The key is avoiding tests that lock in arbitrary slug rules rather than user-visible expectations.

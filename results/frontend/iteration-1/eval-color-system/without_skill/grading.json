@@ -1,0 +1,25 @@
+{
+  "assertion_results": [
+    {
+      "text": "Provides specific colors or values, not just adjectives like 'muted blue'",
+      "passed": true,
+      "evidence": "The output provides named colors with hex values, e.g. 'Primary background | Midnight Navy | `#0B1220`', 'Brand accent | Developer Blue | `#4F8CFF`', and 'Code background | Carbon | `#080D18`'."
+    },
+    {
+      "text": "Assigns functional roles to each color (background, text, accent, code blocks)",
+      "passed": true,
+      "evidence": "The palette table assigns roles such as 'Primary background', 'Surface / cards', 'Primary text', 'Brand accent', and 'Code background'; the usage section further maps colors to 'Navigation', 'Documentation content', and 'Code blocks'."
+    },
+    {
+      "text": "Addresses readability/contrast for long-form reading",
+      "passed": true,
+      "evidence": "The output states 'contrast and fatigue resistance matter more than visual flash' and includes a rationale section saying 'It supports long reading sessions' with discussion of 'near-black navy background and off-white text' reducing harsh contrast."
+    }
+  ],
+  "summary": {
+    "passed": 3,
+    "failed": 0,
+    "total": 3,
+    "pass_rate": 1
+  }
+}

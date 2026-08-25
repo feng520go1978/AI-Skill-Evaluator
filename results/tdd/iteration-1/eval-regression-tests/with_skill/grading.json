@@ -1,0 +1,25 @@
+{
+  "assertion_results": [
+    {
+      "text": "Includes a test case with MULTIPLE spaces or multiple words that exposes the single-replace bug",
+      "passed": true,
+      "evidence": "Test case: `expect(slugify(\"Hello Big World\")).toBe(\"hello-big-world\");` and explanation: `\"Hello Big World\" -> \"hello-big world\" // only first space replaced`."
+    },
+    {
+      "text": "Covers additional edge cases: at minimum empty string and special characters or unicode",
+      "passed": false,
+      "evidence": "Includes special-character coverage with `test(\"handles punctuation in titles\")` and `expect(slugify(\"Hello, World!\")).toBe(\"hello-world\");`, but no test case for an empty string."
+    },
+    {
+      "text": "States these tests should fail against the current implementation before the fix is made",
+      "passed": false,
+      "evidence": "States `The first failing test I’d probably write is` and explains it exposes the current bug, but does not state that these tests (plural) should fail against the current implementation before the fix."
+    }
+  ],
+  "summary": {
+    "passed": 1,
+    "failed": 2,
+    "total": 3,
+    "pass_rate": 0.3333333333333333
+  }
+}

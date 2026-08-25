@@ -1,0 +1,201 @@
+A nice way to build this test-first (TDD) is to start with **behavior**, not the implementation. We’ll write a test that describes what `maxValue` should do, make it fail, then write the smallest code that makes it pass.
+
+I’ll use a Jest-style setup.
+
+## 1. Define the first behavior
+
+We need a function:
+
+```js
+maxValue(rows, column)
+```
+
+Given:
+
+```js
+[
+  { name: "A", score: 10 },
+  { name: "B", score: 25 },
+  { name: "C", score: 15 }
+]
+```
+
+calling:
+
+```js
+maxValue(rows, "score")
+```
+
+should return:
+
+```js
+25
+```
+
+That’s our first test.
+
+## 2. Write the failing test first
+
+Create `maxValue.test.js`:
+
+```js
+import { maxValue } from "./maxValue";
+
+test("returns the maximum value from a numeric column", () => {
+  const rows = [
+    { name: "A", score: 10 },
+    { name: "B", score: 25 },
+    { name: "C", score: 15 }
+  ];
+
+  expect(maxValue(rows, "score")).toBe(25);
+});
+```
+
+Run it.
+
+It should fail because `maxValue` does not exist yet. That failure is useful: we know the test is actually exercising something.
+
+---
+
+## 3. Write the smallest implementation
+
+Create `maxValue.js`:
+
+```js
+export function maxValue(rows, column) {
+  return Math.max(...rows.map(row => row[column]));
+}
+```
+
+Run the test again.
+
+Now it passes.
+
+We’ve completed the first TDD loop:
+
+1. 🔴 Write failing test
+2. 🟢 Make it pass
+3. 🔵 Refactor if needed
+
+---
+
+## 4. Add edge cases by writing more tests
+
+A good next question: what happens with an empty array?
+
+Before deciding, define the behavior. For example, maybe we want `null`.
+
+Add:
+
+```js
+test("returns null when there are no rows", () => {
+  expect(maxValue([], "score")).toBeNull();
+});
+```
+
+This fails because:
+
+```js
+Math.max(...[])
+```
+
+returns `-Infinity`.
+
+Now update the implementation:
+
+```js
+export function maxValue(rows, column) {
+  if (rows.length === 0) {
+    return null;
+  }
+
+  return Math.max(...rows.map(row => row[column]));
+}
+```
+
+Test passes again.
+
+---
+
+## 5. Test that the column is actually numeric
+
+You might want to prevent accidental misuse:
+
+```js
+test("ignores non-numeric values", () => {
+  const rows = [
+    { score: 10 },
+    { score: "not a number" },
+    { score: 20 }
+  ];
+
+  expect(maxValue(rows, "score")).toBe(20);
+});
+```
+
+Now we need to decide the rule: ignore bad values or throw an error?
+
+If we choose "ignore", implementation becomes:
+
+```js
+export function maxValue(rows, column) {
+  const values = rows.map(row => row[column]).filter(value => typeof value === "number");
+
+  if (values.length === 0) {
+    return null;
+  }
+
+  return Math.max(...values);
+}
+```
+
+---
+
+## 6. Final test suite
+
+You’d now have:
+
+```js
+import { maxValue } from "./maxValue";
+
+test("returns the maximum value from a numeric column", () => {
+  const rows = [
+    { name: "A", score: 10 },
+    { name: "B", score: 25 },
+    { name: "C", score: 15 }
+  ];
+
+  expect(maxValue(rows, "score")).toBe(25);
+});
+
+test("returns null when there are no rows", () => {
+  expect(maxValue([], "score")).toBeNull();
+});
+
+test("ignores non-numeric values", () => {
+  const rows = [
+    { score: 10 },
+    { score: "bad" },
+    { score: 20 }
+  ];
+
+  expect(maxValue(rows, "score")).toBe(20);
+});
+```
+
+And the implementation:
+
+```js
+export function maxValue(rows, column) {
+  const values = rows.map(row => row[column]).filter(value => typeof value === "number");
+
+  if (values.length === 0) {
+    return null;
+  }
+
+  return Math.max(...values);
+}
+```
+
+The key TDD habit here is that every new rule came from a test first. The function’s design emerges from the behavior you actually need, rather than guessing the perfect implementation up front.

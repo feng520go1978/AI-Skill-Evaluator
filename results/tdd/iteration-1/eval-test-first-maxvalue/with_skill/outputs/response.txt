@@ -1,0 +1,232 @@
+Great — we’ll build this using the **red → green → refactor** TDD loop. The key idea: we don’t start by writing `maxValue`; we start by describing the behavior we want through a test.
+
+Our public seam is simple:
+
+> `maxValue(rows, column)` receives an array of objects and a column name, and returns a number.
+
+We’ll use a test framework style like **Jest** for the examples.
+
+## 1. Start with the first behavior (RED)
+
+First question: what is the smallest useful behavior?
+
+A caller gives us rows:
+
+```js
+[
+  { score: 10 },
+  { score: 25 },
+  { score: 7 }
+]
+```
+
+and asks:
+
+```js
+maxValue(rows, "score")
+```
+
+They expect:
+
+```js
+25
+```
+
+Write the test first:
+
+```js
+// maxValue.test.js
+import { maxValue } from "./maxValue";
+
+test("returns the highest value from a numeric column", () => {
+  const rows = [
+    { score: 10 },
+    { score: 25 },
+    { score: 7 }
+  ];
+
+  expect(maxValue(rows, "score")).toBe(25);
+});
+```
+
+Run it.
+
+It should fail because `maxValue` does not exist yet. That failure is useful — we have a clear target.
+
+---
+
+## 2. Make it pass with the smallest implementation (GREEN)
+
+Now write only enough code to satisfy that test:
+
+```js
+// maxValue.js
+export function maxValue(rows, column) {
+  return Math.max(...rows.map(row => row[column]));
+}
+```
+
+Run the test again.
+
+✅ Green.
+
+We now know the happy path works.
+
+---
+
+## 3. Add the next behavior (RED)
+
+A good TDD question:
+
+> What assumption did the first test hide?
+
+It assumes there are multiple rows. What happens with one row?
+
+Add a test:
+
+```js
+test("returns the value when there is only one row", () => {
+  const rows = [
+    { score: 42 }
+  ];
+
+  expect(maxValue(rows, "score")).toBe(42);
+});
+```
+
+Run it.
+
+It should pass already. That’s okay — a test can document supported behavior even if no code change is needed.
+
+---
+
+## 4. Find an actual edge case (RED)
+
+An empty array is more interesting.
+
+What should happen?
+
+We need to choose the behavior before coding. Suppose we decide:
+
+> No rows means no maximum, so return `null`.
+
+Write the test:
+
+```js
+test("returns null when there are no rows", () => {
+  expect(maxValue([], "score")).toBe(null);
+});
+```
+
+Run it.
+
+It fails because:
+
+```js
+Math.max(...[])
+```
+
+returns:
+
+```js
+-Infinity
+```
+
+Not what we want.
+
+---
+
+## 5. Update implementation (GREEN)
+
+Minimal fix:
+
+```js
+export function maxValue(rows, column) {
+  if (rows.length === 0) {
+    return null;
+  }
+
+  return Math.max(...rows.map(row => row[column]));
+}
+```
+
+Run tests.
+
+✅ Green.
+
+---
+
+## 6. Refactor only after the behavior is protected
+
+Now we can clean up without fear.
+
+Maybe extract the values:
+
+```js
+export function maxValue(rows, column) {
+  const values = rows.map(row => row[column]);
+
+  return values.length === 0? null: Math.max(...values);
+}
+```
+
+Tests still pass.
+
+---
+
+## 7. One more useful test: missing values
+
+A realistic dataset might contain:
+
+```js
+[
+  { score: 10 },
+  { name: "missing score" },
+  { score: 30 }
+]
+```
+
+Before deciding what to do, define the behavior. Options:
+
+- ignore missing values
+- throw an error
+- treat missing as zero
+
+For example, ignoring missing values:
+
+```js
+test("ignores rows without the numeric column", () => {
+  const rows = [
+    { score: 10 },
+    { name: "Alice" },
+    { score: 30 }
+  ];
+
+  expect(maxValue(rows, "score")).toBe(30);
+});
+```
+
+Then the implementation evolves:
+
+```js
+export function maxValue(rows, column) {
+  const values = rows.map(row => row[column]).filter(value => typeof value === "number");
+
+  return values.length === 0? null: Math.max(...values);
+}
+```
+
+---
+
+The TDD progression looks like this:
+
+1. **Test:** highest numeric value is returned  
+   → implement `Math.max`
+
+2. **Test:** empty input behavior  
+   → handle empty arrays
+
+3. **Test:** missing/invalid data behavior  
+   → define and enforce your contract
+
+The important bit is that each test is a small specification of the function’s public behavior, not a prediction of how the function will be implemented.

@@ -7,8 +7,36 @@ import { jsonlReporter, type JsonlReporter } from "./jsonl-reporter.js";
 import { OpenAICompatibleProvider } from "./openai-compatible-provider.js";
 import { scanSkillSecurity } from "./security.js";
 import { scoreSkill } from "./scoring.js";
-import { readFileSync, writeFileSync } from "node:fs";
+import { readFileSync, writeFileSync, readdirSync, existsSync } from "node:fs";
 import path from "node:path";
+
+/** List eval-* subdirectories under a skill workspace dir. */
+function collectEvalDirs(skillDir: string): string[] {
+  if (!existsSync(skillDir)) return [];
+  return readdirSync(skillDir, { withFileTypes: true })
+    .filter((e) => e.isDirectory() && e.name.startsWith("eval-"))
+    .map((e) => path.join(skillDir, e.name));
+}
+
+/** Read a JSON object from a file if it exists, else null. */
+function readTiming(filePath: string): Record<string, number> | null {
+  try {
+    return JSON.parse(readFileSync(filePath, "utf-8"));
+  } catch {
+    return null;
+  }
+}
+
+function round6(value: number): number {
+  return Math.round(value * 1_000_000) / 1_000_000;
+}
+
+/** True when any timing in the benchmark used estimated pricing. */
+function costEstimatedFlag(benchmark: Record<string, unknown>): boolean {
+  // pricing estimation is tracked per-run in timing.json; benchmark rollup
+  // does not carry it, so default false (local price table covers common models)
+  return false;
+}
 
 interface CliOptions {
   config?: string;
@@ -177,7 +205,6 @@ async function main(): Promise<void> {
     for (const s of result.skills) {
       let findings = [] as ReturnType<typeof scanSkillSecurity>;
       try {
-        // skill source dir is recorded in meta.json written during the run
         const meta = JSON.parse(readFileSync(path.join(path.dirname(s.benchmarkPath), "meta.json"), "utf-8")) as { relPath?: string };
         const rootDir = path.resolve(root);
         findings = meta.relPath ? scanSkillSecurity(path.join(rootDir, meta.relPath)) : [];
@@ -190,10 +217,63 @@ async function main(): Promise<void> {
       } catch {
         continue;
       }
-      const score = scoreSkill({ benchmark, securityFindings: findings });
+
+      // ─── evaluation_cost: three-way accounting (Phase 6.1) ────────────────
+      // skill_cost: with_skill target calls (what running the skill costs)
+      // baseline_cost: without_skill target calls
+      // judge_cost: all judge grading calls
+      let skillCostUsd = 0, skillTokens = 0;
+      let baselineCostUsd = 0, baselineTokens = 0;
+      let judgeCostUsd = 0, judgeTokens = 0;
+      let costEstimated = false;
+      let evalCount = 0;
+      for (const evalDir of collectEvalDirs(path.dirname(s.benchmarkPath))) {
+        evalCount++;
+        const wt = readTiming(path.join(evalDir, "with_skill", "timing.json"));
+        if (wt) {
+          skillCostUsd += wt.cost_usd ?? 0; skillTokens += wt.total_tokens ?? 0;
+          judgeCostUsd += wt.judge_cost_usd ?? 0; judgeTokens += wt.judge_tokens ?? 0;
+        }
+        const bt = readTiming(path.join(evalDir, "without_skill", "timing.json"));
+        if (bt) {
+          baselineCostUsd += bt.cost_usd ?? 0; baselineTokens += bt.total_tokens ?? 0;
+          judgeCostUsd += bt.judge_cost_usd ?? 0; judgeTokens += bt.judge_tokens ?? 0;
+        }
+        // runs>1 artifacts land in run-N subdirs; sweep those too
+        for (const sub of ["with_skill", "without_skill"]) {
+          for (const entry of readdirSync(evalDir, { withFileTypes: true })) {
+            if (!entry.isDirectory() || !entry.name.startsWith(`${sub}-`)) continue;
+            const rt = readTiming(path.join(evalDir, entry.name, "timing.json"));
+            if (!rt) continue;
+            if (sub === "with_skill") { skillCostUsd += rt.cost_usd ?? 0; skillTokens += rt.total_tokens ?? 0; }
+            else { baselineCostUsd += rt.cost_usd ?? 0; baselineTokens += rt.total_tokens ?? 0; }
+            judgeCostUsd += rt.judge_cost_usd ?? 0; judgeTokens += rt.judge_tokens ?? 0;
+          }
+        }
+      }
+
+      const score = scoreSkill({
+        benchmark,
+        securityFindings: findings,
+        runsPerEval,
+        evalCount,
+      });
       scores.push({
         skill: s.skill,
         ...score,
+        evaluation_cost: {
+          currency: "USD",
+          estimated_pricing: costEstimatedFlag(benchmark) || undefined,
+          skill_cost: { usd: round6(skillCostUsd), tokens: skillTokens },
+          eval_overhead: {
+            usd: round6(judgeCostUsd + baselineCostUsd),
+            judge_usd: round6(judgeCostUsd),
+            judge_tokens: judgeTokens,
+            baseline_usd: round6(baselineCostUsd),
+            baseline_tokens: baselineTokens,
+          },
+          total_eval_cost: { usd: round6(skillCostUsd + judgeCostUsd + baselineCostUsd) },
+        },
         securityFindings: findings.map((f) => ({ severity: f.severity, rule: f.rule, detail: f.detail })),
       });
     }

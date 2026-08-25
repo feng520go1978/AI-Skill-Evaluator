@@ -1,0 +1,25 @@
+{
+  "assertion_results": [
+    {
+      "text": "States which pricing tier receives emphasis and by what visual mechanism",
+      "passed": true,
+      "evidence": "The output identifies the emphasized tier as \"Tier 2: Pro / Recommended\" and states: \"Use one visual winner: the recommended plan\" with mechanisms including \"Slightly larger card (5–10% scale difference)\", \"Elevated position or stronger border\", \"Persistent badge (\"Most popular\")\", and \"Strongest CTA contrast\"."
+    },
+    {
+      "text": "Maintains structural consistency across the three tiers while differentiating emphasis",
+      "passed": true,
+      "evidence": "The component hierarchy shows all three as \"PricingCard\" components with shared elements such as TierName, Description, Price, FeatureList, and CTAButton, while the Pro card adds \"RecommendedBadge\" and differentiated treatments."
+    },
+    {
+      "text": "FAQ treatment is deliberately de-emphasized relative to pricing tiers with a stated reason",
+      "passed": true,
+      "evidence": "The output states: \"The FAQ should not compete with pricing. It exists to remove objections,\" explicitly placing FAQ below pricing in emphasis and giving the reason that it serves to remove objections."
+    }
+  ],
+  "summary": {
+    "passed": 3,
+    "failed": 0,
+    "total": 3,
+    "pass_rate": 1
+  }
+}

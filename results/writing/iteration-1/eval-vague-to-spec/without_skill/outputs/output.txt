@@ -1,0 +1,26 @@
+:::writing{variant="standard" id="48291"}
+Improve the dashboard performance and UI quality with the following implementation requirements:
+
+1. Performance improvements:
+- Reduce initial dashboard load time by optimizing the largest contributors to startup latency.
+- Identify and eliminate unnecessary API requests, duplicate data fetching, and redundant calculations during initial render.
+- Implement lazy loading for non-critical dashboard components that are not visible on first load.
+- Optimize large data sets by adding pagination, virtualization, or incremental loading where applicable.
+- Minimize JavaScript bundle size by removing unused dependencies and applying code splitting where appropriate.
+- Add loading states (skeletons or placeholders) so users receive immediate visual feedback while data is loading.
+- Verify improvements by measuring dashboard load time before and after changes using browser performance tools.
+
+2. UI improvements:
+- Refresh the dashboard layout to create a cleaner visual hierarchy and make key metrics easier to find.
+- Ensure consistent spacing, typography, colors, and component styling across all dashboard sections.
+- Improve readability by reducing visual clutter and grouping related information together.
+- Make interactive elements (buttons, filters, charts, tables) visually consistent and easy to understand.
+- Ensure the dashboard is responsive and usable on desktop, tablet, and mobile screen sizes.
+- Improve accessibility by ensuring sufficient color contrast, keyboard navigation support, and appropriate labels for interactive elements.
+
+3. Acceptance criteria:
+- The dashboard loads noticeably faster than the current version, with measured performance improvements documented.
+- No existing dashboard functionality is removed or broken.
+- All major dashboard views render correctly across supported screen sizes.
+- Updated UI follows the existing application design system or establishes reusable components where needed.
+- Performance and visual changes are reviewed using screenshots, metrics, and regression testing before release.:::

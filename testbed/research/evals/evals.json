@@ -1,0 +1,38 @@
+{
+  "skill_name": "research",
+  "evals": [
+    {
+      "id": 1,
+      "name": "research-framework",
+      "prompt": "Research question: Is WebSocket or Server-Sent Events better for a live dashboard? Before answering, lay out HOW you would research this: information sources and verification steps.",
+      "expected_output": "Structured research plan: ranks sources by trust (official specs/RFCs and vendor docs above blog posts), identifies the key comparison dimensions (reconnect behavior, proxy/firewall traversal, one-way vs bidirectional, browser support), includes cross-verification of claims.",
+      "assertions": [
+        "Proposes consulting primary/high-trust sources (protocol specs, official docs) before secondary sources like blogs",
+        "Identifies at least 3 concrete technical comparison dimensions (e.g. directionality, reconnection, proxies)",
+        "Includes a verification or cross-checking step rather than accepting single-source claims"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "conflicting-sources",
+      "prompt": "Source A says library X is fastest; Source B says library Y is fastest. Both cite benchmarks. Walk me through how you'd resolve this conflict.",
+      "expected_output": "Methodical conflict resolution: check benchmark methodology (workload match, versions, hardware, date), look for source independence/bias, prefer reproducing locally with own workload, treat vendor benchmarks skeptically.",
+      "assertions": [
+        "Examines benchmark methodology differences before trusting either claim",
+        "Flags potential bias (vendor-published benchmarks, outdated versions, non-matching workload)",
+        "Concludes with reproducing the benchmark against one's own real workload as the deciding step"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "structured-summary",
+      "prompt": "Summarize what you know about HTTP/3 adoption for a engineering decision doc. Structure matters more than exhaustiveness.",
+      "expected_output": "Well-structured summary with clearly separated sections (status/adoption level, benefits, risks/caveats, decision implications); distinguishes established facts from uncertain claims; notes knowledge cutoff limitations.",
+      "assertions": [
+        "Output uses clear section structure suitable for a decision document",
+        "Distinguishes confident facts from uncertain or time-sensitive claims",
+        "Includes caveats about verification or recency rather than presenting everything as settled"
+      ]
+    }
+  ]
+}

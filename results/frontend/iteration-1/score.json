@@ -1,0 +1,19 @@
+[
+  {
+    "skill": "frontend-design",
+    "dimensions": {
+      "capability": 100,
+      "lift": 40,
+      "cost": 91,
+      "speed": 99,
+      "stability": 100,
+      "security": 100
+    },
+    "overall": 83.6,
+    "verdict": "PASS",
+    "reasons": [
+      "no issues flagged"
+    ],
+    "securityFindings": []
+  }
+]

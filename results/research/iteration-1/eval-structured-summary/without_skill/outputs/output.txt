@@ -1,0 +1,324 @@
+# HTTP/3 Adoption — Engineering Decision Summary
+
+## 1. Executive summary
+
+**Decision posture:** HTTP/3 is mature enough for production use, but adoption should be driven by measurable latency/reliability gains rather than treated as a universal replacement for HTTP/2.
+
+**Current state:**
+- HTTP/3 (standardized in 2022 as RFC 9114) has moved from experimental to mainstream deployment.
+- Major browsers, operating systems, CDNs, and cloud providers support it.
+- Adoption is strongest at the edge layer (CDNs, large consumer services); enterprise internal traffic is generally slower to migrate.
+- The main benefits are improved connection establishment, resilience on unreliable networks, and elimination of TCP head-of-line blocking.
+- The main costs are operational complexity: UDP handling, observability changes, firewall/network compatibility, and additional infrastructure tuning.
+
+**Recommended approach:** Enable HTTP/3 opportunistically alongside HTTP/2 rather than replacing HTTP/2. Measure impact by client population and workload before expanding.
+
+---
+
+# 2. What HTTP/3 changes
+
+## Protocol stack
+
+HTTP/2:
+```
+HTTP/2
+  ↓
+TLS
+  ↓
+TCP
+  ↓
+IP
+```
+
+HTTP/3:
+```
+HTTP/3
+  ↓
+QUIC
+  ↓
+UDP
+  ↓
+IP
+```
+
+QUIC provides:
+- Reliable delivery
+- Congestion control
+- Encryption (TLS 1.3 integrated)
+- Stream multiplexing
+- Connection migration
+
+The key architectural change is moving transport behavior out of the kernel TCP stack into user-space QUIC implementations.
+
+---
+
+# 3. Adoption status
+
+## Client support
+
+Broad support exists across:
+- Chrome / Chromium-based browsers
+- Firefox
+- Safari
+- Mobile platforms
+- Modern operating systems
+
+For consumer web traffic, HTTP/3-capable clients are now a large majority of active users.
+
+## Server and infrastructure support
+
+Supported by:
+- Major CDNs
+- Cloud load balancers
+- Web servers
+- Reverse proxies
+
+Common deployment paths:
+- Enable HTTP/3 at CDN edge while origin remains HTTP/1.1 or HTTP/2.
+- Terminate QUIC at edge infrastructure.
+- Gradually introduce HTTP/3 support closer to applications.
+
+## Industry adoption pattern
+
+Typical maturity curve:
+
+| Layer | Adoption |
+|---|---|
+| CDN edge | High |
+| Public APIs | Medium |
+| Consumer websites | Medium–High |
+| Internal services | Low–Medium |
+| Service-to-service RPC | Low |
+
+Most organizations do not need every internal service to speak HTTP/3.
+
+---
+
+# 4. Expected benefits
+
+## 4.1 Faster connection setup
+
+QUIC combines transport and cryptographic negotiation.
+
+Potential improvements:
+- Fewer round trips for new connections
+- Better performance for short-lived requests
+- Improved mobile experience
+
+Most noticeable for:
+- Mobile users
+- High-latency networks
+- Users frequently creating new connections
+
+---
+
+## 4.2 Better behavior on lossy networks
+
+TCP suffers when packet loss affects one connection stream.
+
+QUIC provides independent streams:
+- Loss on one stream does not block unrelated streams.
+- Better performance on Wi-Fi/mobile networks.
+
+Potential beneficiaries:
+- Mobile applications
+- Video streaming
+- Interactive applications
+
+---
+
+## 4.3 Connection migration
+
+QUIC connections are not tied to a TCP 4-tuple.
+
+Example:
+- User switches from cellular → Wi-Fi.
+- Existing connection can continue.
+
+Useful for:
+- Mobile apps
+- Long-lived connections
+- Real-time workloads
+
+---
+
+## 5. Limitations and tradeoffs
+
+## 5.1 Operational complexity
+
+HTTP/3 introduces:
+
+- UDP traffic requirements
+- New metrics
+- New debugging tools
+- Different packet behavior
+
+Teams need to update:
+- Firewalls
+- Load balancers
+- Network monitoring
+- Security controls
+
+---
+
+## 5.2 UDP concerns
+
+Some networks:
+- Block UDP
+- Rate-limit UDP
+- Inspect TCP better than UDP
+
+Mitigation:
+- Keep HTTP/2 fallback enabled.
+- Use Alt-Svc negotiation.
+- Monitor fallback rates.
+
+---
+
+## 5.3 CPU and infrastructure costs
+
+QUIC implementations run partly in user space.
+
+Potential impacts:
+- More CPU overhead compared with optimized TCP stacks.
+- More tuning required at high throughput.
+
+Large providers have optimized this heavily, but smaller deployments may see different results.
+
+---
+
+## 5.4 Debugging differences
+
+Existing TCP tools are less useful.
+
+Examples:
+- Packet captures are encrypted and QUIC-specific.
+- Traditional TCP latency analysis does not directly apply.
+
+Teams need:
+- QUIC-aware telemetry
+- Application-level metrics
+- Connection lifecycle visibility
+
+---
+
+# 6. Workloads most likely to benefit
+
+## Strong candidates
+
+### Consumer-facing websites
+Benefits:
+- Faster first loads
+- Better mobile performance
+- Global user improvements
+
+### APIs with many short requests
+Benefits:
+- Reduced handshake cost
+- Better latency for geographically distributed clients
+
+### Real-time applications
+
+Examples:
+- Collaboration tools
+- Gaming
+- Live communication
+
+Benefits:
+- Better handling of network changes and loss.
+
+---
+
+# 7. Workloads with limited benefit
+
+## Stable internal services
+
+If traffic is:
+- Low latency already
+- Same datacenter
+- Reliable network
+
+HTTP/3 may provide little improvement.
+
+## Large bulk transfers
+
+Benefits may be workload-dependent:
+- Congestion control improvements can help.
+- But raw throughput gains are not guaranteed.
+
+## Existing HTTP/2 deployments with warm connections
+
+Many HTTP/3 advantages appear during:
+- Connection setup
+- Network transitions
+- Packet loss
+
+Long-lived, stable HTTP/2 connections may see smaller gains.
+
+---
+
+# 8. Migration considerations
+
+## Recommended deployment model
+
+1. Enable HTTP/3 at the edge.
+2. Keep HTTP/2 fallback.
+3. Measure:
+   - Request latency
+   - Error rates
+   - Connection success
+   - CPU usage
+   - UDP reachability
+4. Expand based on observed gains.
+
+---
+
+## Architecture questions
+
+Before enabling:
+
+### Infrastructure
+- Does our CDN/load balancer support HTTP/3?
+- Can we terminate QUIC at the edge?
+- Do security systems allow UDP/443?
+
+### Observability
+- Can we distinguish HTTP/2 vs HTTP/3 traffic?
+- Do dashboards track protocol-level performance?
+
+### Reliability
+- What percentage of clients successfully negotiate HTTP/3?
+- What is fallback behavior?
+
+---
+
+# 9. Decision framework
+
+| Question | Recommendation |
+|---|---|
+| Public internet-facing service? | Strong candidate |
+| Mobile-heavy user base? | Strong candidate |
+| Global users/high latency? | Strong candidate |
+| Internal microservices only? | Usually defer |
+| Need zero infrastructure changes? | Defer |
+| CDN already supports HTTP/3? | Enable experimentally |
+
+---
+
+# 10. Suggested engineering decision
+
+**Adopt HTTP/3 as an optional transport protocol, not a forced migration.**
+
+Initial rollout:
+- Enable HTTP/3 on public endpoints.
+- Maintain HTTP/2 compatibility.
+- Track performance differences.
+- Avoid migrating internal service meshes unless measurements justify it.
+
+Success criteria:
+- Lower p95/p99 latency for applicable clients.
+- No increase in error rates.
+- Acceptable CPU/network overhead.
+- Stable observability and operations.
+
+**Bottom line:** HTTP/3 is no longer a speculative technology. The engineering question is less “is HTTP/3 ready?” and more “where does the operational cost pay back through measurable user or system improvements?”

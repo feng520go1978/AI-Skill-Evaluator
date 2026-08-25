@@ -1,0 +1,25 @@
+{
+  "assertion_results": [
+    {
+      "text": "Examines benchmark methodology differences before trusting either claim",
+      "passed": true,
+      "evidence": "The response says “I’d treat this as a benchmark validity problem, not a ‘who is right?’ problem” and compares “Same hardware,” “Same library versions,” “Same input data,” and “Same measurement method” before accepting a winner."
+    },
+    {
+      "text": "Flags potential bias (vendor-published benchmarks, outdated versions, non-matching workload)",
+      "passed": false,
+      "evidence": "The response flags narrow/artificial workloads and version differences (“Same library versions? Performance changes across releases”), but it does not mention vendor-published benchmarks as a possible source of bias."
+    },
+    {
+      "text": "Concludes with reproducing the benchmark against one's own real workload as the deciding step",
+      "passed": false,
+      "evidence": "The response recommends reproducing Source A and Source B benchmarks and says “70%: performance on my real workload,” but its conclusion is about workload/environment dependence rather than stating reproduction against one's own real workload is the deciding step."
+    }
+  ],
+  "summary": {
+    "passed": 1,
+    "failed": 2,
+    "total": 3,
+    "pass_rate": 0.3333333333333333
+  }
+}

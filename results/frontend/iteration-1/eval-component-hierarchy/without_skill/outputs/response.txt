@@ -1,0 +1,240 @@
+For a pricing page with **3 tiers + FAQ**, structure the page so the user makes a decision quickly: understand the options → compare → choose → resolve objections.
+
+## Component hierarchy
+
+```
+PricingPage
+├── PricingHero
+│   ├── Eyebrow ("Simple pricing")
+│   ├── Heading
+│   ├── SupportingCopy
+│   └── BillingToggle (Monthly / Annual)
+│
+├── PricingGrid
+│   ├── PricingCard (Tier 1: Starter)
+│   │   ├── TierHeader
+│   │   ├── Price
+│   │   ├── Description
+│   │   ├── FeatureList
+│   │   └── CTAButton
+│   │
+│   ├── PricingCard (Tier 2: Pro / Recommended)
+│   │   ├── PopularBadge
+│   │   ├── TierHeader
+│   │   ├── Price
+│   │   ├── Description
+│   │   ├── FeatureList
+│   │   └── PrimaryCTAButton
+│   │
+│   └── PricingCard (Tier 3: Enterprise)
+│       ├── TierHeader
+│       ├── Price
+│       ├── Description
+│       ├── FeatureList
+│       └── ContactCTA
+│
+├── FeatureComparison (optional)
+│   ├── ComparisonHeader
+│   ├── FeatureRows
+│   └── TierColumns
+│
+├── TrustSection
+│   ├── CustomerLogos
+│   ├── Testimonials
+│   └── SecurityBadges
+│
+└── FAQSection
+    ├── FAQHeader
+    ├── FAQAccordion
+    │   ├── FAQItem
+    │   ├── FAQItem
+    │   └── FAQItem
+    └── ContactPrompt
+```
+
+---
+
+## Visual emphasis strategy
+
+### 1. Make the middle tier the visual anchor
+
+Most users compare before choosing, so the recommended plan should dominate.
+
+**Recommended tier treatment:**
+- Slightly larger card (5–10% scale difference)
+- Elevated position (desktop: slightly higher)
+- Stronger border/shadow
+- Accent background or gradient
+- "Most popular" badge
+- Primary CTA style
+
+Example hierarchy:
+
+```
+Starter        Pro ⭐              Enterprise
+  ↓            ↓↓↓                    ↓
+Secondary     Primary              Secondary
+CTA           CTA                  CTA
+```
+
+Avoid making all cards equal weight — it forces users to do more cognitive work.
+
+---
+
+### 2. Pricing card anatomy
+
+Prioritize information in this order:
+
+```
+1. Plan name
+2. Who it's for
+3. Price
+4. CTA
+5. Key benefits
+6. Full feature list
+```
+
+Users should understand the choice within ~5 seconds.
+
+Example:
+
+```
+┌──────────────────┐
+│ PRO ⭐            │
+│ For growing teams │
+│                  │
+│ $49 / month      │
+│                  │
+│ [Start free]     │
+│                  │
+│ ✓ Unlimited users│
+│ ✓ Analytics      │
+│ ✓ Integrations   │
+└──────────────────┘
+```
+
+---
+
+### 3. Use contrast intentionally
+
+| Element | Visual weight |
+|---|---|
+| Recommended plan | Highest |
+| CTA buttons | High |
+| Price | High |
+| Plan names | Medium-high |
+| Features | Medium |
+| Footnotes/legal | Low |
+
+Don't make feature lists visually louder than the decision itself.
+
+---
+
+### 4. FAQ placement strategy
+
+Place FAQ **after pricing**, not before.
+
+The flow:
+
+```
+Interest
+   ↓
+"What are my options?"
+   ↓
+"Which plan fits me?"
+   ↓
+"What about my concerns?"
+   ↓
+Conversion
+```
+
+FAQ categories should target purchase blockers:
+
+```
+FAQ
+├── Billing
+├── Trial / cancellation
+├── Security
+├── Migration
+├── Team size limits
+└── Support
+```
+
+---
+
+### 5. Responsive behavior
+
+Desktop:
+
+```
+[Starter] [Pro ⭐] [Enterprise]
+```
+
+Mobile:
+
+```
+[Pro ⭐]
+[Starter]
+[Enterprise]
+```
+
+or:
+
+```
+[Starter]
+[Pro ⭐]
+[Enterprise]
+```
+
+depending on whether you want conversion optimization or neutral comparison.
+
+Keep the recommended plan visible early.
+
+---
+
+### 6. Component design considerations
+
+Useful props:
+
+```ts
+<PricingCard
+  name="Pro"
+  description="For growing teams"
+  price={49}
+  features={[
+    "Unlimited projects",
+    "Advanced analytics"
+  ]}
+  highlighted={true}
+  badge="Most Popular"
+  cta="Start Free Trial"
+/>
+```
+
+Keep pricing data separate from presentation:
+
+```ts
+const plans = [
+  {
+    name: "Starter",
+    price: 19,
+    highlighted: false
+  },
+  {
+    name: "Pro",
+    price: 49,
+    highlighted: true
+  },
+  {
+    name: "Enterprise",
+    price: null,
+    highlighted: false
+  }
+];
+```
+
+This makes experiments (changing prices, order, copy, emphasis) much easier.
+
+---
+
+A strong default is: **one dominant recommended plan, two supporting alternatives, and an FAQ designed around objections rather than general information.**

@@ -1,0 +1,25 @@
+{
+  "assertion_results": [
+    {
+      "text": "Provides specific colors or values, not just adjectives like 'muted blue'",
+      "passed": true,
+      "evidence": "Provides a palette table with named colors and hex values such as Deep Graphite `#16181D`, Cool Mist `#F4F6F8`, Electric Teal `#00B8A9`, and Code Void `#0D1117`."
+    },
+    {
+      "text": "Assigns functional roles to each color (background, text, accent, code blocks)",
+      "passed": true,
+      "evidence": "The table explicitly assigns roles including 'Primary text, headings, code emphasis', 'Main documentation background', 'Links, active states, success indicators', 'Primary actions, navigation highlights', and 'Code blocks'."
+    },
+    {
+      "text": "Addresses readability/contrast for long-form reading",
+      "passed": true,
+      "evidence": "States that documentation is read 'for hours' and that the neutral foundation 'keeps long reading sessions comfortable'; also recommends 'generous line-height in body copy'."
+    }
+  ],
+  "summary": {
+    "passed": 3,
+    "failed": 0,
+    "total": 3,
+    "pass_rate": 1
+  }
+}

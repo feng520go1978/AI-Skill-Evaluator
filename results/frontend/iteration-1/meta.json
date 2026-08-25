@@ -1,0 +1,12 @@
+{
+  "name": "frontend-design",
+  "slug": "frontend-design",
+  "relPath": "",
+  "target": "auto",
+  "judge": "auto",
+  "modes": [
+    "with_skill",
+    "without_skill"
+  ],
+  "generated_at": "2026-08-25T09:22:37.124Z"
+}

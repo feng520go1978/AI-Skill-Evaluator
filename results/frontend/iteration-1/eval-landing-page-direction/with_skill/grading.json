@@ -1,0 +1,25 @@
+{
+  "assertion_results": [
+    {
+      "text": "Commits to a SPECIFIC direction rather than listing generic options or hedging",
+      "passed": true,
+      "evidence": "Output states \"Design direction: “The Writer’s Studio”\" and defines a specific concept: \"a quiet room, a blank page, and the moment an idea starts moving.\""
+    },
+    {
+      "text": "Typography and color choices are concrete (named characteristics, not just 'nice fonts')",
+      "passed": true,
+      "evidence": "Output specifies \"Ivory paper — #F5F0E6\", \"Charcoal ink — #191816\", \"Oxidized copper — #B56A3B\", and typography choices including \"Fraunces\" as a display face and \"Inter\" for body text."
+    },
+    {
+      "text": "Design choices are explicitly connected to the target audience (writers) rather than generic best practices",
+      "passed": true,
+      "evidence": "Output repeatedly ties choices to writers, including \"a novelist’s manuscript margin notes,\" \"Writers don’t buy 'AI-powered organization.' They buy fewer interruptions,\" and the \"living manuscript margin\" feature based on writers’ existing habits."
+    }
+  ],
+  "summary": {
+    "passed": 3,
+    "failed": 0,
+    "total": 3,
+    "pass_rate": 1
+  }
+}

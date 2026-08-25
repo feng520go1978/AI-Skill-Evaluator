@@ -1,0 +1,38 @@
+{
+  "skill_name": "writing-for-agents",
+  "evals": [
+    {
+      "id": 1,
+      "name": "agent-readable-readme",
+      "prompt": "Write a README section explaining how to run our CLI tool 'deploykit' which has commands: init, plan, apply, rollback. It will be read primarily by AI coding agents working in the repo.",
+      "expected_output": "Unambiguous, agent-oriented writing: explicit command sequences with expected outcomes, states preconditions, avoids prose ambiguity, defines error handling expectations, structured for machine parsing (consistent formatting).",
+      "assertions": [
+        "Commands are documented with explicit invocation syntax and expected outcome per command",
+        "Preconditions or ordering constraints are stated explicitly (e.g. must run init before apply)",
+        "Writing avoids ambiguous pronouns/vague references that would confuse an automated reader"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "vague-to-spec",
+      "prompt": "Rewrite this vague requirement into something an AI coding agent could implement without asking questions: 'make the dashboard load faster and look nicer'.",
+      "expected_output": "Converts vague goals into measurable, testable spec items: concrete performance metric with target (e.g. LCP < 2s), specific UI changes enumerated, scope boundaries stated, verification method included.",
+      "assertions": [
+        "Performance goal is made measurable with a specific metric and numeric target",
+        "'Look nicer' is replaced with concrete, enumerable UI changes",
+        "Includes how completion would be verified or tested"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "ops-runbook",
+      "prompt": "Write runbook steps for: when the nightly data import fails, an operator should be able to fix it. The importer pulls from an SFTP server, transforms CSVs, and loads into Postgres.",
+      "expected_output": "Agent/operator-executable steps: explicit diagnostic checks in order (check logs location, verify SFTP connectivity, check file format, check DB constraints), each step with pass/fail signal and next action, no unstated assumptions.",
+      "assertions": [
+        "Diagnostic steps appear in a logical ordered sequence covering the three failure domains (network/SFTP, file format/transformation, database)",
+        "Each step indicates how to determine success or failure",
+        "No critical steps left implicit (e.g. does not assume the reader knows where logs live)"
+      ]
+    }
+  ]
+}

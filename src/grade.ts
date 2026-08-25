@@ -34,6 +34,11 @@ export interface GradeOutputsResult {
   judgePrompt: string;
   /** Raw text the judge returned. Empty when no rubric assertions. */
   judgeResponse: string;
+  /**
+   * Aggregate cost of ALL judge calls for this grading (including retries),
+   * zeroed when there were no rubric assertions (deterministic tool-only path).
+   */
+  judgeCost: { costUsd: number; inputTokens: number; outputTokens: number };
 }
 
 function truncate(value: string, max = 1200): string {
@@ -374,6 +379,7 @@ export async function gradeOutputs(args: GradeOutputsArgs): Promise<GradeOutputs
       grading: { assertion_results: toolResults, summary: summarize(toolResults) },
       judgePrompt: "",
       judgeResponse: "",
+      judgeCost: { costUsd: 0, inputTokens: 0, outputTokens: 0 },
     };
   }
 
@@ -381,11 +387,15 @@ export async function gradeOutputs(args: GradeOutputsArgs): Promise<GradeOutputs
   let lastPrompt = "";
   let lastText = "";
   let rubricResults: AssertionResult[] | undefined;
+  let judgeCost = { costUsd: 0, inputTokens: 0, outputTokens: 0 };
 
   for (let attempt = 0; attempt < 2; attempt++) {
     lastPrompt = renderRubricPrompt(args, badResponse || undefined);
     const response = await callJudge(args.judge.provider, lastPrompt, args.judgeParams);
     lastText = response.output || response.error || "";
+    judgeCost.costUsd += response.costUsd ?? 0;
+    judgeCost.inputTokens += response.inputTokens ?? 0;
+    judgeCost.outputTokens += response.outputTokens ?? 0;
     try {
       rubricResults = normalizeRubricGrading(JSON.parse(extractJsonObject(lastText)), args.assertions);
       break;
@@ -403,5 +413,6 @@ export async function gradeOutputs(args: GradeOutputsArgs): Promise<GradeOutputs
     grading: { assertion_results: combined, summary: summarize(combined) },
     judgePrompt: lastPrompt,
     judgeResponse: lastText,
+    judgeCost,
   };
 }

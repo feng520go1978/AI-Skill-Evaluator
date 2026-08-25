@@ -1,0 +1,2127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Agent Skills Eval report</title>
+  <style>
+  :root {
+    --fg: #1a1f24;
+    --muted: #6a737d;
+    --bg: #ffffff;
+    --bg-alt: #f6f8fa;
+    --border: #e1e4e8;
+    --ok: #1a7f37;
+    --warn: #b08800;
+    --bad: #cf222e;
+    --ok-bg: #dafbe1;
+    --warn-bg: #fff8c5;
+    --bad-bg: #ffebe9;
+    --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 14px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; color: var(--fg); background: var(--bg); }
+  header.hero { background: linear-gradient(180deg, #fafbfc 0%, #f0f2f5 100%); border-bottom: 1px solid var(--border); padding: 24px 32px; }
+  header.hero h1 { margin: 0 0 4px; font-size: 22px; }
+  header.hero .meta { color: var(--muted); font-size: 13px; }
+  header.hero .totals { margin-top: 16px; display: flex; gap: 16px; flex-wrap: wrap; }
+  header.hero .stat { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 12px 16px; min-width: 120px; }
+  header.hero .stat .label { display: block; font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
+  header.hero .stat .value { display: block; font-size: 22px; font-weight: 600; margin-top: 2px; }
+  header.hero .stat.ok .value { color: var(--ok); }
+  header.hero .stat.bad .value { color: var(--bad); }
+  main { padding: 24px 32px; max-width: 1200px; margin: 0 auto; }
+  h2 { margin: 0 0 4px; font-size: 18px; }
+  .muted { color: var(--muted); font-size: 12px; }
+  table.summary { width: 100%; border-collapse: collapse; margin-bottom: 32px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+  table.summary th, table.summary td { padding: 10px 12px; border-bottom: 1px solid var(--border); text-align: left; }
+  table.summary th { background: var(--bg-alt); font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); }
+  table.summary td.num { text-align: right; font-variant-numeric: tabular-nums; }
+  table.summary tr.skill-row.bad { background: var(--bad-bg); }
+  table.summary tr.skill-row.warn { background: var(--warn-bg); }
+  table.summary tr.skill-row.ok td { background: transparent; }
+  table.summary tr.skill-row a { color: var(--fg); text-decoration: none; font-weight: 500; }
+  table.summary tr.skill-row a:hover { text-decoration: underline; }
+  .bar { width: 100px; height: 10px; background: var(--bg-alt); border-radius: 5px; overflow: hidden; }
+  .bar .fill { height: 100%; }
+  .bar.ok .fill { background: var(--ok); }
+  .bar.warn .fill { background: var(--warn); }
+  .bar.bad .fill { background: var(--bad); }
+  article.skill { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 20px; margin-bottom: 20px; }
+  article.skill header h2 .badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: 500; vertical-align: middle; margin-left: 8px; }
+  article.skill header h2 .badge.ok { background: var(--ok-bg); color: var(--ok); }
+  article.skill header h2 .badge.warn { background: var(--warn-bg); color: var(--warn); }
+  article.skill header h2 .badge.bad { background: var(--bad-bg); color: var(--bad); }
+  article.skill .delta { margin-top: 8px; font-size: 13px; }
+  article.skill .delta.ok { color: var(--ok); }
+  article.skill .delta.bad { color: var(--bad); }
+  details.eval { border: 1px solid var(--border); border-radius: 6px; margin-top: 12px; }
+  details.eval > summary { padding: 10px 14px; cursor: pointer; display: flex; gap: 10px; align-items: center; }
+  details.eval[open] > summary { border-bottom: 1px solid var(--border); }
+  details.eval.bad > summary { background: var(--bad-bg); }
+  details.eval.ok > summary { background: var(--ok-bg); }
+  details.eval .eval-status { font-weight: 600; }
+  details.eval.bad .eval-status { color: var(--bad); }
+  details.eval.ok .eval-status { color: var(--ok); }
+  .eval-body { padding: 12px 16px; }
+  .run { padding: 12px 0; border-top: 1px dashed var(--border); }
+  .run:first-child { border-top: none; padding-top: 0; }
+  .run-head { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+  .mode { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.04em; }
+  .mode-with_skill { background: #ddf4ff; color: #0969da; }
+  .mode-without_skill { background: #fff1e5; color: #bc4c00; }
+  .status.ok { color: var(--ok); font-weight: 600; }
+  .status.bad { color: var(--bad); font-weight: 600; }
+  .run details > summary { cursor: pointer; font-size: 12px; color: var(--muted); padding: 4px 0; }
+  .run details[open] > summary { color: var(--fg); }
+  .run pre { background: var(--bg-alt); border: 1px solid var(--border); border-radius: 6px; padding: 10px 12px; font-family: var(--mono); font-size: 12px; line-height: 1.45; overflow-x: auto; white-space: pre-wrap; word-break: break-word; max-height: 400px; overflow-y: auto; }
+  table.assertions { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 13px; }
+  table.assertions th, table.assertions td { padding: 6px 8px; border-bottom: 1px solid var(--border); text-align: left; vertical-align: top; }
+  table.assertions th { background: var(--bg-alt); font-size: 11px; text-transform: uppercase; color: var(--muted); }
+  table.assertions tr.bad td { background: var(--bad-bg); }
+  table.assertions .check { color: var(--ok); font-weight: 600; }
+  table.assertions .x { color: var(--bad); font-weight: 600; }
+  table.assertions .evidence { color: var(--muted); font-size: 12px; }
+  details.tools { margin: 12px 0; }
+  details.tools > summary { cursor: pointer; font-size: 12px; color: var(--muted); padding: 4px 0; }
+  details.tools[open] > summary { color: var(--fg); font-weight: 500; }
+  table.tool-calls { width: 100%; border-collapse: collapse; margin: 6px 0 8px; font-size: 13px; }
+  table.tool-calls th, table.tool-calls td { padding: 6px 8px; border-bottom: 1px solid var(--border); text-align: left; vertical-align: top; }
+  table.tool-calls th { background: var(--bg-alt); font-size: 11px; text-transform: uppercase; color: var(--muted); }
+  table.tool-calls .tool-name { font-family: var(--mono); color: #b08800; font-weight: 600; }
+  pre.tool-args { background: var(--bg-alt); border: 1px solid var(--border); border-radius: 4px; padding: 6px 8px; margin: 0; font-family: var(--mono); font-size: 12px; line-height: 1.4; overflow-x: auto; white-space: pre-wrap; word-break: break-word; max-height: 240px; overflow-y: auto; }
+  .empty { padding: 60px 20px; text-align: center; color: var(--muted); }
+</style>
+</head>
+<body>
+  <header class="hero">
+    <h1>Agent Skills Eval report</h1>
+    <div class="meta">
+      generated 2026-08-25T09:22:02.725Z
+      · target <code>auto</code>
+      · judge <code>auto</code>
+    </div>
+    <div class="totals">
+      <div class="stat"><span class="label">skills</span><span class="value">1</span></div>
+      <div class="stat"><span class="label">evals</span><span class="value">3</span></div>
+      <div class="stat ok"><span class="label">passed</span><span class="value">8</span></div>
+      <div class="stat bad"><span class="label">failed</span><span class="value">1</span></div>
+      <div class="stat ok"><span class="label">pass rate</span><span class="value">88.9%</span></div>
+    </div>
+  </header>
+  <main>
+        <table class="summary">
+          <thead>
+            <tr>
+              <th>Skill</th>
+              <th class="num">Evals</th>
+              <th class="num">Passed</th>
+              <th class="num">Pass rate</th>
+              <th></th>
+              <th class="num">Avg time</th>
+              <th class="num">Avg tokens</th>
+            </tr>
+          </thead>
+          <tbody>
+    <tr class="skill-row ok">
+      <td><a href="#skill-writing-for-agents">writing-for-agents</a>
+          <div class="muted"></div></td>
+      <td class="num">3</td>
+      <td class="num">8/9</td>
+      <td class="num">88.9%</td>
+      <td class="bar-cell"><div class="bar ok"><div class="fill" style="width:89%"></div></div></td>
+      <td class="num">29ms</td>
+      <td class="num">2984</td>
+    </tr>
+  </tbody>
+        </table>
+        
+    <article class="skill" id="skill-writing-for-agents">
+      <header>
+        <h2>writing-for-agents <span class="badge ok">88.9%</span></h2>
+        <div class="muted"></div>
+        <div class="muted">8/9 assertions · 3 evals · 29ms avg · 2984 tokens avg</div>
+        <div class="delta ok">Δ vs baseline: pass-rate +22.22pp · time -0.60s · tokens +2190.67</div>
+      </header>
+      <div class="evals">
+    <details class="eval ok">
+      <summary>
+        <span class="eval-status">✓</span>
+        <span class="eval-name">eval-agent-readable-readme</span>
+        <span class="muted">6/6 assertions</span>
+      </summary>
+      <div class="eval-body">
+    <section class="run">
+      <header class="run-head">
+        <span class="mode mode-with_skill">with_skill</span>
+        <span class="status ok">PASS</span>
+        <span class="muted">51ms · 2785 tokens · 3/3</span>
+      </header>
+      <details class="prompt"><summary>system prompt</summary><pre>&lt;skill name=&quot;writing-for-agents&quot;&gt;
+&lt;description&gt;Writing documents for agents. Use when creating or editing skills, or modifying AGENTS.md or CLAUDE.md.&lt;/description&gt;
+&lt;instructions&gt;
+Reference for writing any document an agent consumes: a skill, an `AGENTS.md` / `CLAUDE.md`, a doc reached by a pointer. The packaging differs; the writing does not: the same levers make each one predictable, since the agent takes the same _process_ every run rather than producing the same output.
+
+When the document you're writing is a skill, read [`SKILL-MECHANICS.md`](SKILL-MECHANICS.md) for frontmatter, invocation choice, and router skills.
+
+## Context pointers
+
+A **context pointer** is a reference held in the agent's context that names some out-of-context material and encodes the condition for reaching it. A skill's description is one; a line in `AGENTS.md` naming a doc is the same object. The pointer's _wording_, not its target, decides when the agent reaches the material, and how reliably. A must-have target behind a weakly worded pointer is a variance bug: sharpen the wording first, and inline the material only if sharpening fails.
+
+A pointer does two jobs: state what the material is, and list the **branches** that should trigger reaching it (a branch is a distinct case the document handles, so different runs take different paths through it). Every word of an always-loaded pointer costs on every turn, so it earns even harder pruning than the body:
+
+- **Front-load the leading word**: the pointer is where it does its triggering work.
+- **One trigger per branch.** Synonyms that rename a single branch are one branch written twice; collapse them and keep only genuinely distinct branches.
+- **Cut identity the body already carries.**
+
+## The two loads
+
+Every document and pointer you add spends one of two budgets:
+
+- **Context load** is the cost of always-loaded material on the agent's window: an `AGENTS.md` line, a skill description, anything sitting in context every turn, spending tokens and attention whether or not it fires.
+- **Cognitive load** is the cost on the human: which documents exist and when to reach for each. The human is the index. Not a cost to minimise: it is the price of human agency; spend it where human judgement matters, remove it where it does not.
+
+Material reached only through a pointer escapes context load at the price of the pointer's own line; material with no pointer at all rides entirely on cognitive load.
+
+## Information hierarchy
+
+A document is built from two content types: **steps** (the ordered actions the agent performs) and **reference** (definitions, rules, facts consulted on demand). The two mix freely: all steps (a recipe), all reference (a review's rules, this skill), or both. The core decision is where each piece sits on the **information hierarchy**, a ladder ranked by how immediately the agent needs the material:
+
+1. **In-file step** is the primary tier: what the agent does, in order.
+2. **In-file reference** is consulted on demand. Often a legitimately flat peer-set (every rule of a review on one rung), which is a fine arrangement, not a smell.
+3. **Disclosed reference** is pushed out into a separate file, reached by a context pointer, loaded only when the pointer fires. Spans a sibling file in the same folder through fully external reference that lives anywhere and any document can point at.
+
+Push too little down and the top bloats; push too much and you hide material the agent actually needs. That tension is the whole decision.
+
+**Progressive disclosure** is the move down the ladder (out of the main file and behind a pointer) so the top stays legible. Not primarily a token optimisation: it is how the hierarchy is protected. Branching is the cleanest disclosure test: inline what every branch needs, and push behind a pointer what only some branches reach. When a document has steps, in-file reference that should be disclosed buries them and turns attending to them into a coin-flip: a variance lever, not just a legibility one.
+
+**Co-location** is the within-file companion: where the ladder decides _how far down_ a piece sits, co-location decides _what sits beside it_ once there. Keep a concept's definition, rules, and caveats under one heading rather than scattered, so reading one part brings its neighbours with it. The test: the document should read like documentation written for the agent. Grouped material reads that way; scattered material does not. (Distinct from duplication: that repeats one meaning in two places; scattering fragments one meaning across many.)
+
+**Sprawl** is the failure mode here: a document simply too long, even when every line is live and unique. Attention thins across the excess, and every extra line is one more to keep relevant. The cure is the ladder: disclose reference behind pointers, and split by branch or sequence so each path carries only what it needs.
+
+## Steps and completion criteria
+
+Every step ends on a **completion criterion**, the condition that tells the agent the work is done. Two properties make it a lever:
+
+- **Clarity**: can the agent tell done from not-done? A vague bound (&quot;understanding reached&quot;) invites **premature completion**: ending the step before it is genuinely done, attention slipping to _being done_. The visible steps still ahead (the **post-completion steps**) supply the pull; the criterion's clarity is the resistance. Defend in order: **sharpen the bound first** (local and cheap); only if it is irreducibly fuzzy _and_ you observe the rush, hide the later steps by splitting the sequence. Hiding only works across a real context boundary (a hand-off or a subagent dispatch; an inline call leaves the later steps in context and clears nothing).
+- **Demand**: how much it requires. &quot;Every modified model accounted for&quot; forces thorough work where &quot;produce a change list&quot; does not. Demand drives **legwork** (the digging the agent does within the work, latent in the wording rather than written as its own step), and it is not step-bound: &quot;every rule applied&quot; binds a body of flat reference just as &quot;every step done&quot; binds a sequence, which is how an all-reference document still carries an exhaustiveness bar.
+
+The strongest criteria are both checkable and exhaustive.
+
+## When to split
+
+Splitting one document into two spends one of the two loads, so split only when the cut earns it:
+
+- **By sequence**: split a run of steps where the post-completion steps tempt the agent to rush the one in front of it. Keeping them out of view drives more legwork on the current task. Beware the reverse: merging sequences exposes each step's later steps to what follows, inviting premature completion.
+- **By invocation**, skill-specific: see [`SKILL-MECHANICS.md`](SKILL-MECHANICS.md).
+
+## Leading words
+
+A **leading word** is a compact concept already living in the model's pretraining that the agent thinks with while running the document (_lesson_, _fog of war_, _tracer bullets_). Repeated as a token, never as a sentence, it accumulates a distributed definition and anchors a whole region of behaviour in the fewest tokens, by recruiting priors the model already holds. Coining your own works if you define it clearly, but a made-up word recruits no priors: you pay in definition tokens what a pretrained word gives free; reach for an existing word first.
+
+It anchors twice. In the body, _execution_: the agent reaches for the same behaviour every time the word appears, and inside flat reference it focuses attention on a class of thing to look for. In a pointer, _invocation_: when the same word lives in your prompts, your docs, and your codebase, the agent links that shared language to the material and reaches it more reliably.
+
+Hunt for opportunities to refactor with leading words. A triad spelled out at three sites, a pointer spending a sentence to gesture at one idea. Each is a passage begging to collapse into a single token:
+
+- &quot;fast, deterministic, low-overhead&quot; → _tight_ (a _tight_ loop).
+- &quot;a loop you believe in&quot; → _red_, turning a fuzzy gate into a binary observable state (the loop goes _red_ on the bug, or it doesn't).
+
+You win twice: fewer tokens, and a sharper hook for the agent to hang its thinking on. Assume every document is carrying restatements that leading words retire. Go find them.
+
+**Negation** is the failure mode beside this lever: steering by prohibition drags the forbidden behaviour into context and makes it _more_ available, not less. _Don't think of an elephant_, and the elephant is all there is; the negation is a weak modifier the strongly-activated concept overruns, so the ban half-reads as an instruction to do the thing. Prompt the **positive**: state the target behaviour (&quot;write one-line comments&quot;) so the banned one is never spoken. A prohibition earns its place only as a hard guardrail you cannot phrase positively; even then, pair it with the positive target so attention lands on what to do.
+
+## Pruning
+
+- Keep each meaning in a **single source of truth**: one authoritative place, so changing the behaviour is a one-place edit. **Duplication** (the same meaning in more than one place) costs maintenance and tokens, and inflates a meaning's prominence on the ladder past its real rank. (The accidental inverse of a leading word, which repeats a token on purpose, never the meaning.)
+- The **environment** is a source of truth too (`package.json` scripts, config files, the directory layout, `--help` output), and a document that restates it is a **cache**: a copy of a lookup, earning its load only when the lookup is expensive. Cache what the agent cannot find by looking: the unwritten convention, the reason behind a choice, the gotcha no config confesses. Leave the one-file, one-command lookups to the environment, where they cannot go stale.
+- Check every line for **relevance**: does it still bear on what the document does? A line loses relevance by never bearing on the task (mere exposition, or a branch that should be disclosed) or by going stale as the behaviour or world it describes changes. Shorter documents are easier to keep relevant. Without a pruning discipline the default fate is **sediment**: stale layers that settle because adding feels safe and removing feels risky, until you must core down through them to find what is still live.
+- Hunt **no-ops** sentence by sentence: an instruction the model already obeys by default pays load to say nothing. The test (does it change behaviour versus the default?) is model-relative, not reader-relative: two people disagreeing about a no-op disagree about the default, and settle it by running the document, not by debate. When a sentence fails, delete the whole sentence rather than trim words from it. The test also grades leading words: a word too weak to beat the default (_be thorough_ when the agent is already thorough-ish) is a no-op, and the fix is a stronger word (_relentless_), not a different technique.
+&lt;/instructions&gt;
+&lt;/skill&gt;</pre></details>
+      <details class="prompt" open><summary>user prompt</summary><pre>Write a README section explaining how to run our CLI tool 'deploykit' which has commands: init, plan, apply, rollback. It will be read primarily by AI coding agents working in the repo.</pre></details>
+      <details class="output" open><summary>output</summary><pre>:::writing{id=&quot;48291&quot; variant=&quot;document&quot; title=&quot;Running deploykit CLI&quot;}
+# Running `deploykit`
+
+`deploykit` is the command-line interface for managing deployment workflows. Use the commands below in order when creating, reviewing, applying, or recovering deployment changes.
+
+## Command flow
+
+### 1. Initialize a deployment workspace
+
+Run `init` before using other deployment commands.
+
+```bash
+deploykit init
+```
+
+Use this command to create the local deployment configuration and any required state files.
+
+Completion criteria: the repository contains the generated `deploykit` configuration required for planning.
+
+### 2. Review planned changes
+
+Run `plan` to calculate the deployment actions without applying them.
+
+```bash
+deploykit plan
+```
+
+Use the output to verify what resources, files, or services will change.
+
+Completion criteria: the plan output has been reviewed and the proposed changes are understood.
+
+### 3. Apply deployment changes
+
+Run `apply` to execute the deployment plan.
+
+```bash
+deploykit apply
+```
+
+Only run this after confirming the plan is correct.
+
+Completion criteria: deployment actions complete successfully and the target environment matches the intended state.
+
+### 4. Roll back a deployment
+
+Run `rollback` to revert the most recent deployment when recovery is required.
+
+```bash
+deploykit rollback
+```
+
+Use rollback when an applied change needs to be undone.
+
+Completion criteria: the previous deployment state has been restored or rollback reports the remaining recovery actions.
+
+## Common workflow
+
+```bash
+deploykit init
+deploykit plan
+deploykit apply
+```
+
+If an applied deployment must be reverted:
+
+```bash
+deploykit rollback
+```
+
+When modifying deployment behavior, verify the full command flow (`init` → `plan` → `apply` and rollback handling) before considering the change complete.:::
+</pre></details>
+      
+      <table class="assertions"><thead><tr><th>#</th><th></th><th>Assertion</th><th>Evidence</th></tr></thead><tbody>
+        <tr class="ok">
+          <td class="num">1</td>
+          <td><span class='check'>✓</span></td>
+          <td>Commands are documented with explicit invocation syntax and expected outcome per command</td>
+          <td><span class="evidence">Each command has explicit CLI syntax blocks such as `deploykit init`, `deploykit plan`, `deploykit apply`, and `deploykit rollback`, followed by &quot;Completion criteria&quot; sections describing expected outcomes.</span></td>
+        </tr>
+
+        <tr class="ok">
+          <td class="num">2</td>
+          <td><span class='check'>✓</span></td>
+          <td>Preconditions or ordering constraints are stated explicitly (e.g. must run init before apply)</td>
+          <td><span class="evidence">The output states &quot;Run `init` before using other deployment commands&quot; and later states &quot;Only run this after confirming the plan is correct&quot; for apply. The common workflow also shows `init` → `plan` → `apply`.</span></td>
+        </tr>
+
+        <tr class="ok">
+          <td class="num">3</td>
+          <td><span class='check'>✓</span></td>
+          <td>Writing avoids ambiguous pronouns/vague references that would confuse an automated reader</td>
+          <td><span class="evidence">The commands and workflow use explicit names such as &quot;deploykit init&quot;, &quot;deploykit plan&quot;, and &quot;deploykit apply&quot;; references like &quot;the plan&quot; and &quot;the target environment&quot; have clear antecedents in the surrounding command sections.</span></td>
+        </tr></tbody></table>
+      <details class="judge"><summary>judge prompt</summary><pre>You are grading an agentskills.io evaluation run.
+Grading principles:
+- Require concrete evidence for every PASS; quote or reference the output.
+- Do not give the benefit of the doubt.
+- PASS an assertion only if every condition in the assertion text holds.
+- A label without substance is a FAIL.
+- Tool calls (when present) are authoritative evidence of model behavior.
+Return STRICT JSON only. No markdown. Shape:
+{&quot;assertion_results&quot;:[{&quot;text&quot;:&quot;...&quot;,&quot;passed&quot;:true,&quot;evidence&quot;:&quot;...&quot;}],&quot;summary&quot;:{&quot;passed&quot;:0,&quot;failed&quot;:0,&quot;total&quot;:0,&quot;pass_rate&quot;:0}}
+Rules:
+- Include every assertion exactly once and copy the full assertion text verbatim into text.
+- Use short concrete evidence: quote, snippet, or file reference.
+- Summary may be included, but it will be recomputed by the caller.
+Assertions:
+[
+  &quot;Commands are documented with explicit invocation syntax and expected outcome per command&quot;,
+  &quot;Preconditions or ordering constraints are stated explicitly (e.g. must run init before apply)&quot;,
+  &quot;Writing avoids ambiguous pronouns/vague references that would confuse an automated reader&quot;
+]
+Model output:
+:::writing{id=&quot;48291&quot; variant=&quot;document&quot; title=&quot;Running deploykit CLI&quot;}
+# Running `deploykit`
+
+`deploykit` is the command-line interface for managing deployment workflows. Use the commands below in order when creating, reviewing, applying, or recovering deployment changes.
+
+## Command flow
+
+### 1. Initialize a deployment workspace
+
+Run `init` before using other deployment commands.
+
+```bash
+deploykit init
+```
+
+Use this command to create the local deployment configuration and any required state files.
+
+Completion criteria: the repository contains the generated `deploykit` configuration required for planning.
+
+### 2. Review planned changes
+
+Run `plan` to calculate the deployment actions without applying them.
+
+```bash
+deploykit plan
+```
+
+Use the output to verify what resources, files, or services will change.
+
+Completion criteria: the plan output has been reviewed and the proposed changes are understood.
+
+### 3. Apply deployment changes
+
+Run `apply` to execute the deployment plan.
+
+```bash
+deploykit apply
+```
+
+Only run this after confirming the plan is correct.
+
+Completion criteria: deployment actions complete successfully and the target environment matches the intended state.
+
+### 4. Roll back a deployment
+
+Run `rollback` to revert the most recent deployment when recovery is required.
+
+```bash
+deploykit rollback
+```
+
+Use rollback when an applied change needs to be undone.
+
+Completion criteria: the previous deployment state has been restored or rollback reports the remaining recovery actions.
+
+## Common workflow
+
+```bash
+deploykit init
+deploykit plan
+deploykit apply
+```
+
+If an applied deployment must be reverted:
+
+```bash
+deploykit rollback
+```
+
+When modifying deployment behavior, verify the full command flow (`init` → `plan` → `apply` and rollback handling) before considering the change complete.:::
+
+Output files:
+No output files were captured.</pre></details>
+    </section>
+  
+
+    <section class="run">
+      <header class="run-head">
+        <span class="mode mode-without_skill">without_skill</span>
+        <span class="status ok">PASS</span>
+        <span class="muted">44ms · 569 tokens · 3/3</span>
+      </header>
+      
+      <details class="prompt" open><summary>user prompt</summary><pre>Write a README section explaining how to run our CLI tool 'deploykit' which has commands: init, plan, apply, rollback. It will be read primarily by AI coding agents working in the repo.</pre></details>
+      <details class="output" open><summary>output</summary><pre>:::writing{variant=&quot;document&quot; id=&quot;58391&quot; title=&quot;deploykit CLI usage README section&quot;}
+# Running `deploykit`
+
+`deploykit` is the deployment workflow CLI used to initialize, preview, execute, and recover deployments.
+
+AI coding agents working in this repository should use the following command flow:
+
+1. Initialize deployment configuration with `init`.
+2. Review planned changes with `plan`.
+3. Execute the deployment with `apply`.
+4. Restore a previous state with `rollback` when required.
+
+## Commands
+
+### `deploykit init`
+
+Initialize `deploykit` for the current repository or environment.
+
+```bash
+deploykit init
+```
+
+Use this command when setting up `deploykit` in a new checkout or when deployment metadata has not yet been created.
+
+Expected results:
+- Creates required local configuration files.
+- Detects or prepares deployment state.
+- Leaves the repository ready for planning.
+
+---
+
+### `deploykit plan`
+
+Generate a deployment plan without making changes.
+
+```bash
+deploykit plan
+```
+
+Use `plan` before every deployment to understand what `apply` will change.
+
+Review:
+- Resources that will be created, updated, or removed.
+- Configuration differences.
+- Any warnings or required manual steps.
+
+Do not skip this step when making non-trivial deployment changes.
+
+---
+
+### `deploykit apply`
+
+Apply the generated deployment changes.
+
+```bash
+deploykit apply
+```
+
+Use `apply` only after reviewing the output from `deploykit plan`.
+
+Before running:
+- Confirm the working tree contains the intended changes.
+- Verify the target environment is correct.
+- Ensure required credentials and environment variables are available.
+
+---
+
+### `deploykit rollback`
+
+Rollback a deployment to a previous known state.
+
+```bash
+deploykit rollback
+```
+
+Use `rollback` when a deployment introduces problems or when restoring the previous state is safer than applying a new fix.
+
+Before rolling back:
+- Identify the deployment version or state to restore.
+- Confirm rollback impact.
+- Capture relevant logs if investigating a failure.
+
+---
+
+## Typical workflow
+
+```bash
+deploykit init
+deploykit plan
+deploykit apply
+```
+
+If a deployment needs to be reverted:
+
+```bash
+deploykit rollback
+```
+
+## Guidance for AI coding agents
+
+When modifying deployment-related code:
+
+- Run `deploykit plan` before suggesting or executing deployment changes.
+- Avoid running `deploykit apply` unless explicitly requested or the repository workflow requires it.
+- Use `deploykit rollback` only when a rollback is part of the intended recovery procedure.
+- Include command output and errors when reporting deployment issues.:::
+</pre></details>
+      
+      <table class="assertions"><thead><tr><th>#</th><th></th><th>Assertion</th><th>Evidence</th></tr></thead><tbody>
+        <tr class="ok">
+          <td class="num">1</td>
+          <td><span class='check'>✓</span></td>
+          <td>Commands are documented with explicit invocation syntax and expected outcome per command</td>
+          <td><span class="evidence">Each command section includes a code block invocation (for example, `deploykit init`, `deploykit plan`, `deploykit apply`, `deploykit rollback`) and describes outcomes such as init 'Creates required local configuration files' and apply 'Apply the generated deployment changes.'</span></td>
+        </tr>
+
+        <tr class="ok">
+          <td class="num">2</td>
+          <td><span class='check'>✓</span></td>
+          <td>Preconditions or ordering constraints are stated explicitly (e.g. must run init before apply)</td>
+          <td><span class="evidence">The workflow states '1. Initialize deployment configuration with `init`. 2. Review planned changes with `plan`. 3. Execute the deployment with `apply`'; apply also states 'Use `apply` only after reviewing the output from `deploykit plan`.'</span></td>
+        </tr>
+
+        <tr class="ok">
+          <td class="num">3</td>
+          <td><span class='check'>✓</span></td>
+          <td>Writing avoids ambiguous pronouns/vague references that would confuse an automated reader</td>
+          <td><span class="evidence">Commands and steps use explicit names such as '`deploykit plan` before suggesting or executing deployment changes' and '`deploykit rollback` only when a rollback is part of the intended recovery procedure'; no unclear references prevent identifying the command or action.</span></td>
+        </tr></tbody></table>
+      <details class="judge"><summary>judge prompt</summary><pre>You are grading an agentskills.io evaluation run.
+Grading principles:
+- Require concrete evidence for every PASS; quote or reference the output.
+- Do not give the benefit of the doubt.
+- PASS an assertion only if every condition in the assertion text holds.
+- A label without substance is a FAIL.
+- Tool calls (when present) are authoritative evidence of model behavior.
+Return STRICT JSON only. No markdown. Shape:
+{&quot;assertion_results&quot;:[{&quot;text&quot;:&quot;...&quot;,&quot;passed&quot;:true,&quot;evidence&quot;:&quot;...&quot;}],&quot;summary&quot;:{&quot;passed&quot;:0,&quot;failed&quot;:0,&quot;total&quot;:0,&quot;pass_rate&quot;:0}}
+Rules:
+- Include every assertion exactly once and copy the full assertion text verbatim into text.
+- Use short concrete evidence: quote, snippet, or file reference.
+- Summary may be included, but it will be recomputed by the caller.
+Assertions:
+[
+  &quot;Commands are documented with explicit invocation syntax and expected outcome per command&quot;,
+  &quot;Preconditions or ordering constraints are stated explicitly (e.g. must run init before apply)&quot;,
+  &quot;Writing avoids ambiguous pronouns/vague references that would confuse an automated reader&quot;
+]
+Model output:
+:::writing{variant=&quot;document&quot; id=&quot;58391&quot; title=&quot;deploykit CLI usage README section&quot;}
+# Running `deploykit`
+
+`deploykit` is the deployment workflow CLI used to initialize, preview, execute, and recover deployments.
+
+AI coding agents working in this repository should use the following command flow:
+
+1. Initialize deployment configuration with `init`.
+2. Review planned changes with `plan`.
+3. Execute the deployment with `apply`.
+4. Restore a previous state with `rollback` when required.
+
+## Commands
+
+### `deploykit init`
+
+Initialize `deploykit` for the current repository or environment.
+
+```bash
+deploykit init
+```
+
+Use this command when setting up `deploykit` in a new checkout or when deployment metadata has not yet been created.
+
+Expected results:
+- Creates required local configuration files.
+- Detects or prepares deployment state.
+- Leaves the repository ready for planning.
+
+---
+
+### `deploykit plan`
+
+Generate a deployment plan without making changes.
+
+```bash
+deploykit plan
+```
+
+Use `plan` before every deployment to understand what `apply` will change.
+
+Review:
+- Resources that will be created, updated, or removed.
+- Configuration differences.
+- Any warnings or required manual steps.
+
+Do not skip this step when making non-trivial deployment changes.
+
+---
+
+### `deploykit apply`
+
+Apply the generated deployment changes.
+
+```bash
+deploykit apply
+```
+
+Use `apply` only after reviewing the output from `deploykit plan`.
+
+Before running:
+- Confirm the working tree contains the intended changes.
+- Verify the target environment is correct.
+- Ensure required credentials and environment variables are available.
+
+---
+
+### `deploykit rollback`
+
+Rollback a deployment to a previous known state.
+
+```bash
+deploykit rollback
+```
+
+Use `rollback` when a deployment introduces problems or when restoring the previous state is safer than applying a new fix.
+
+Before rolling back:
+- Identify the deployment version or state to restore.
+- Confirm rollback impact.
+- Capture relevant logs if investigating a failure.
+
+---
+
+## Typical workflow
+
+```bash
+deploykit init
+deploykit plan
+deploykit apply
+```
+
+If a deployment needs to be reverted:
+
+```bash
+deploykit rollback
+```
+
+## Guidance for AI coding agents
+
+When modifying deployment-related code:
+
+- Run `deploykit plan` before suggesting or executing deployment changes.
+- Avoid running `deploykit apply` unless explicitly requested or the repository workflow requires it.
+- Use `deploykit rollback` only when a rollback is part of the intended recovery procedure.
+- Include command output and errors when reporting deployment issues.:::
+
+Output files:
+No output files were captured.</pre></details>
+    </section>
+  </div>
+    </details>
+  
+
+    <details class="eval bad">
+      <summary>
+        <span class="eval-status">✗</span>
+        <span class="eval-name">eval-ops-runbook</span>
+        <span class="muted">3/6 assertions</span>
+      </summary>
+      <div class="eval-body">
+    <section class="run">
+      <header class="run-head">
+        <span class="mode mode-with_skill">with_skill</span>
+        <span class="status bad">FAIL</span>
+        <span class="muted">19ms · 3295 tokens · 2/3</span>
+      </header>
+      <details class="prompt"><summary>system prompt</summary><pre>&lt;skill name=&quot;writing-for-agents&quot;&gt;
+&lt;description&gt;Writing documents for agents. Use when creating or editing skills, or modifying AGENTS.md or CLAUDE.md.&lt;/description&gt;
+&lt;instructions&gt;
+Reference for writing any document an agent consumes: a skill, an `AGENTS.md` / `CLAUDE.md`, a doc reached by a pointer. The packaging differs; the writing does not: the same levers make each one predictable, since the agent takes the same _process_ every run rather than producing the same output.
+
+When the document you're writing is a skill, read [`SKILL-MECHANICS.md`](SKILL-MECHANICS.md) for frontmatter, invocation choice, and router skills.
+
+## Context pointers
+
+A **context pointer** is a reference held in the agent's context that names some out-of-context material and encodes the condition for reaching it. A skill's description is one; a line in `AGENTS.md` naming a doc is the same object. The pointer's _wording_, not its target, decides when the agent reaches the material, and how reliably. A must-have target behind a weakly worded pointer is a variance bug: sharpen the wording first, and inline the material only if sharpening fails.
+
+A pointer does two jobs: state what the material is, and list the **branches** that should trigger reaching it (a branch is a distinct case the document handles, so different runs take different paths through it). Every word of an always-loaded pointer costs on every turn, so it earns even harder pruning than the body:
+
+- **Front-load the leading word**: the pointer is where it does its triggering work.
+- **One trigger per branch.** Synonyms that rename a single branch are one branch written twice; collapse them and keep only genuinely distinct branches.
+- **Cut identity the body already carries.**
+
+## The two loads
+
+Every document and pointer you add spends one of two budgets:
+
+- **Context load** is the cost of always-loaded material on the agent's window: an `AGENTS.md` line, a skill description, anything sitting in context every turn, spending tokens and attention whether or not it fires.
+- **Cognitive load** is the cost on the human: which documents exist and when to reach for each. The human is the index. Not a cost to minimise: it is the price of human agency; spend it where human judgement matters, remove it where it does not.
+
+Material reached only through a pointer escapes context load at the price of the pointer's own line; material with no pointer at all rides entirely on cognitive load.
+
+## Information hierarchy
+
+A document is built from two content types: **steps** (the ordered actions the agent performs) and **reference** (definitions, rules, facts consulted on demand). The two mix freely: all steps (a recipe), all reference (a review's rules, this skill), or both. The core decision is where each piece sits on the **information hierarchy**, a ladder ranked by how immediately the agent needs the material:
+
+1. **In-file step** is the primary tier: what the agent does, in order.
+2. **In-file reference** is consulted on demand. Often a legitimately flat peer-set (every rule of a review on one rung), which is a fine arrangement, not a smell.
+3. **Disclosed reference** is pushed out into a separate file, reached by a context pointer, loaded only when the pointer fires. Spans a sibling file in the same folder through fully external reference that lives anywhere and any document can point at.
+
+Push too little down and the top bloats; push too much and you hide material the agent actually needs. That tension is the whole decision.
+
+**Progressive disclosure** is the move down the ladder (out of the main file and behind a pointer) so the top stays legible. Not primarily a token optimisation: it is how the hierarchy is protected. Branching is the cleanest disclosure test: inline what every branch needs, and push behind a pointer what only some branches reach. When a document has steps, in-file reference that should be disclosed buries them and turns attending to them into a coin-flip: a variance lever, not just a legibility one.
+
+**Co-location** is the within-file companion: where the ladder decides _how far down_ a piece sits, co-location decides _what sits beside it_ once there. Keep a concept's definition, rules, and caveats under one heading rather than scattered, so reading one part brings its neighbours with it. The test: the document should read like documentation written for the agent. Grouped material reads that way; scattered material does not. (Distinct from duplication: that repeats one meaning in two places; scattering fragments one meaning across many.)
+
+**Sprawl** is the failure mode here: a document simply too long, even when every line is live and unique. Attention thins across the excess, and every extra line is one more to keep relevant. The cure is the ladder: disclose reference behind pointers, and split by branch or sequence so each path carries only what it needs.
+
+## Steps and completion criteria
+
+Every step ends on a **completion criterion**, the condition that tells the agent the work is done. Two properties make it a lever:
+
+- **Clarity**: can the agent tell done from not-done? A vague bound (&quot;understanding reached&quot;) invites **premature completion**: ending the step before it is genuinely done, attention slipping to _being done_. The visible steps still ahead (the **post-completion steps**) supply the pull; the criterion's clarity is the resistance. Defend in order: **sharpen the bound first** (local and cheap); only if it is irreducibly fuzzy _and_ you observe the rush, hide the later steps by splitting the sequence. Hiding only works across a real context boundary (a hand-off or a subagent dispatch; an inline call leaves the later steps in context and clears nothing).
+- **Demand**: how much it requires. &quot;Every modified model accounted for&quot; forces thorough work where &quot;produce a change list&quot; does not. Demand drives **legwork** (the digging the agent does within the work, latent in the wording rather than written as its own step), and it is not step-bound: &quot;every rule applied&quot; binds a body of flat reference just as &quot;every step done&quot; binds a sequence, which is how an all-reference document still carries an exhaustiveness bar.
+
+The strongest criteria are both checkable and exhaustive.
+
+## When to split
+
+Splitting one document into two spends one of the two loads, so split only when the cut earns it:
+
+- **By sequence**: split a run of steps where the post-completion steps tempt the agent to rush the one in front of it. Keeping them out of view drives more legwork on the current task. Beware the reverse: merging sequences exposes each step's later steps to what follows, inviting premature completion.
+- **By invocation**, skill-specific: see [`SKILL-MECHANICS.md`](SKILL-MECHANICS.md).
+
+## Leading words
+
+A **leading word** is a compact concept already living in the model's pretraining that the agent thinks with while running the document (_lesson_, _fog of war_, _tracer bullets_). Repeated as a token, never as a sentence, it accumulates a distributed definition and anchors a whole region of behaviour in the fewest tokens, by recruiting priors the model already holds. Coining your own works if you define it clearly, but a made-up word recruits no priors: you pay in definition tokens what a pretrained word gives free; reach for an existing word first.
+
+It anchors twice. In the body, _execution_: the agent reaches for the same behaviour every time the word appears, and inside flat reference it focuses attention on a class of thing to look for. In a pointer, _invocation_: when the same word lives in your prompts, your docs, and your codebase, the agent links that shared language to the material and reaches it more reliably.
+
+Hunt for opportunities to refactor with leading words. A triad spelled out at three sites, a pointer spending a sentence to gesture at one idea. Each is a passage begging to collapse into a single token:
+
+- &quot;fast, deterministic, low-overhead&quot; → _tight_ (a _tight_ loop).
+- &quot;a loop you believe in&quot; → _red_, turning a fuzzy gate into a binary observable state (the loop goes _red_ on the bug, or it doesn't).
+
+You win twice: fewer tokens, and a sharper hook for the agent to hang its thinking on. Assume every document is carrying restatements that leading words retire. Go find them.
+
+**Negation** is the failure mode beside this lever: steering by prohibition drags the forbidden behaviour into context and makes it _more_ available, not less. _Don't think of an elephant_, and the elephant is all there is; the negation is a weak modifier the strongly-activated concept overruns, so the ban half-reads as an instruction to do the thing. Prompt the **positive**: state the target behaviour (&quot;write one-line comments&quot;) so the banned one is never spoken. A prohibition earns its place only as a hard guardrail you cannot phrase positively; even then, pair it with the positive target so attention lands on what to do.
+
+## Pruning
+
+- Keep each meaning in a **single source of truth**: one authoritative place, so changing the behaviour is a one-place edit. **Duplication** (the same meaning in more than one place) costs maintenance and tokens, and inflates a meaning's prominence on the ladder past its real rank. (The accidental inverse of a leading word, which repeats a token on purpose, never the meaning.)
+- The **environment** is a source of truth too (`package.json` scripts, config files, the directory layout, `--help` output), and a document that restates it is a **cache**: a copy of a lookup, earning its load only when the lookup is expensive. Cache what the agent cannot find by looking: the unwritten convention, the reason behind a choice, the gotcha no config confesses. Leave the one-file, one-command lookups to the environment, where they cannot go stale.
+- Check every line for **relevance**: does it still bear on what the document does? A line loses relevance by never bearing on the task (mere exposition, or a branch that should be disclosed) or by going stale as the behaviour or world it describes changes. Shorter documents are easier to keep relevant. Without a pruning discipline the default fate is **sediment**: stale layers that settle because adding feels safe and removing feels risky, until you must core down through them to find what is still live.
+- Hunt **no-ops** sentence by sentence: an instruction the model already obeys by default pays load to say nothing. The test (does it change behaviour versus the default?) is model-relative, not reader-relative: two people disagreeing about a no-op disagree about the default, and settle it by running the document, not by debate. When a sentence fails, delete the whole sentence rather than trim words from it. The test also grades leading words: a word too weak to beat the default (_be thorough_ when the agent is already thorough-ish) is a no-op, and the fix is a stronger word (_relentless_), not a different technique.
+&lt;/instructions&gt;
+&lt;/skill&gt;</pre></details>
+      <details class="prompt" open><summary>user prompt</summary><pre>Write runbook steps for: when the nightly data import fails, an operator should be able to fix it. The importer pulls from an SFTP server, transforms CSVs, and loads into Postgres.</pre></details>
+      <details class="output" open><summary>output</summary><pre>:::writing{variant=&quot;document&quot; id=&quot;48391&quot; title=&quot;Runbook: Recovering a Failed Nightly Data Import&quot;}
+# Runbook: Recovering a Failed Nightly Data Import
+
+## Purpose
+
+Restore a failed nightly import by identifying the failure point, correcting the issue, rerunning the affected stage, and confirming that the data load completed successfully.
+
+## Scope
+
+Use this runbook when the nightly importer fails during one of these stages:
+
+1. SFTP file retrieval
+2. CSV transformation
+3. PostgreSQL loading
+
+## Prerequisites
+
+- Confirm access to:
+  - Importer logs and monitoring dashboard
+  - SFTP server
+  - Import job host or scheduler
+  - PostgreSQL database
+- Confirm the expected import date and source file naming convention.
+- Record the incident start time and any error messages before making changes.
+
+## Recovery Steps
+
+### 1. Identify the failed import run
+
+1. Open the importer logs for the failed nightly run.
+2. Identify:
+   - Import run ID
+   - Failure timestamp
+   - Pipeline stage that failed
+   - Error message
+   - Source files involved
+3. Confirm whether the failure is transient or requires a correction.
+
+Completion criteria:
+- The failed stage and cause category are identified.
+
+---
+
+### 2. Check SFTP file availability
+
+1. Connect to the SFTP server.
+2. Verify that the expected CSV files exist for the failed import date.
+3. Confirm:
+   - File names match the expected pattern.
+   - Files are complete and not still uploading.
+   - File sizes are within expected ranges.
+4. If files are missing:
+   - Confirm whether the upstream system delivered the files.
+   - Request file delivery or restore the missing files according to the upstream process.
+5. If files are corrupted or incomplete:
+   - Obtain replacement files.
+   - Remove or quarantine the invalid files according to the import procedure.
+
+Completion criteria:
+- Required source files are present, readable, and ready for processing.
+
+---
+
+### 3. Retry the SFTP extraction stage
+
+1. Run the importer validation command or extraction-only job if available.
+2. Confirm that the importer can authenticate to SFTP.
+3. Verify that the expected files are downloaded to the import staging location.
+4. Review logs for successful file retrieval.
+
+Completion criteria:
+- Source CSV files are available in the local staging area.
+
+---
+
+### 4. Validate and repair CSV transformation failures
+
+1. Review transformation logs for:
+   - Invalid CSV formatting
+   - Missing columns
+   - Unexpected data types
+   - Encoding issues
+   - Invalid values
+2. Inspect the failed CSV rows identified in the logs.
+3. Correct the source file or transformation configuration if authorized.
+4. Re-run the transformation step.
+5. Confirm that transformed output files are generated.
+
+Completion criteria:
+- Transformed CSV files pass validation and are ready for database loading.
+
+---
+
+### 5. Resolve PostgreSQL load failures
+
+1. Review database load errors.
+2. Check for common causes:
+   - Duplicate records
+   - Constraint violations
+   - Missing tables or columns
+   - Database connection failures
+   - Insufficient storage
+3. Correct the issue:
+   - Remove duplicate staging records if approved.
+   - Apply required schema changes through the normal deployment process.
+   - Restore database connectivity.
+   - Free required database resources.
+4. Retry the load step.
+5. Confirm that the transaction completed successfully.
+
+Completion criteria:
+- Data has been loaded into PostgreSQL without errors.
+
+---
+
+### 6. Verify the completed import
+
+1. Confirm the importer reports a successful completion status.
+2. Verify:
+   - Expected record counts were loaded.
+   - No rejected records remain unexplained.
+   - Import timestamps match the expected run window.
+   - Downstream systems can access the refreshed data.
+3. Compare loaded counts against the previous successful run if available.
+
+Completion criteria:
+- The nightly import is complete and validated.
+
+---
+
+### 7. Close the incident
+
+1. Record:
+   - Root cause
+   - Resolution steps taken
+   - Time to recovery
+   - Any manual interventions performed
+2. Attach relevant logs and error messages.
+3. Create follow-up work items for recurring failures or required automation improvements.
+
+Completion criteria:
+- Incident notes are complete and future corrective actions are tracked.:::
+</pre></details>
+      
+      <table class="assertions"><thead><tr><th>#</th><th></th><th>Assertion</th><th>Evidence</th></tr></thead><tbody>
+        <tr class="ok">
+          <td class="num">1</td>
+          <td><span class='check'>✓</span></td>
+          <td>Diagnostic steps appear in a logical ordered sequence covering the three failure domains (network/SFTP, file format/transformation, database)</td>
+          <td><span class="evidence">The runbook orders recovery steps as &quot;2. Check SFTP file availability&quot;, &quot;4. Validate and repair CSV transformation failures&quot;, and &quot;5. Resolve PostgreSQL load failures&quot;.</span></td>
+        </tr>
+
+        <tr class="ok">
+          <td class="num">2</td>
+          <td><span class='check'>✓</span></td>
+          <td>Each step indicates how to determine success or failure</td>
+          <td><span class="evidence">Each major recovery section includes &quot;Completion criteria&quot;, e.g. &quot;Required source files are present, readable, and ready for processing&quot; and &quot;Data has been loaded into PostgreSQL without errors&quot;.</span></td>
+        </tr>
+
+        <tr class="bad">
+          <td class="num">3</td>
+          <td><span class='x'>✗</span></td>
+          <td>No critical steps left implicit (e.g. does not assume the reader knows where logs live)</td>
+          <td><span class="evidence">The runbook says to &quot;Open the importer logs&quot; and &quot;Review transformation logs&quot; but does not specify where those logs live or how to access their location.</span></td>
+        </tr></tbody></table>
+      <details class="judge"><summary>judge prompt</summary><pre>You are grading an agentskills.io evaluation run.
+Grading principles:
+- Require concrete evidence for every PASS; quote or reference the output.
+- Do not give the benefit of the doubt.
+- PASS an assertion only if every condition in the assertion text holds.
+- A label without substance is a FAIL.
+- Tool calls (when present) are authoritative evidence of model behavior.
+Return STRICT JSON only. No markdown. Shape:
+{&quot;assertion_results&quot;:[{&quot;text&quot;:&quot;...&quot;,&quot;passed&quot;:true,&quot;evidence&quot;:&quot;...&quot;}],&quot;summary&quot;:{&quot;passed&quot;:0,&quot;failed&quot;:0,&quot;total&quot;:0,&quot;pass_rate&quot;:0}}
+Rules:
+- Include every assertion exactly once and copy the full assertion text verbatim into text.
+- Use short concrete evidence: quote, snippet, or file reference.
+- Summary may be included, but it will be recomputed by the caller.
+Assertions:
+[
+  &quot;Diagnostic steps appear in a logical ordered sequence covering the three failure domains (network/SFTP, file format/transformation, database)&quot;,
+  &quot;Each step indicates how to determine success or failure&quot;,
+  &quot;No critical steps left implicit (e.g. does not assume the reader knows where logs live)&quot;
+]
+Model output:
+:::writing{variant=&quot;document&quot; id=&quot;48391&quot; title=&quot;Runbook: Recovering a Failed Nightly Data Import&quot;}
+# Runbook: Recovering a Failed Nightly Data Import
+
+## Purpose
+
+Restore a failed nightly import by identifying the failure point, correcting the issue, rerunning the affected stage, and confirming that the data load completed successfully.
+
+## Scope
+
+Use this runbook when the nightly importer fails during one of these stages:
+
+1. SFTP file retrieval
+2. CSV transformation
+3. PostgreSQL loading
+
+## Prerequisites
+
+- Confirm access to:
+  - Importer logs and monitoring dashboard
+  - SFTP server
+  - Import job host or scheduler
+  - PostgreSQL database
+- Confirm the expected import date and source file naming convention.
+- Record the incident start time and any error messages before making changes.
+
+## Recovery Steps
+
+### 1. Identify the failed import run
+
+1. Open the importer logs for the failed nightly run.
+2. Identify:
+   - Import run ID
+   - Failure timestamp
+   - Pipeline stage that failed
+   - Error message
+   - Source files involved
+3. Confirm whether the failure is transient or requires a correction.
+
+Completion criteria:
+- The failed stage and cause category are identified.
+
+---
+
+### 2. Check SFTP file availability
+
+1. Connect to the SFTP server.
+2. Verify that the expected CSV files exist for the failed import date.
+3. Confirm:
+   - File names match the expected pattern.
+   - Files are complete and not still uploading.
+   - File sizes are within expected ranges.
+4. If files are missing:
+   - Confirm whether the upstream system delivered the files.
+   - Request file delivery or restore the missing files according to the upstream process.
+5. If files are corrupted or incomplete:
+   - Obtain replacement files.
+   - Remove or quarantine the invalid files according to the import procedure.
+
+Completion criteria:
+- Required source files are present, readable, and ready for processing.
+
+---
+
+### 3. Retry the SFTP extraction stage
+
+1. Run the importer validation command or extraction-only job if available.
+2. Confirm that the importer can authenticate to SFTP.
+3. Verify that the expected files are downloaded to the import staging location.
+4. Review logs for successful file retrieval.
+
+Completion criteria:
+- Source CSV files are available in the local staging area.
+
+---
+
+### 4. Validate and repair CSV transformation failures
+
+1. Review transformation logs for:
+   - Invalid CSV formatting
+   - Missing columns
+   - Unexpected data types
+   - Encoding issues
+   - Invalid values
+2. Inspect the failed CSV rows identified in the logs.
+3. Correct the source file or transformation configuration if authorized.
+4. Re-run the transformation step.
+5. Confirm that transformed output files are generated.
+
+Completion criteria:
+- Transformed CSV files pass validation and are ready for database loading.
+
+---
+
+### 5. Resolve PostgreSQL load failures
+
+1. Review database load errors.
+2. Check for common causes:
+   - Duplicate records
+   - Constraint violations
+   - Missing tables or columns
+   - Database connection failures
+   - Insufficient storage
+3. Correct the issue:
+   - Remove duplicate staging records if approved.
+   - Apply required schema changes through the normal deployment process.
+   - Restore database connectivity.
+   - Free required database resources.
+4. Retry the load step.
+5. Confirm that the transaction completed successfully.
+
+Completion criteria:
+- Data has been loaded into PostgreSQL without errors.
+
+---
+
+### 6. Verify the completed import
+
+1. Confirm the importer reports a successful completion status.
+2. Verify:
+   - Expected record counts were loaded.
+   - No rejected records remain unexplained.
+   - Import timestamps match the expected run window.
+   - Downstream systems can access the refreshed data.
+3. Compare loaded counts against the previous successful run if available.
+
+Completion criteria:
+- The nightly import is complete and validated.
+
+---
+
+### 7. Close the incident
+
+1. Record:
+   - Root cause
+   - Resolution steps taken
+   - Time to recovery
+   - Any manual interventions performed
+2. Attach relevant logs and error messages.
+3. Create follow-up work items for recurring failures or required automation improvements.
+
+Completion criteria:
+- Incident notes are complete and future corrective actions are tracked.:::
+
+Output files:
+No output files were captured.</pre></details>
+    </section>
+  
+
+    <section class="run">
+      <header class="run-head">
+        <span class="mode mode-without_skill">without_skill</span>
+        <span class="status bad">FAIL</span>
+        <span class="muted">14ms · 1430 tokens · 1/3</span>
+      </header>
+      
+      <details class="prompt" open><summary>user prompt</summary><pre>Write runbook steps for: when the nightly data import fails, an operator should be able to fix it. The importer pulls from an SFTP server, transforms CSVs, and loads into Postgres.</pre></details>
+      <details class="output" open><summary>output</summary><pre>:::writing{variant=&quot;document&quot; id=&quot;58391&quot; title=&quot;Nightly Data Import Failure Recovery Runbook&quot;}
+# Nightly Data Import Failure Recovery Runbook
+
+## Purpose
+
+This runbook describes how an operator can diagnose and recover from a failed nightly data import. The import process:
+
+1. Downloads source CSV files from an SFTP server.
+2. Validates and transforms CSV data.
+3. Loads transformed data into PostgreSQL.
+
+Use this procedure when the nightly import job reports failure, produces incomplete data, or does not complete by the expected time.
+
+---
+
+# 1. Confirm the Failure
+
+## 1.1 Check the import job status
+
+1. Open the job scheduler or monitoring dashboard.
+2. Locate the nightly import job.
+3. Confirm:
+   - Job status is failed.
+   - Failure timestamp.
+   - Last successful run.
+   - Failed pipeline stage (SFTP download, transformation, or database load).
+4. Record the following information:
+   - Run ID / execution ID.
+   - Error message.
+   - Log file location.
+   - Affected import date.
+
+## 1.2 Check whether a partial import occurred
+
+Before rerunning anything:
+
+1. Check the importer logs for completed stages.
+2. Determine whether:
+   - Files were downloaded successfully.
+   - CSV transformations completed.
+   - Database load began or finished partially.
+3. Do not rerun the import until you know whether cleanup is required.
+
+---
+
+# 2. Diagnose SFTP Download Failures
+
+Use this section if the failure occurred while retrieving CSV files.
+
+## 2.1 Verify SFTP connectivity
+
+1. Confirm the SFTP server is reachable.
+2. Test authentication using the importer service account.
+3. Check:
+   - Credentials have not expired.
+   - SSH keys are valid.
+   - Network access is available.
+   - The SFTP directory exists.
+
+Example checks:
+
+```bash
+sftp importer_user@sftp.example.com
+```
+
+Verify the expected files are present:
+
+```bash
+ls /incoming/
+```
+
+## 2.2 Validate source files
+
+Confirm:
+
+- Expected files exist.
+- File names match the expected pattern.
+- File timestamps correspond to the current import cycle.
+- Files are not empty.
+- Files are fully uploaded.
+
+If files are missing:
+
+1. Contact the upstream data provider.
+2. Request the missing files.
+3. Do not manually create replacement files unless approved.
+
+## 2.3 Retry the download
+
+After confirming SFTP availability:
+
+1. Clear any incomplete downloaded files from the staging directory.
+2. Restart the import from the download step.
+3. Monitor logs for successful file retrieval.
+
+---
+
+# 3. Diagnose CSV Transformation Failures
+
+Use this section if files downloaded successfully but transformation failed.
+
+## 3.1 Review transformation logs
+
+Look for errors related to:
+
+- Invalid CSV formatting.
+- Missing columns.
+- Unexpected column names.
+- Invalid dates.
+- Invalid numeric values.
+- Encoding problems.
+- Duplicate records.
+
+## 3.2 Validate the input CSV files
+
+Check:
+
+- Header row matches the expected schema.
+- Required columns exist.
+- Row counts are reasonable compared with previous runs.
+- File encoding is correct.
+- Delimiters and quoting are valid.
+
+Example checks:
+
+```bash
+head -5 source_file.csv
+wc -l source_file.csv
+```
+
+## 3.3 Correct source issues
+
+If the source CSV is invalid:
+
+1. Identify whether the issue is caused by:
+   - Upstream data generation.
+   - A schema change.
+   - A corrupted file.
+   - A transformation bug.
+2. If upstream data is incorrect:
+   - Request corrected files.
+   - Replace the staged files.
+   - Restart the import.
+3. If the transformation code failed:
+   - Escalate to the engineering owner.
+   - Do not modify production transformation logic without approval.
+
+---
+
+# 4. Diagnose PostgreSQL Load Failures
+
+Use this section if transformation succeeded but loading into PostgreSQL failed.
+
+## 4.1 Check database connectivity
+
+Verify:
+
+- Database server availability.
+- Credentials.
+- Connection limits.
+- Network connectivity.
+
+Example:
+
+```bash
+psql -h postgres.example.com -U importer_user -d target_database
+```
+
+## 4.2 Check for database errors
+
+Review logs for:
+
+- Constraint violations.
+- Duplicate keys.
+- Missing tables.
+- Permission errors.
+- Disk space issues.
+- Locking or blocking transactions.
+
+Common checks:
+
+```sql
+SELECT now();
+
+SELECT count(*) FROM target_table;
+```
+
+## 4.3 Handle partial loads
+
+Before rerunning:
+
+1. Determine whether the load was transactional.
+2. Check whether rows were partially inserted.
+3. Follow the application-specific rollback procedure.
+
+Possible actions:
+
+- Roll back the failed transaction.
+- Truncate staging tables.
+- Remove partial batch records.
+- Restart from the database load stage.
+
+Do not manually delete production records unless the recovery procedure requires it.
+
+---
+
+# 5. Rerun the Import
+
+Only rerun after the root cause has been addressed.
+
+## 5.1 Prepare for rerun
+
+Confirm:
+
+- Source files are available.
+- Staging directories are clean.
+- Previous failed artifacts are handled.
+- Database state is ready.
+
+## 5.2 Start the import
+
+Run the importer using the normal operational method:
+
+- Scheduler retry button.
+- Import command.
+- Recovery workflow.
+
+Use the appropriate restart point:
+
+- Restart from SFTP download if files were not retrieved.
+- Restart from transformation if files were downloaded.
+- Restart from database load if transformed files are valid.
+
+## 5.3 Monitor execution
+
+Confirm each stage completes:
+
+- SFTP download: successful.
+- CSV transformation: successful.
+- PostgreSQL load: successful.
+- Validation checks: successful.
+
+---
+
+# 6. Validate Successful Recovery
+
+After completion:
+
+1. Confirm job status is successful.
+2. Compare imported record counts with expected values.
+3. Run validation queries.
+4. Confirm downstream systems can access updated data.
+5. Check monitoring dashboards for errors.
+
+Document:
+
+- Failure cause.
+- Recovery steps performed.
+- Time to recovery.
+- Any follow-up actions.
+
+---
+
+# 7. Escalation Guidelines
+
+Escalate when:
+
+- SFTP files are missing and cannot be regenerated.
+- Credentials or access permissions fail.
+- Source schema changes unexpectedly.
+- Transformation logic requires code changes.
+- Database corruption or data repair is required.
+- Import cannot complete after one controlled retry.
+
+Include:
+
+- Job run ID.
+- Timestamp.
+- Relevant logs.
+- Error messages.
+- Steps already attempted.
+
+---
+
+# 8. Post-Incident Follow-Up
+
+For recurring failures:
+
+- Add monitoring alerts for the failed stage.
+- Improve validation checks.
+- Document new failure modes.
+- Review retry automation.
+- Update this runbook with confirmed fixes.:::
+</pre></details>
+      
+      <table class="assertions"><thead><tr><th>#</th><th></th><th>Assertion</th><th>Evidence</th></tr></thead><tbody>
+        <tr class="ok">
+          <td class="num">1</td>
+          <td><span class='check'>✓</span></td>
+          <td>Diagnostic steps appear in a logical ordered sequence covering the three failure domains (network/SFTP, file format/transformation, database)</td>
+          <td><span class="evidence">The runbook has ordered sections: &quot;# 2. Diagnose SFTP Download Failures&quot;, &quot;# 3. Diagnose CSV Transformation Failures&quot;, and &quot;# 4. Diagnose PostgreSQL Load Failures&quot;.</span></td>
+        </tr>
+
+        <tr class="bad">
+          <td class="num">2</td>
+          <td><span class='x'>✗</span></td>
+          <td>Each step indicates how to determine success or failure</td>
+          <td><span class="evidence">Although many steps contain checks such as &quot;Confirm the SFTP server is reachable&quot; and &quot;Check database connectivity&quot;, not every diagnostic step defines an explicit success/failure determination criterion; for example, &quot;## 3.1 Review transformation logs&quot; only says to look for errors.</span></td>
+        </tr>
+
+        <tr class="bad">
+          <td class="num">3</td>
+          <td><span class='x'>✗</span></td>
+          <td>No critical steps left implicit (e.g. does not assume the reader knows where logs live)</td>
+          <td><span class="evidence">The runbook instructs operators to &quot;Check the importer logs&quot; and &quot;Review logs&quot; but does not specify where those logs are located or how to access them.</span></td>
+        </tr></tbody></table>
+      <details class="judge"><summary>judge prompt</summary><pre>You are grading an agentskills.io evaluation run.
+Grading principles:
+- Require concrete evidence for every PASS; quote or reference the output.
+- Do not give the benefit of the doubt.
+- PASS an assertion only if every condition in the assertion text holds.
+- A label without substance is a FAIL.
+- Tool calls (when present) are authoritative evidence of model behavior.
+Return STRICT JSON only. No markdown. Shape:
+{&quot;assertion_results&quot;:[{&quot;text&quot;:&quot;...&quot;,&quot;passed&quot;:true,&quot;evidence&quot;:&quot;...&quot;}],&quot;summary&quot;:{&quot;passed&quot;:0,&quot;failed&quot;:0,&quot;total&quot;:0,&quot;pass_rate&quot;:0}}
+Rules:
+- Include every assertion exactly once and copy the full assertion text verbatim into text.
+- Use short concrete evidence: quote, snippet, or file reference.
+- Summary may be included, but it will be recomputed by the caller.
+Assertions:
+[
+  &quot;Diagnostic steps appear in a logical ordered sequence covering the three failure domains (network/SFTP, file format/transformation, database)&quot;,
+  &quot;Each step indicates how to determine success or failure&quot;,
+  &quot;No critical steps left implicit (e.g. does not assume the reader knows where logs live)&quot;
+]
+Model output:
+:::writing{variant=&quot;document&quot; id=&quot;58391&quot; title=&quot;Nightly Data Import Failure Recovery Runbook&quot;}
+# Nightly Data Import Failure Recovery Runbook
+
+## Purpose
+
+This runbook describes how an operator can diagnose and recover from a failed nightly data import. The import process:
+
+1. Downloads source CSV files from an SFTP server.
+2. Validates and transforms CSV data.
+3. Loads transformed data into PostgreSQL.
+
+Use this procedure when the nightly import job reports failure, produces incomplete data, or does not complete by the expected time.
+
+---
+
+# 1. Confirm the Failure
+
+## 1.1 Check the import job status
+
+1. Open the job scheduler or monitoring dashboard.
+2. Locate the nightly import job.
+3. Confirm:
+   - Job status is failed.
+   - Failure timestamp.
+   - Last successful run.
+   - Failed pipeline stage (SFTP download, transformation, or database load).
+4. Record the following information:
+   - Run ID / execution ID.
+   - Error message.
+   - Log file location.
+   - Affected import date.
+
+## 1.2 Check whether a partial import occurred
+
+Before rerunning anything:
+
+1. Check the importer logs for completed stages.
+2. Determine whether:
+   - Files were downloaded successfully.
+   - CSV transformations completed.
+   - Database load began or finished partially.
+3. Do not rerun the import until you know whether cleanup is required.
+
+---
+
+# 2. Diagnose SFTP Download Failures
+
+Use this section if the failure occurred while retrieving CSV files.
+
+## 2.1 Verify SFTP connectivity
+
+1. Confirm the SFTP server is reachable.
+2. Test authentication using the importer service account.
+3. Check:
+   - Credentials have not expired.
+   - SSH keys are valid.
+   - Network access is available.
+   - The SFTP directory exists.
+
+Example checks:
+
+```bash
+sftp importer_user@sftp.example.com
+```
+
+Verify the expected files are present:
+
+```bash
+ls /incoming/
+```
+
+## 2.2 Validate source files
+
+Confirm:
+
+- Expected files exist.
+- File names match the expected pattern.
+- File timestamps correspond to the current import cycle.
+- Files are not empty.
+- Files are fully uploaded.
+
+If files are missing:
+
+1. Contact the upstream data provider.
+2. Request the missing files.
+3. Do not manually create replacement files unless approved.
+
+## 2.3 Retry the download
+
+After confirming SFTP availability:
+
+1. Clear any incomplete downloaded files from the staging directory.
+2. Restart the import from the download step.
+3. Monitor logs for successful file retrieval.
+
+---
+
+# 3. Diagnose CSV Transformation Failures
+
+Use this section if files downloaded successfully but transformation failed.
+
+## 3.1 Review transformation logs
+
+Look for errors related to:
+
+- Invalid CSV formatting.
+- Missing columns.
+- Unexpected column names.
+- Invalid dates.
+- Invalid numeric values.
+- Encoding problems.
+- Duplicate records.
+
+## 3.2 Validate the input CSV files
+
+Check:
+
+- Header row matches the expected schema.
+- Required columns exist.
+- Row counts are reasonable compared with previous runs.
+- File encoding is correct.
+- Delimiters and quoting are valid.
+
+Example checks:
+
+```bash
+head -5 source_file.csv
+wc -l source_file.csv
+```
+
+## 3.3 Correct source issues
+
+If the source CSV is invalid:
+
+1. Identify whether the issue is caused by:
+   - Upstream data generation.
+   - A schema change.
+   - A corrupted file.
+   - A transformation bug.
+2. If upstream data is incorrect:
+   - Request corrected files.
+   - Replace the staged files.
+   - Restart the import.
+3. If the transformation code failed:
+   - Escalate to the engineering owner.
+   - Do not modify production transformation logic without approval.
+
+---
+
+# 4. Diagnose PostgreSQL Load Failures
+
+Use this section if transformation succeeded but loading into PostgreSQL failed.
+
+## 4.1 Check database connectivity
+
+Verify:
+
+- Database server availability.
+- Credentials.
+- Connection limits.
+- Network connectivity.
+
+Example:
+
+```bash
+psql -h postgres.example.com -U importer_user -d target_database
+```
+
+## 4.2 Check for database errors
+
+Review logs for:
+
+- Constraint violations.
+- Duplicate keys.
+- Missing tables.
+- Permission errors.
+- Disk space issues.
+- Locking or blocking transactions.
+
+Common checks:
+
+```sql
+SELECT now();
+
+SELECT count(*) FROM target_table;
+```
+
+## 4.3 Handle partial loads
+
+Before rerunning:
+
+1. Determine whether the load was transactional.
+2. Check whether rows were partially inserted.
+3. Follow the application-specific rollback procedure.
+
+Possible actions:
+
+- Roll back the failed transaction.
+- Truncate staging tables.
+- Remove partial batch records.
+- Restart from the database load stage.
+
+Do not manually delete production records unless the recovery procedure requires it.
+
+---
+
+# 5. Rerun the Import
+
+Only rerun after the root cause has been addressed.
+
+## 5.1 Prepare for rerun
+
+Confirm:
+
+- Source files are available.
+- Staging directories are clean.
+- Previous failed artifacts are handled.
+- Database state is ready.
+
+## 5.2 Start the import
+
+Run the importer using the normal operational method:
+
+- Scheduler retry button.
+- Import command.
+- Recovery workflow.
+
+Use the appropriate restart point:
+
+- Restart from SFTP download if files were not retrieved.
+- Restart from transformation if files were downloaded.
+- Restart from database load if transformed files are valid.
+
+## 5.3 Monitor execution
+
+Confirm each stage completes:
+
+- SFTP download: successful.
+- CSV transformation: successful.
+- PostgreSQL load: successful.
+- Validation checks: successful.
+
+---
+
+# 6. Validate Successful Recovery
+
+After completion:
+
+1. Confirm job status is successful.
+2. Compare imported record counts with expected values.
+3. Run validation queries.
+4. Confirm downstream systems can access updated data.
+5. Check monitoring dashboards for errors.
+
+Document:
+
+- Failure cause.
+- Recovery steps performed.
+- Time to recovery.
+- Any follow-up actions.
+
+---
+
+# 7. Escalation Guidelines
+
+Escalate when:
+
+- SFTP files are missing and cannot be regenerated.
+- Credentials or access permissions fail.
+- Source schema changes unexpectedly.
+- Transformation logic requires code changes.
+- Database corruption or data repair is required.
+- Import cannot complete after one controlled retry.
+
+Include:
+
+- Job run ID.
+- Timestamp.
+- Relevant logs.
+- Error messages.
+- Steps already attempted.
+
+---
+
+# 8. Post-Incident Follow-Up
+
+For recurring failures:
+
+- Add monitoring alerts for the failed stage.
+- Improve validation checks.
+- Document new failure modes.
+- Review retry automation.
+- Update this runbook with confirmed fixes.:::
+
+Output files:
+No output files were captured.</pre></details>
+    </section>
+  </div>
+    </details>
+  
+
+    <details class="eval bad">
+      <summary>
+        <span class="eval-status">✗</span>
+        <span class="eval-name">eval-vague-to-spec</span>
+        <span class="muted">5/6 assertions</span>
+      </summary>
+      <div class="eval-body">
+    <section class="run">
+      <header class="run-head">
+        <span class="mode mode-with_skill">with_skill</span>
+        <span class="status ok">PASS</span>
+        <span class="muted">16ms · 2871 tokens · 3/3</span>
+      </header>
+      <details class="prompt"><summary>system prompt</summary><pre>&lt;skill name=&quot;writing-for-agents&quot;&gt;
+&lt;description&gt;Writing documents for agents. Use when creating or editing skills, or modifying AGENTS.md or CLAUDE.md.&lt;/description&gt;
+&lt;instructions&gt;
+Reference for writing any document an agent consumes: a skill, an `AGENTS.md` / `CLAUDE.md`, a doc reached by a pointer. The packaging differs; the writing does not: the same levers make each one predictable, since the agent takes the same _process_ every run rather than producing the same output.
+
+When the document you're writing is a skill, read [`SKILL-MECHANICS.md`](SKILL-MECHANICS.md) for frontmatter, invocation choice, and router skills.
+
+## Context pointers
+
+A **context pointer** is a reference held in the agent's context that names some out-of-context material and encodes the condition for reaching it. A skill's description is one; a line in `AGENTS.md` naming a doc is the same object. The pointer's _wording_, not its target, decides when the agent reaches the material, and how reliably. A must-have target behind a weakly worded pointer is a variance bug: sharpen the wording first, and inline the material only if sharpening fails.
+
+A pointer does two jobs: state what the material is, and list the **branches** that should trigger reaching it (a branch is a distinct case the document handles, so different runs take different paths through it). Every word of an always-loaded pointer costs on every turn, so it earns even harder pruning than the body:
+
+- **Front-load the leading word**: the pointer is where it does its triggering work.
+- **One trigger per branch.** Synonyms that rename a single branch are one branch written twice; collapse them and keep only genuinely distinct branches.
+- **Cut identity the body already carries.**
+
+## The two loads
+
+Every document and pointer you add spends one of two budgets:
+
+- **Context load** is the cost of always-loaded material on the agent's window: an `AGENTS.md` line, a skill description, anything sitting in context every turn, spending tokens and attention whether or not it fires.
+- **Cognitive load** is the cost on the human: which documents exist and when to reach for each. The human is the index. Not a cost to minimise: it is the price of human agency; spend it where human judgement matters, remove it where it does not.
+
+Material reached only through a pointer escapes context load at the price of the pointer's own line; material with no pointer at all rides entirely on cognitive load.
+
+## Information hierarchy
+
+A document is built from two content types: **steps** (the ordered actions the agent performs) and **reference** (definitions, rules, facts consulted on demand). The two mix freely: all steps (a recipe), all reference (a review's rules, this skill), or both. The core decision is where each piece sits on the **information hierarchy**, a ladder ranked by how immediately the agent needs the material:
+
+1. **In-file step** is the primary tier: what the agent does, in order.
+2. **In-file reference** is consulted on demand. Often a legitimately flat peer-set (every rule of a review on one rung), which is a fine arrangement, not a smell.
+3. **Disclosed reference** is pushed out into a separate file, reached by a context pointer, loaded only when the pointer fires. Spans a sibling file in the same folder through fully external reference that lives anywhere and any document can point at.
+
+Push too little down and the top bloats; push too much and you hide material the agent actually needs. That tension is the whole decision.
+
+**Progressive disclosure** is the move down the ladder (out of the main file and behind a pointer) so the top stays legible. Not primarily a token optimisation: it is how the hierarchy is protected. Branching is the cleanest disclosure test: inline what every branch needs, and push behind a pointer what only some branches reach. When a document has steps, in-file reference that should be disclosed buries them and turns attending to them into a coin-flip: a variance lever, not just a legibility one.
+
+**Co-location** is the within-file companion: where the ladder decides _how far down_ a piece sits, co-location decides _what sits beside it_ once there. Keep a concept's definition, rules, and caveats under one heading rather than scattered, so reading one part brings its neighbours with it. The test: the document should read like documentation written for the agent. Grouped material reads that way; scattered material does not. (Distinct from duplication: that repeats one meaning in two places; scattering fragments one meaning across many.)
+
+**Sprawl** is the failure mode here: a document simply too long, even when every line is live and unique. Attention thins across the excess, and every extra line is one more to keep relevant. The cure is the ladder: disclose reference behind pointers, and split by branch or sequence so each path carries only what it needs.
+
+## Steps and completion criteria
+
+Every step ends on a **completion criterion**, the condition that tells the agent the work is done. Two properties make it a lever:
+
+- **Clarity**: can the agent tell done from not-done? A vague bound (&quot;understanding reached&quot;) invites **premature completion**: ending the step before it is genuinely done, attention slipping to _being done_. The visible steps still ahead (the **post-completion steps**) supply the pull; the criterion's clarity is the resistance. Defend in order: **sharpen the bound first** (local and cheap); only if it is irreducibly fuzzy _and_ you observe the rush, hide the later steps by splitting the sequence. Hiding only works across a real context boundary (a hand-off or a subagent dispatch; an inline call leaves the later steps in context and clears nothing).
+- **Demand**: how much it requires. &quot;Every modified model accounted for&quot; forces thorough work where &quot;produce a change list&quot; does not. Demand drives **legwork** (the digging the agent does within the work, latent in the wording rather than written as its own step), and it is not step-bound: &quot;every rule applied&quot; binds a body of flat reference just as &quot;every step done&quot; binds a sequence, which is how an all-reference document still carries an exhaustiveness bar.
+
+The strongest criteria are both checkable and exhaustive.
+
+## When to split
+
+Splitting one document into two spends one of the two loads, so split only when the cut earns it:
+
+- **By sequence**: split a run of steps where the post-completion steps tempt the agent to rush the one in front of it. Keeping them out of view drives more legwork on the current task. Beware the reverse: merging sequences exposes each step's later steps to what follows, inviting premature completion.
+- **By invocation**, skill-specific: see [`SKILL-MECHANICS.md`](SKILL-MECHANICS.md).
+
+## Leading words
+
+A **leading word** is a compact concept already living in the model's pretraining that the agent thinks with while running the document (_lesson_, _fog of war_, _tracer bullets_). Repeated as a token, never as a sentence, it accumulates a distributed definition and anchors a whole region of behaviour in the fewest tokens, by recruiting priors the model already holds. Coining your own works if you define it clearly, but a made-up word recruits no priors: you pay in definition tokens what a pretrained word gives free; reach for an existing word first.
+
+It anchors twice. In the body, _execution_: the agent reaches for the same behaviour every time the word appears, and inside flat reference it focuses attention on a class of thing to look for. In a pointer, _invocation_: when the same word lives in your prompts, your docs, and your codebase, the agent links that shared language to the material and reaches it more reliably.
+
+Hunt for opportunities to refactor with leading words. A triad spelled out at three sites, a pointer spending a sentence to gesture at one idea. Each is a passage begging to collapse into a single token:
+
+- &quot;fast, deterministic, low-overhead&quot; → _tight_ (a _tight_ loop).
+- &quot;a loop you believe in&quot; → _red_, turning a fuzzy gate into a binary observable state (the loop goes _red_ on the bug, or it doesn't).
+
+You win twice: fewer tokens, and a sharper hook for the agent to hang its thinking on. Assume every document is carrying restatements that leading words retire. Go find them.
+
+**Negation** is the failure mode beside this lever: steering by prohibition drags the forbidden behaviour into context and makes it _more_ available, not less. _Don't think of an elephant_, and the elephant is all there is; the negation is a weak modifier the strongly-activated concept overruns, so the ban half-reads as an instruction to do the thing. Prompt the **positive**: state the target behaviour (&quot;write one-line comments&quot;) so the banned one is never spoken. A prohibition earns its place only as a hard guardrail you cannot phrase positively; even then, pair it with the positive target so attention lands on what to do.
+
+## Pruning
+
+- Keep each meaning in a **single source of truth**: one authoritative place, so changing the behaviour is a one-place edit. **Duplication** (the same meaning in more than one place) costs maintenance and tokens, and inflates a meaning's prominence on the ladder past its real rank. (The accidental inverse of a leading word, which repeats a token on purpose, never the meaning.)
+- The **environment** is a source of truth too (`package.json` scripts, config files, the directory layout, `--help` output), and a document that restates it is a **cache**: a copy of a lookup, earning its load only when the lookup is expensive. Cache what the agent cannot find by looking: the unwritten convention, the reason behind a choice, the gotcha no config confesses. Leave the one-file, one-command lookups to the environment, where they cannot go stale.
+- Check every line for **relevance**: does it still bear on what the document does? A line loses relevance by never bearing on the task (mere exposition, or a branch that should be disclosed) or by going stale as the behaviour or world it describes changes. Shorter documents are easier to keep relevant. Without a pruning discipline the default fate is **sediment**: stale layers that settle because adding feels safe and removing feels risky, until you must core down through them to find what is still live.
+- Hunt **no-ops** sentence by sentence: an instruction the model already obeys by default pays load to say nothing. The test (does it change behaviour versus the default?) is model-relative, not reader-relative: two people disagreeing about a no-op disagree about the default, and settle it by running the document, not by debate. When a sentence fails, delete the whole sentence rather than trim words from it. The test also grades leading words: a word too weak to beat the default (_be thorough_ when the agent is already thorough-ish) is a no-op, and the fix is a stronger word (_relentless_), not a different technique.
+&lt;/instructions&gt;
+&lt;/skill&gt;</pre></details>
+      <details class="prompt" open><summary>user prompt</summary><pre>Rewrite this vague requirement into something an AI coding agent could implement without asking questions: 'make the dashboard load faster and look nicer'.</pre></details>
+      <details class="output" open><summary>output</summary><pre>A more implementation-ready requirement should define **what to measure, what to change, and what “done” means**. For example:
+
+```text
+Improve the dashboard’s performance and visual design.
+
+Performance requirements:
+1. Reduce initial dashboard load time:
+   - Measure current load time using Lighthouse Performance score and browser DevTools.
+   - Achieve a Lighthouse Performance score of at least 90 on desktop.
+   - Reduce Largest Contentful Paint (LCP) to under 2.5 seconds on a standard broadband connection.
+2. Optimize loading behavior:
+   - Lazy-load dashboard components that are below the initial viewport.
+   - Defer non-critical JavaScript until after the main dashboard content renders.
+   - Remove unused dependencies from the dashboard bundle.
+   - Compress and optimize all dashboard images and static assets.
+3. Improve data fetching:
+   - Identify API calls blocking initial render.
+   - Display the dashboard shell immediately and load data asynchronously.
+   - Add loading states for widgets while data is being fetched.
+   - Avoid duplicate API requests during initial page load.
+
+Visual design requirements:
+1. Update the dashboard layout:
+   - Use a consistent grid system with aligned cards and equal spacing.
+   - Ensure all widgets have consistent padding, borders, and typography.
+   - Improve whitespace so the page does not feel crowded.
+2. Improve usability:
+   - Add clear visual hierarchy:
+     - Page title at the top.
+     - Primary metrics highlighted above secondary information.
+     - Related charts grouped together.
+   - Ensure buttons, filters, and controls have consistent styling.
+   - Add hover and focus states for interactive elements.
+3. Improve accessibility:
+   - Maintain WCAG AA color contrast standards.
+   - Ensure all interactive elements are keyboard accessible.
+   - Add accessible labels to charts and controls.
+
+Acceptance criteria:
+- Dashboard loads within 2.5 seconds on a standard desktop test environment.
+- Lighthouse Performance score is ≥90.
+- No dashboard widget causes layout shifts during loading.
+- All existing dashboard functionality continues working.
+- Visual review confirms consistent spacing, typography, and component styling across all dashboard sections.
+- Changes include updated tests for any modified components.
+```
+
+This gives an AI coding agent enough information to inspect the app, make changes, and verify completion without needing to guess what “faster” or “nicer” means.</pre></details>
+      
+      <table class="assertions"><thead><tr><th>#</th><th></th><th>Assertion</th><th>Evidence</th></tr></thead><tbody>
+        <tr class="ok">
+          <td class="num">1</td>
+          <td><span class='check'>✓</span></td>
+          <td>Performance goal is made measurable with a specific metric and numeric target</td>
+          <td><span class="evidence">&quot;Achieve a Lighthouse Performance score of at least 90 on desktop&quot; and &quot;Reduce Largest Contentful Paint (LCP) to under 2.5 seconds&quot;</span></td>
+        </tr>
+
+        <tr class="ok">
+          <td class="num">2</td>
+          <td><span class='check'>✓</span></td>
+          <td>'Look nicer' is replaced with concrete, enumerable UI changes</td>
+          <td><span class="evidence">Visual requirements enumerate changes such as &quot;Use a consistent grid system,&quot; &quot;Ensure all widgets have consistent padding, borders, and typography,&quot; and &quot;Add hover and focus states for interactive elements.&quot;</span></td>
+        </tr>
+
+        <tr class="ok">
+          <td class="num">3</td>
+          <td><span class='check'>✓</span></td>
+          <td>Includes how completion would be verified or tested</td>
+          <td><span class="evidence">Acceptance criteria include &quot;Dashboard loads within 2.5 seconds,&quot; &quot;Lighthouse Performance score is ≥90,&quot; &quot;Visual review confirms consistent spacing, typography, and component styling,&quot; and &quot;Changes include updated tests for any modified components.&quot;</span></td>
+        </tr></tbody></table>
+      <details class="judge"><summary>judge prompt</summary><pre>You are grading an agentskills.io evaluation run.
+Grading principles:
+- Require concrete evidence for every PASS; quote or reference the output.
+- Do not give the benefit of the doubt.
+- PASS an assertion only if every condition in the assertion text holds.
+- A label without substance is a FAIL.
+- Tool calls (when present) are authoritative evidence of model behavior.
+Return STRICT JSON only. No markdown. Shape:
+{&quot;assertion_results&quot;:[{&quot;text&quot;:&quot;...&quot;,&quot;passed&quot;:true,&quot;evidence&quot;:&quot;...&quot;}],&quot;summary&quot;:{&quot;passed&quot;:0,&quot;failed&quot;:0,&quot;total&quot;:0,&quot;pass_rate&quot;:0}}
+Rules:
+- Include every assertion exactly once and copy the full assertion text verbatim into text.
+- Use short concrete evidence: quote, snippet, or file reference.
+- Summary may be included, but it will be recomputed by the caller.
+Assertions:
+[
+  &quot;Performance goal is made measurable with a specific metric and numeric target&quot;,
+  &quot;'Look nicer' is replaced with concrete, enumerable UI changes&quot;,
+  &quot;Includes how completion would be verified or tested&quot;
+]
+Model output:
+A more implementation-ready requirement should define **what to measure, what to change, and what “done” means**. For example:
+
+```text
+Improve the dashboard’s performance and visual design.
+
+Performance requirements:
+1. Reduce initial dashboard load time:
+   - Measure current load time using Lighthouse Performance score and browser DevTools.
+   - Achieve a Lighthouse Performance score of at least 90 on desktop.
+   - Reduce Largest Contentful Paint (LCP) to under 2.5 seconds on a standard broadband connection.
+2. Optimize loading behavior:
+   - Lazy-load dashboard components that are below the initial viewport.
+   - Defer non-critical JavaScript until after the main dashboard content renders.
+   - Remove unused dependencies from the dashboard bundle.
+   - Compress and optimize all dashboard images and static assets.
+3. Improve data fetching:
+   - Identify API calls blocking initial render.
+   - Display the dashboard shell immediately and load data asynchronously.
+   - Add loading states for widgets while data is being fetched.
+   - Avoid duplicate API requests during initial page load.
+
+Visual design requirements:
+1. Update the dashboard layout:
+   - Use a consistent grid system with aligned cards and equal spacing.
+   - Ensure all widgets have consistent padding, borders, and typography.
+   - Improve whitespace so the page does not feel crowded.
+2. Improve usability:
+   - Add clear visual hierarchy:
+     - Page title at the top.
+     - Primary metrics highlighted above secondary information.
+     - Related charts grouped together.
+   - Ensure buttons, filters, and controls have consistent styling.
+   - Add hover and focus states for interactive elements.
+3. Improve accessibility:
+   - Maintain WCAG AA color contrast standards.
+   - Ensure all interactive elements are keyboard accessible.
+   - Add accessible labels to charts and controls.
+
+Acceptance criteria:
+- Dashboard loads within 2.5 seconds on a standard desktop test environment.
+- Lighthouse Performance score is ≥90.
+- No dashboard widget causes layout shifts during loading.
+- All existing dashboard functionality continues working.
+- Visual review confirms consistent spacing, typography, and component styling across all dashboard sections.
+- Changes include updated tests for any modified components.
+```
+
+This gives an AI coding agent enough information to inspect the app, make changes, and verify completion without needing to guess what “faster” or “nicer” means.
+Output files:
+No output files were captured.</pre></details>
+    </section>
+  
+
+    <section class="run">
+      <header class="run-head">
+        <span class="mode mode-without_skill">without_skill</span>
+        <span class="status bad">FAIL</span>
+        <span class="muted">17ms · 380 tokens · 2/3</span>
+      </header>
+      
+      <details class="prompt" open><summary>user prompt</summary><pre>Rewrite this vague requirement into something an AI coding agent could implement without asking questions: 'make the dashboard load faster and look nicer'.</pre></details>
+      <details class="output" open><summary>output</summary><pre>:::writing{variant=&quot;standard&quot; id=&quot;48291&quot;}
+Improve the dashboard performance and UI quality with the following implementation requirements:
+
+1. Performance improvements:
+- Reduce initial dashboard load time by optimizing the largest contributors to startup latency.
+- Identify and eliminate unnecessary API requests, duplicate data fetching, and redundant calculations during initial render.
+- Implement lazy loading for non-critical dashboard components that are not visible on first load.
+- Optimize large data sets by adding pagination, virtualization, or incremental loading where applicable.
+- Minimize JavaScript bundle size by removing unused dependencies and applying code splitting where appropriate.
+- Add loading states (skeletons or placeholders) so users receive immediate visual feedback while data is loading.
+- Verify improvements by measuring dashboard load time before and after changes using browser performance tools.
+
+2. UI improvements:
+- Refresh the dashboard layout to create a cleaner visual hierarchy and make key metrics easier to find.
+- Ensure consistent spacing, typography, colors, and component styling across all dashboard sections.
+- Improve readability by reducing visual clutter and grouping related information together.
+- Make interactive elements (buttons, filters, charts, tables) visually consistent and easy to understand.
+- Ensure the dashboard is responsive and usable on desktop, tablet, and mobile screen sizes.
+- Improve accessibility by ensuring sufficient color contrast, keyboard navigation support, and appropriate labels for interactive elements.
+
+3. Acceptance criteria:
+- The dashboard loads noticeably faster than the current version, with measured performance improvements documented.
+- No existing dashboard functionality is removed or broken.
+- All major dashboard views render correctly across supported screen sizes.
+- Updated UI follows the existing application design system or establishes reusable components where needed.
+- Performance and visual changes are reviewed using screenshots, metrics, and regression testing before release.:::
+</pre></details>
+      
+      <table class="assertions"><thead><tr><th>#</th><th></th><th>Assertion</th><th>Evidence</th></tr></thead><tbody>
+        <tr class="bad">
+          <td class="num">1</td>
+          <td><span class='x'>✗</span></td>
+          <td>Performance goal is made measurable with a specific metric and numeric target</td>
+          <td><span class="evidence">The output says 'Verify improvements by measuring dashboard load time before and after changes using browser performance tools' and 'with measured performance improvements documented,' but it does not provide a numeric target.</span></td>
+        </tr>
+
+        <tr class="ok">
+          <td class="num">2</td>
+          <td><span class='check'>✓</span></td>
+          <td>'Look nicer' is replaced with concrete, enumerable UI changes</td>
+          <td><span class="evidence">The output lists concrete UI changes including 'cleaner visual hierarchy,' 'consistent spacing, typography, colors, and component styling,' 'grouping related information together,' 'visually consistent' interactive elements, responsive support, and accessibility improvements.</span></td>
+        </tr>
+
+        <tr class="ok">
+          <td class="num">3</td>
+          <td><span class='check'>✓</span></td>
+          <td>Includes how completion would be verified or tested</td>
+          <td><span class="evidence">The output includes verification steps: 'measuring dashboard load time before and after changes using browser performance tools' and 'reviewed using screenshots, metrics, and regression testing before release.'</span></td>
+        </tr></tbody></table>
+      <details class="judge"><summary>judge prompt</summary><pre>You are grading an agentskills.io evaluation run.
+Grading principles:
+- Require concrete evidence for every PASS; quote or reference the output.
+- Do not give the benefit of the doubt.
+- PASS an assertion only if every condition in the assertion text holds.
+- A label without substance is a FAIL.
+- Tool calls (when present) are authoritative evidence of model behavior.
+Return STRICT JSON only. No markdown. Shape:
+{&quot;assertion_results&quot;:[{&quot;text&quot;:&quot;...&quot;,&quot;passed&quot;:true,&quot;evidence&quot;:&quot;...&quot;}],&quot;summary&quot;:{&quot;passed&quot;:0,&quot;failed&quot;:0,&quot;total&quot;:0,&quot;pass_rate&quot;:0}}
+Rules:
+- Include every assertion exactly once and copy the full assertion text verbatim into text.
+- Use short concrete evidence: quote, snippet, or file reference.
+- Summary may be included, but it will be recomputed by the caller.
+Assertions:
+[
+  &quot;Performance goal is made measurable with a specific metric and numeric target&quot;,
+  &quot;'Look nicer' is replaced with concrete, enumerable UI changes&quot;,
+  &quot;Includes how completion would be verified or tested&quot;
+]
+Model output:
+:::writing{variant=&quot;standard&quot; id=&quot;48291&quot;}
+Improve the dashboard performance and UI quality with the following implementation requirements:
+
+1. Performance improvements:
+- Reduce initial dashboard load time by optimizing the largest contributors to startup latency.
+- Identify and eliminate unnecessary API requests, duplicate data fetching, and redundant calculations during initial render.
+- Implement lazy loading for non-critical dashboard components that are not visible on first load.
+- Optimize large data sets by adding pagination, virtualization, or incremental loading where applicable.
+- Minimize JavaScript bundle size by removing unused dependencies and applying code splitting where appropriate.
+- Add loading states (skeletons or placeholders) so users receive immediate visual feedback while data is loading.
+- Verify improvements by measuring dashboard load time before and after changes using browser performance tools.
+
+2. UI improvements:
+- Refresh the dashboard layout to create a cleaner visual hierarchy and make key metrics easier to find.
+- Ensure consistent spacing, typography, colors, and component styling across all dashboard sections.
+- Improve readability by reducing visual clutter and grouping related information together.
+- Make interactive elements (buttons, filters, charts, tables) visually consistent and easy to understand.
+- Ensure the dashboard is responsive and usable on desktop, tablet, and mobile screen sizes.
+- Improve accessibility by ensuring sufficient color contrast, keyboard navigation support, and appropriate labels for interactive elements.
+
+3. Acceptance criteria:
+- The dashboard loads noticeably faster than the current version, with measured performance improvements documented.
+- No existing dashboard functionality is removed or broken.
+- All major dashboard views render correctly across supported screen sizes.
+- Updated UI follows the existing application design system or establishes reusable components where needed.
+- Performance and visual changes are reviewed using screenshots, metrics, and regression testing before release.:::
+
+Output files:
+No output files were captured.</pre></details>
+    </section>
+  </div>
+    </details>
+  </div>
+    </article>
+  
+      </main>
+</body>
+</html>

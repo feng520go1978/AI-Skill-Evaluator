@@ -51,6 +51,10 @@ export interface RunTiming {
   duration_ms: number;
   /** USD cost of the target-model call (API-reported or priced locally). */
   cost_usd?: number;
+  /** USD cost of the judge call(s) grading this run. */
+  judge_cost_usd?: number;
+  /** Tokens consumed by the judge call(s). */
+  judge_tokens?: number;
 }
 
 export function writeRunArtifacts(

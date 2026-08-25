@@ -1,0 +1,25 @@
+{
+  "assertion_results": [
+    {
+      "text": "Output uses clear section structure suitable for a decision document",
+      "passed": true,
+      "evidence": "Uses a structured decision format with sections including \"Executive summary\", \"Adoption status\", \"Limitations and tradeoffs\", \"Migration considerations\", \"Decision framework\", and \"Suggested engineering decision\"."
+    },
+    {
+      "text": "Distinguishes confident facts from uncertain or time-sensitive claims",
+      "passed": true,
+      "evidence": "Separates established statements such as \"HTTP/3 (standardized in 2022 as RFC 9114) has moved from experimental to mainstream deployment\" from uncertain outcomes using language such as \"Potential improvements\", \"Potential impacts\", and \"Benefits may be workload-dependent\"."
+    },
+    {
+      "text": "Includes caveats about verification or recency rather than presenting everything as settled",
+      "passed": true,
+      "evidence": "Includes verification-oriented caveats such as \"Measure impact by client population and workload before expanding\", \"Track performance differences\", \"Expand based on observed gains\", and \"raw throughput gains are not guaranteed\"."
+    }
+  ],
+  "summary": {
+    "passed": 3,
+    "failed": 0,
+    "total": 3,
+    "pass_rate": 1
+  }
+}

@@ -1,0 +1,68 @@
+For a developer-tool documentation site, I’d aim for a palette that feels **precise, technical, calm, and trustworthy** rather than “cyberpunk.” Documentation is a place where users spend a lot of time reading, scanning, copying code, and troubleshooting — so contrast and fatigue resistance matter more than visual flash.
+
+## Palette: **“Midnight Terminal”**
+
+{"query":["dark developer documentation website UI","modern API documentation interface"],"aspect_ratio":"16:9"}
+
+| Role | Color | Hex | Why |
+|---|---|---|---|
+| **Primary background** | Midnight Navy | `#0B1220` | Softer than pure black; reduces eye strain while keeping a technical feel |
+| **Surface / cards** | Deep Slate | `#111B2E` | Creates hierarchy without heavy borders |
+| **Elevated surface** | Blue Slate | `#18263D` | Useful for callouts, navigation panels, and interactive areas |
+| **Primary text** | Cloud White | `#E6EDF7` | High readability without harsh #FFFFFF glare |
+| **Secondary text** | Cool Gray | `#94A3B8` | Keeps metadata, descriptions, and hints visually subordinate |
+| **Brand accent** | Developer Blue | `#4F8CFF` | Familiar “trust + technology” signal; works well for links and actions |
+| **Accent hover** | Electric Blue | `#79A8FF` | Provides clear interaction feedback |
+| **Success** | Terminal Green | `#34D399` | Fits build states, API success responses, and validation |
+| **Warning** | Amber | `#FBBF24` | High visibility without feeling alarming |
+| **Error** | Coral Red | `#FB7185` | Softer than pure red; readable in dark UI |
+| **Code background** | Carbon | `#080D18` | Separates code blocks from prose areas |
+| **Inline code highlight** | Muted Indigo | `#27345A` | Gives code tokens distinction without distraction |
+
+## Usage example
+
+**Navigation**
+- Background: `#0B1220`
+- Active item: `#18263D`
+- Active indicator: `#4F8CFF`
+
+**Documentation content**
+- Headings: `#E6EDF7`
+- Body copy: `#CBD5E1`
+- Links: `#4F8CFF`
+- Link hover: `#79A8FF`
+
+**Code blocks**
+- Container: `#080D18`
+- Border: `#18263D`
+- Syntax accents:
+  - Functions: `#79A8FF`
+  - Strings: `#34D399`
+  - Numbers: `#FBBF24`
+  - Keywords: `#C084FC`
+
+## Rationale
+
+### 1. It communicates “engineering tool,” not “marketing website”
+Blues, slate neutrals, and restrained accents are common in developer environments because they imply stability and competence. The interface should feel like a reliable instrument.
+
+### 2. It supports long reading sessions
+Docs users often spend 30+ minutes debugging. A near-black navy background and off-white text reduce the harsh contrast of white-on-black layouts.
+
+### 3. It keeps attention on code
+The palette intentionally makes UI chrome quiet. Bright colors are reserved for:
+- clickable actions
+- status states
+- syntax highlighting
+- important notices
+
+### 4. It scales well
+This palette works for:
+- API references
+- SDK docs
+- CLI documentation
+- changelogs
+- dashboards
+- developer portals
+
+A light-mode companion palette would be easy to derive by swapping the navy surfaces for warm grays rather than pure whites. The biggest mistake with developer docs is usually making the UI “look technical” while sacrificing readability — this palette tries to avoid that trap.

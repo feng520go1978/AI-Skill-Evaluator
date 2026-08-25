@@ -31,12 +31,12 @@ export interface ScoreWeights {
 }
 
 export const DEFAULT_WEIGHTS: ScoreWeights = {
-  capability: 0.3,
+  capability: 0.35,
   lift: 0.25,
-  cost: 0.15,
+  cost: 0.1,
   speed: 0.1,
-  stability: 0.15,
-  security: 0.05,
+  stability: 0.1,
+  security: 0.1,
 };
 
 /** Scoring budgets — what "good" looks like. Configurable per run. */
@@ -58,12 +58,18 @@ export const DEFAULT_BUDGETS: ScoreBudgets = {
   speedSecondsMax: 60,
 };
 
-export type Verdict = "PASS" | "CAUTION" | "FAIL";
+export type Verdict = "PASS" | "CAUTION" | "FAIL" | "INCONCLUSIVE";
+
+/** Why a run was judged INCONCLUSIVE (absent when conclusive). */
+export type InconclusiveReason =
+  | "baseline near-perfect — task too easy for this skill"
+  | "task shows no sensitivity to the skill"
+  | "insufficient sample size";
 
 export interface SkillScore {
   dimensions: {
     capability: number; // 0-100
-    lift: number;      // 0-100 (null baseline → neutral 50)
+    lift: number | null; // 0-100, null when inconclusive (displayed as n/a)
     cost: number;
     speed: number;
     stability: number;
@@ -72,8 +78,42 @@ export interface SkillScore {
   overall: number; // 0-100 weighted
   verdict: Verdict;
   reasons: string[];
+  /** "low" when INCONCLUSIVE — scores are advisory only. */
+  reliability?: "high" | "low";
+  inconclusiveReason?: InconclusiveReason;
   /** True when costUsd was priced locally (unknown model) — surfaced in reports. */
   costEstimated?: boolean;
+}
+
+/**
+ * Validity pre-checks (Phase 6 §2). Run BEFORE scoring; any hit yields
+ * verdict=INCONCLUSIVE with reliability=low. Thresholds calibrated on
+ * Phase 5 real-skill data: frontend-design baseline 1.000/Δ0 → I1 hit;
+ * tdd baseline 0.889 → correctly below the line.
+ */
+export function checkInconclusive(args: {
+  baselinePassRate?: number; // without_skill mean pass rate
+  deltaPassRate?: number; // with − without
+  runsPerEval: number;
+  evalCount?: number;
+}): InconclusiveReason | null {
+  // I3 only applies when the caller explicitly reports the sample size;
+  // unknown evalCount must not trigger a false "insufficient sample".
+  if (args.evalCount !== undefined && args.runsPerEval * args.evalCount < 6) {
+    return "insufficient sample size";
+  }
+  if (
+    args.baselinePassRate !== undefined &&
+    args.baselinePassRate >= 0.9 &&
+    (args.deltaPassRate ?? 0) <= 0.05
+  ) {
+    return "baseline near-perfect — task too easy for this skill";
+  }
+  if ((args.deltaPassRate ?? -1) === 0 && args.baselinePassRate !== undefined) {
+    // zero delta with zero variance across all runs means no sensitivity at all
+    return "task shows no sensitivity to the skill";
+  }
+  return null;
 }
 
 function clamp01(value: number): number {
@@ -139,6 +179,8 @@ export function scoreSkill(args: {
   securityFindings?: SecurityFinding[];
   weights?: Partial<ScoreWeights>;
   budgets?: Partial<ScoreBudgets>;
+  runsPerEval?: number;
+  evalCount?: number;
 }): SkillScore {
   const w = { ...DEFAULT_WEIGHTS, ...(args.weights ?? {}) };
   const b = { ...DEFAULT_BUDGETS, ...(args.budgets ?? {}) };
@@ -146,13 +188,36 @@ export function scoreSkill(args: {
   const ws = args.benchmark.run_summary.with_skill;
   const delta = args.benchmark.run_summary.delta;
 
+  // ─── validity pre-check: INCONCLUSIVE gate ──────────────────────────────
+  const inconclusive = checkInconclusive({
+    baselinePassRate: args.benchmark.run_summary.without_skill?.pass_rate.mean,
+    deltaPassRate: delta?.pass_rate,
+    runsPerEval: args.runsPerEval ?? 1,
+    evalCount: args.evalCount,
+  });
+
   const capability = Math.round(ws.pass_rate.mean * 100);
-  const lift = scoreLift(delta?.pass_rate);
+  const rawLift = scoreLift(delta?.pass_rate);
   const cost = scoreCost(ws.tokens.mean, b);
   const speed = scoreSpeed(ws.time_seconds.mean, b);
   const stability = scoreStability(ws.pass_rate.stddev);
   const sec = scoreSecurity(args.securityFindings ?? []);
 
+  if (inconclusive) {
+    return {
+      dimensions: { capability, lift: null, cost, speed, stability, security: sec.score },
+      overall: round1(
+        w.capability * capability + w.cost * cost + w.speed * speed +
+          w.stability * stability + w.security * sec.score
+      ),
+      verdict: "INCONCLUSIVE",
+      reasons: [inconclusive],
+      reliability: "low",
+      inconclusiveReason: inconclusive,
+    };
+  }
+
+  const lift = rawLift;
   const overall = round1(
     w.capability * capability +
       w.lift * lift +

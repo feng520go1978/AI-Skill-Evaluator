@@ -1,0 +1,108 @@
+For testing a welcome-email function, I usually **do not start with a real SMTP server**. The right approach depends on what you’re trying to verify.
+
+A good testing strategy is layered:
+
+### 1. Unit test: mock the email sender (most tests)
+For the signup flow itself, mock your mail service.
+
+Example idea:
+
+```
+signup(user)
+  -> create user
+  -> call sendWelcomeEmail(user)
+  -> verify sendWelcomeEmail was called with correct data
+```
+
+You’re testing your application logic, not whether SMTP works.
+
+Good for:
+- CI pipelines
+- fast feedback
+- testing edge cases (duplicate signup, failed signup, rollback behavior)
+
+---
+
+### 2. Integration test: use a fake SMTP server
+For verifying that your email code actually generates a valid message, use a local SMTP catcher.
+
+Common choices:
+- ["company","MailHog","local email testing SMTP server"]
+- ["company","Mailpit","email testing SMTP server"]
+- ["company","smtp4dev","local SMTP testing tool"]
+
+Your app sends mail normally via SMTP, but the test server captures it instead of delivering it.
+
+You can assert:
+- recipient
+- subject
+- HTML/text body
+- template variables
+- headers
+
+Example flow:
+
+```
+Signup API
+    |
+    v
+Email service
+    |
+    v
+Fake SMTP server
+    |
+    v
+Test checks captured email
+```
+
+---
+
+### 3. Staging test: use a real email provider
+Only use a real SMTP/API provider for a small number of end-to-end tests.
+
+Examples:
+- ["company","Amazon Simple Email Service","email sending service"]
+- ["company","SendGrid","email delivery platform"]
+- ["company","Mailgun","email delivery service"]
+- ["company","Postmark","transactional email service"]
+
+Use:
+- a dedicated test domain
+- a test inbox
+- strict rate limits
+
+Avoid accidentally sending hundreds of "Welcome!" emails during automated tests.
+
+---
+
+My usual setup:
+
+```
+Local development:
+    Fake SMTP (Mailpit/MailHog)
+
+Unit tests:
+    Mock email service
+
+CI:
+    Fake SMTP container
+
+Staging:
+    Real provider + test recipients
+
+Production:
+    Real provider
+```
+
+One extra thing: make your email sender an abstraction, e.g.:
+
+```text
+EmailSender
+ ├── SmtpEmailSender
+ ├── FakeEmailSender
+ └── MockEmailSender
+```
+
+Then your signup code never cares whether the email is real or fake.
+
+So: **don’t use a real SMTP server for normal tests**. Use a fake SMTP server to test email behavior, and reserve real delivery for staging verification.

@@ -1,0 +1,25 @@
+{
+  "assertion_results": [
+    {
+      "text": "Presents a failing test BEFORE any implementation code (strict red-green order)",
+      "passed": true,
+      "evidence": "The output section '1. Start with the first behavior (RED)' shows the test code for maxValue before the implementation in '2. Make it pass with the smallest implementation (GREEN)'."
+    },
+    {
+      "text": "Tests cover edge cases beyond the happy path (e.g. empty input, missing/non-numeric column values)",
+      "passed": true,
+      "evidence": "The output includes tests for empty input: `test(\"returns null when there are no rows\", () => { expect(maxValue([], \"score\")).toBe(null); });` and missing values: `test(\"ignores rows without the numeric column\", () => {... expect(maxValue(rows, \"score\")).toBe(30); });`."
+    },
+    {
+      "text": "Implementation is presented as the step that makes tests pass, not written first",
+      "passed": true,
+      "evidence": "The output labels implementation after tests as '2. Make it pass with the smallest implementation (GREEN)' and later '5. Update implementation (GREEN)' after the failing empty-input test."
+    }
+  ],
+  "summary": {
+    "passed": 3,
+    "failed": 0,
+    "total": 3,
+    "pass_rate": 1
+  }
+}

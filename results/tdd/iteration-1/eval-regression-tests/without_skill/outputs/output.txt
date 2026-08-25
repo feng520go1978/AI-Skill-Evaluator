@@ -1,0 +1,75 @@
+Before changing `slugify`, I’d lock down the **current intended behavior** and the obvious failure modes with regression tests. The current implementation:
+
+```js
+function slugify(t) {
+  return t.toLowerCase().replace(' ', '-')
+}
+```
+
+has several likely bugs:
+- only replaces the **first** space
+- leaves punctuation/special characters
+- doesn't handle repeated whitespace
+- may produce awkward leading/trailing hyphens
+- assumes `t` is always a string
+- lowercases using JS locale-insensitive behavior
+
+I’d write tests around user-typed titles like:
+
+```js
+describe("slugify", () => {
+  test("lowercases titles", () => {
+    expect(slugify("Hello World")).toBe("hello-world");
+  });
+
+  test("replaces all spaces, not just the first", () => {
+    expect(slugify("Hello Big World")).toBe("hello-big-world");
+  });
+
+  test("handles multiple consecutive spaces", () => {
+    expect(slugify("Hello   Big   World")).toBe("hello-big-world");
+  });
+
+  test("handles leading and trailing spaces", () => {
+    expect(slugify("  Hello World  ")).toBe("hello-world");
+  });
+
+  test("removes punctuation from titles", () => {
+    expect(slugify("Hello, World!")).toBe("hello-world");
+  });
+
+  test("handles common title characters", () => {
+    expect(slugify("What's New?")).toBe("whats-new");
+  });
+
+  test("does not leave repeated hyphens", () => {
+    expect(slugify("Hello - World")).toBe("hello-world");
+  });
+
+  test("handles already slug-like input", () => {
+    expect(slugify("hello-world")).toBe("hello-world");
+  });
+
+  test("handles empty input", () => {
+    expect(slugify("")).toBe("");
+  });
+
+  test("does not throw on whitespace-only input", () => {
+    expect(slugify("   ")).toBe("");
+  });
+});
+```
+
+I’d also consider adding tests for product-specific requirements if this slug is persisted in URLs:
+
+```js
+test("creates stable slugs for non-English titles", () => {
+  expect(slugify("こんにちは 世界")).toBe(/* agreed behavior */);
+});
+
+test("does not change existing stored slugs unexpectedly", () => {
+  expect(slugify("My Existing Title")).toBe("my-existing-title");
+});
+```
+
+The key thing before fixing it: **don’t just test the desired new behavior**. Add tests for any currently relied-on behavior too, because slug changes can silently break URLs, bookmarks, database keys, or caches. I’d check where slugs are consumed before deciding the exact normalization rules.

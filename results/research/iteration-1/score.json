@@ -1,0 +1,19 @@
+[
+  {
+    "skill": "research",
+    "dimensions": {
+      "capability": 89,
+      "lift": 62,
+      "cost": 100,
+      "speed": 85,
+      "stability": 37,
+      "security": 100
+    },
+    "overall": 76.3,
+    "verdict": "PASS",
+    "reasons": [
+      "unstable: pass-rate stddev 0.16 across runs"
+    ],
+    "securityFindings": []
+  }
+]

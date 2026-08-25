@@ -1,0 +1,93 @@
+I generally **would not use a real SMTP server for most tests**. A welcome email is a good example of where you want to test the behavior, but you usually don't want your test suite depending on an external mail provider.
+
+My approach is to test at a few layers:
+
+### 1. Unit test: verify the signup flow triggers an email
+Keep the email sender behind an interface, then replace it with a fake/mock.
+
+Example seam:
+
+```
+UserSignupService
+        |
+        v
+EmailSender.sendWelcomeEmail(user)
+```
+
+Test:
+
+- given a new user signs up
+- when signup succeeds
+- then `sendWelcomeEmail()` is called with the correct user/email/template data
+
+This catches the important business behavior without involving SMTP.
+
+---
+
+### 2. Integration test: use a local fake SMTP server
+For the email composition and delivery path, I like a local SMTP capture tool:
+
+- ["company","MailHog","local email testing SMTP server"]
+- ["company","Mailpit","email testing tool"]
+- ["company","smtp4dev","local SMTP server testing tool"]
+
+Your app talks SMTP normally, but the server just stores emails so tests can inspect them.
+
+Verify:
+
+- recipient address
+- subject
+- HTML/text body
+- required links
+- headers
+- attachments (if any)
+
+This is much closer to reality than mocking the whole email layer.
+
+---
+
+### 3. End-to-end test: rarely, but use a real provider
+I would reserve real SMTP/provider tests for things like:
+
+- validating provider credentials/configuration
+- checking deliverability
+- testing production-only behavior
+
+Run these separately (for example nightly or before releases), not on every commit.
+
+---
+
+### Things I avoid
+
+**❌ Sending real emails in CI**
+- flaky
+- slow
+- risks accidentally emailing real users
+- provider rate limits
+
+**❌ Mocking too deeply**
+Example: testing that your code calls `smtp.send()` with the exact internal arguments. That locks tests to implementation details.
+
+**❌ Testing email rendering only through snapshots**
+Snapshots often become "approve the mess" rather than meaningful verification. Assert important pieces instead.
+
+---
+
+A typical setup:
+
+```
+signup test
+    -> fake EmailSender
+    -> assert welcome email requested
+
+email integration test
+    -> app
+    -> Mailpit/MailHog
+    -> inspect captured message
+
+production smoke test
+    -> real email provider
+    -> isolated test inbox
+```
+
+The key question is: **what are you trying to prove?** If it is "a user receives a welcome email after signup," I’d test the signup-to-email trigger with a fake, and separately test SMTP/email formatting with a local capture server.
