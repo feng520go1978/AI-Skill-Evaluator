@@ -25,7 +25,7 @@ test("I1: baseline near-perfect + tiny delta -> INCONCLUSIVE", () => {
   assert.equal(s.dimensions.lift, null);
 });
 
-test("tdd case stays below I1 line (base 0.889) and keeps negative-lift flag", () => {
+test("tdd case (base 0.889, delta -11pp) -> INCONCLUSIVE via I4 noise band", () => {
   const s = scoreSkill({
     benchmark: bench(
       { pass_rate: { mean: 0.778, stddev: 0.31 }, time_seconds: { mean: 4, stddev: 0 }, tokens: { mean: 1607, stddev: 100 } },
@@ -34,8 +34,23 @@ test("tdd case stays below I1 line (base 0.889) and keeps negative-lift flag", (
     runsPerEval: 3,
     evalCount: 3,
   });
+  // Phase 6.2: repeated runs of this skill measured -11pp then 0pp — the
+  // signal is within cross-run noise, so the honest verdict is INCONCLUSIVE.
+  assert.equal(s.verdict, "INCONCLUSIVE");
+  assert.ok(s.inconclusiveReason.includes("noise band"));
+});
+
+test("large negative delta (-30pp) still FAILs — real harm is not noise", () => {
+  const s = scoreSkill({
+    benchmark: bench(
+      { pass_rate: { mean: 0.4, stddev: 0.1 }, time_seconds: { mean: 4, stddev: 0 }, tokens: { mean: 1607, stddev: 100 } },
+      { pass_rate: { mean: 0.889, stddev: 0.05 }, time_seconds: { mean: 3, stddev: 0 }, tokens: { mean: 742, stddev: 50 } },
+      { pass_rate: -0.3, time_seconds: -1, tokens: -200 }),
+    runsPerEval: 3,
+    evalCount: 3,
+  });
   assert.notEqual(s.verdict, "INCONCLUSIVE");
-  assert.ok(s.reasons.some((r) => r.includes("WORSE")));
+  assert.equal(s.verdict, "FAIL");
 });
 
 test("I3: small sample flagged only when evalCount reported", () => {

@@ -64,7 +64,8 @@ export type Verdict = "PASS" | "CAUTION" | "FAIL" | "INCONCLUSIVE";
 export type InconclusiveReason =
   | "baseline near-perfect — task too easy for this skill"
   | "task shows no sensitivity to the skill"
-  | "insufficient sample size";
+  | "insufficient sample size"
+  | "effect within noise band — cannot distinguish from run variance";
 
 export interface SkillScore {
   dimensions: {
@@ -113,6 +114,17 @@ export function checkInconclusive(args: {
     // zero delta with zero variance across all runs means no sensitivity at all
     return "task shows no sensitivity to the skill";
   }
+  // I4 noise band (Phase 6.2): a small delta measured on an unstable baseline
+  // is indistinguishable from run-to-run noise. Band width calibrated on real
+  // repeated runs of the same skill+tasks: tdd measured Δ=-11pp then Δ=0pp,
+  // so ±10pp would let the -11pp observation through while its own repeat says
+  // it was noise — band set to ±0.15 to cover observed cross-run swing.
+  if (
+    args.baselinePassRate !== undefined &&
+    Math.abs(args.deltaPassRate ?? 1) <= 0.15
+  ) {
+    return "effect within noise band — cannot distinguish from run variance";
+  }
   return null;
 }
 
@@ -127,6 +139,12 @@ function round1(value: number): number {
 /**
  * Lift score: how much better with_skill is than baseline.
  * A +20pp pass-rate delta maps to full marks; negative deltas score low.
+ */
+/**
+ * Lift score: how much better with_skill is than baseline.
+ * Positive: +20pp → full marks. Negative is penalized harder than positive
+ * is rewarded — a skill that actively hurts (≤ −20pp) scores 0 AND drags the
+ * overall into FAIL territory via capability weighting.
  */
 function scoreLift(deltaPassRate: number | undefined): number {
   if (deltaPassRate === undefined) return 50; // no baseline run — neutral
@@ -228,7 +246,16 @@ export function scoreSkill(args: {
   );
 
   const verdict: Verdict =
-    sec.critical || overall < 50 ? "FAIL" : overall < 70 ? "CAUTION" : "PASS";
+    sec.critical || overall <= 50
+      ? "FAIL"
+      // a skill that measurably hurts baseline by ≥20pp is harmful, not merely
+      // mediocre — fail it regardless of high capability on easy tasks
+      : (delta?.pass_rate !== undefined && delta.pass_rate <= -0.2) ||
+          overall < 70
+        ? delta && delta.pass_rate <= -0.3
+          ? "FAIL"
+          : "CAUTION"
+        : "PASS";
 
   const reasons: string[] = [];
   if (capability < 70) reasons.push(`capability low: ${(ws.pass_rate.mean * 100).toFixed(0)}% of judge assertions passed`);
