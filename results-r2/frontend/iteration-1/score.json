@@ -1,0 +1,36 @@
+[
+  {
+    "skill": "frontend-design",
+    "dimensions": {
+      "capability": 89,
+      "lift": 73,
+      "cost": 91,
+      "speed": 100,
+      "stability": 37,
+      "security": 100
+    },
+    "overall": 82.2,
+    "verdict": "PASS",
+    "reasons": [
+      "unstable: pass-rate stddev 0.16 across runs"
+    ],
+    "evaluation_cost": {
+      "currency": "USD",
+      "skill_cost": {
+        "usd": 0.017143,
+        "tokens": 8065
+      },
+      "eval_overhead": {
+        "usd": 0.024979,
+        "judge_usd": 0.013375,
+        "judge_tokens": 8938,
+        "baseline_usd": 0.011604,
+        "baseline_tokens": 2961
+      },
+      "total_eval_cost": {
+        "usd": 0.042122
+      }
+    },
+    "securityFindings": []
+  }
+]

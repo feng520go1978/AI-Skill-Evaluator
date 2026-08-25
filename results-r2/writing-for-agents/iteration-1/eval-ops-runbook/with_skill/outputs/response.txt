@@ -1,0 +1,202 @@
+:::writing{variant="document" id="48391" title="Nightly Data Import Failure Recovery Runbook"}
+# Nightly Data Import Failure Recovery Runbook
+
+## Purpose
+
+Restore the nightly data import when the pipeline fails while retrieving files from SFTP, transforming CSV data, or loading data into Postgres.
+
+## Scope
+
+This runbook covers failures in the following pipeline stages:
+
+1. SFTP file retrieval
+2. CSV validation and transformation
+3. Postgres load
+4. Post-run verification
+
+## Prerequisites
+
+Before starting:
+
+- Confirm you have access to:
+  - Import job logs
+  - SFTP credentials or access method
+  - Import application host/container
+  - Postgres database connection
+  - Job scheduler or orchestration system
+- Identify:
+  - Failed import run timestamp
+  - Expected import files
+  - Import job ID or execution ID
+
+## Recovery Steps
+
+### 1. Confirm the failure and identify the failed stage
+
+1. Open the failed nightly import execution details.
+2. Review the importer logs from the failed run.
+3. Identify the failure stage:
+   - SFTP download
+   - CSV transformation
+   - Postgres load
+   - Unknown/application failure
+
+Completion criteria:
+- The failed pipeline stage and error message are identified.
+
+---
+
+### 2. Check SFTP source files
+
+Use this step when the failure occurred during file retrieval or when source files are suspected.
+
+1. Connect to the SFTP server.
+2. Verify that the expected CSV files exist.
+3. Confirm:
+   - File names match the import pattern.
+   - Files are complete and not still uploading.
+   - File sizes are reasonable compared with previous successful runs.
+   - File permissions allow the importer to read them.
+4. If files are missing:
+   - Confirm whether the upstream system generated them.
+   - Request regeneration or re-upload if needed.
+5. If files are corrupted:
+   - Obtain a replacement file before restarting the import.
+
+Completion criteria:
+- Required source CSV files are present, readable, and ready for processing.
+
+---
+
+### 3. Validate downloaded CSV files
+
+Use this step when CSV parsing or transformation fails.
+
+1. Locate the downloaded CSV files used by the failed run.
+2. Check for common issues:
+   - Missing headers
+   - Unexpected columns
+   - Invalid delimiters
+   - Encoding problems
+   - Blank files
+   - Invalid dates or numeric fields
+   - Duplicate records
+3. Compare the failing file format with the latest successful import file.
+4. Correct the source file if the issue originated upstream.
+5. If the importer has a staging directory, remove only the failed run's temporary files before retrying.
+
+Completion criteria:
+- CSV files match the expected schema and transformation requirements.
+
+---
+
+### 4. Check transformation errors
+
+Use this step when CSV files are valid but transformation fails.
+
+1. Review transformation logs for:
+   - Row-level validation errors
+   - Mapping failures
+   - Unexpected data values
+   - Script or dependency errors
+2. Determine whether the failure is:
+   - Data-specific
+   - Code/configuration-related
+   - Environment-related
+3. For data-specific failures:
+   - Correct the source data if possible.
+   - Re-run validation.
+4. For code or configuration failures:
+   - Escalate to the data engineering owner before rerunning.
+
+Completion criteria:
+- Transformed output files are generated successfully or the failure is escalated with logs attached.
+
+---
+
+### 5. Verify Postgres load state
+
+Use this step when the load stage failed or when retrying after a partial import.
+
+1. Check Postgres logs and importer logs for the failure reason.
+2. Determine whether the load partially completed.
+3. Check:
+   - Target table row counts
+   - Import batch markers
+   - Load timestamps
+   - Duplicate records
+   - Failed transactions
+4. If the import supports rollback:
+   - Roll back the failed batch.
+5. If the import uses staging tables:
+   - Clear only the failed staging data before retrying.
+6. Do not manually delete production data unless the recovery procedure requires it.
+
+Completion criteria:
+- Database state is known and safe for a retry.
+
+---
+
+### 6. Retry the import
+
+1. Confirm the source files, transformations, and database state are ready.
+2. Restart the failed import job.
+3. Monitor execution logs during:
+   - File retrieval
+   - Transformation
+   - Database loading
+4. Confirm the job completes successfully.
+
+Completion criteria:
+- The import job finishes without errors.
+
+---
+
+### 7. Validate imported data
+
+After a successful retry:
+
+1. Verify expected tables were updated.
+2. Compare imported record counts against expected volumes.
+3. Check for:
+   - Missing records
+   - Duplicate records
+   - Failed validations
+   - Incorrect timestamps
+4. Confirm downstream systems can access the refreshed data.
+
+Completion criteria:
+- Imported data passes validation checks and is available to downstream consumers.
+
+---
+
+## Escalation Criteria
+
+Escalate to the data engineering team when:
+
+- SFTP files are missing and cannot be regenerated.
+- CSV schema changes unexpectedly.
+- Transformation logic requires code changes.
+- Postgres data integrity is uncertain.
+- The import fails repeatedly after a clean retry.
+
+Include:
+
+- Failed run timestamp
+- Job ID
+- Error logs
+- Failed file names
+- Import stage
+- Actions already attempted
+
+## Post-Incident Follow-Up
+
+After recovery:
+
+1. Record the root cause.
+2. Document the fix applied.
+3. Update monitoring or validation checks if the failure mode was preventable.
+4. Link the incident record to the failed import execution.
+
+Completion criteria:
+- Recovery actions and root cause are documented.:::

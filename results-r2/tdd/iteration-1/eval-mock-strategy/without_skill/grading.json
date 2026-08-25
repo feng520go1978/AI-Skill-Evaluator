@@ -1,0 +1,25 @@
+{
+  "assertion_results": [
+    {
+      "text": "Recommends NOT using a real SMTP server for the primary unit tests",
+      "passed": true,
+      "evidence": "Says: \"Unit test: don't send email at all\" and \"I would avoid pointing automated tests at a real SMTP server because it makes tests slower, flaky, harder to isolate\"."
+    },
+    {
+      "text": "Asserts on what was sent (recipient/content/calls) via a mock or spy",
+      "passed": true,
+      "evidence": "Says: \"Mock the email-sending layer and verify your signup flow calls it correctly\" and lists \"Was sendWelcomeEmail(user) called?\", \"Did it use the right recipient?\", and \"Did the template receive the right variables?\"."
+    },
+    {
+      "text": "Suggests isolating side effect from logic so the core decision can be tested purely",
+      "passed": true,
+      "evidence": "Says: \"Mock the email-sending layer\" and shows the separation: \"signup(user) -> create user record -> generate welcome email payload -> call email service.send(...)\"."
+    }
+  ],
+  "summary": {
+    "passed": 3,
+    "failed": 0,
+    "total": 3,
+    "pass_rate": 1
+  }
+}

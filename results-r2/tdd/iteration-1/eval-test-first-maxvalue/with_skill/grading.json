@@ -1,0 +1,25 @@
+{
+  "assertion_results": [
+    {
+      "text": "Presents a failing test BEFORE any implementation code (strict red-green order)",
+      "passed": true,
+      "evidence": "The output has a section titled \"1. Red: write the first failing test\" with `maxValue.test.js` before the implementation section. It states: \"It fails because `maxValue` does not exist yet. That's our **red** step.\""
+    },
+    {
+      "text": "Tests cover edge cases beyond the happy path (e.g. empty input, missing/non-numeric column values)",
+      "passed": true,
+      "evidence": "The output adds edge-case tests including `test(\"handles negative values\", () => {... })` and `test(\"returns null when there are no rows\", () => { expect(maxValue([], \"score\")).toBeNull(); });`."
+    },
+    {
+      "text": "Implementation is presented as the step that makes tests pass, not written first",
+      "passed": true,
+      "evidence": "The output explicitly labels implementation as \"2. Green: implement the smallest solution\" after the failing test, and says: \"Run the test again. It passes.\""
+    }
+  ],
+  "summary": {
+    "passed": 3,
+    "failed": 0,
+    "total": 3,
+    "pass_rate": 1
+  }
+}

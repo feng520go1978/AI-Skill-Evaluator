@@ -1,0 +1,25 @@
+{
+  "assertion_results": [
+    {
+      "text": "Diagnostic steps appear in a logical ordered sequence covering the three failure domains (network/SFTP, file format/transformation, database)",
+      "passed": true,
+      "evidence": "The runbook has ordered sections: \"# 2. Check SFTP Source Files\", \"# 3. Validate CSV Transformation\", and \"# 4. Check PostgreSQL Load Status\" after confirming the failure."
+    },
+    {
+      "text": "Each step indicates how to determine success or failure",
+      "passed": false,
+      "evidence": "Some checks include outcomes (e.g., \"Confirm: Status = SUCCESS\" and SFTP \"Verify: Files exist for the current import date\"), but not every diagnostic step defines a success/failure determination criterion; for example, \"Stop the import. Escalate to the engineering owner.\" has no success/failure check."
+    },
+    {
+      "text": "No critical steps left implicit (e.g. does not assume the reader knows where logs live)",
+      "passed": false,
+      "evidence": "The runbook says \"Open the import job logs\" and \"Review Transformation Logs\" but does not specify where those logs are located."
+    }
+  ],
+  "summary": {
+    "passed": 1,
+    "failed": 2,
+    "total": 3,
+    "pass_rate": 0.3333333333333333
+  }
+}

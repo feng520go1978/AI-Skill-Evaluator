@@ -1,0 +1,25 @@
+{
+  "assertion_results": [
+    {
+      "text": "Includes a test case with MULTIPLE spaces or multiple words that exposes the single-replace bug",
+      "passed": true,
+      "evidence": "Includes tests 'replaces multiple spaces with hyphens' with slugify('Hello Big World') and 'does not leave repeated hyphens from extra whitespace' with slugify('Hello   Big   World'). Also states 'The minimum regression test that exposes the existing bug is probably'."
+    },
+    {
+      "text": "Covers additional edge cases: at minimum empty string and special characters or unicode",
+      "passed": true,
+      "evidence": "Includes 'handles empty titles' with slugify('') and adds tests for 'Hello, World!' punctuation and 'Café Déjà Vu' unicode."
+    },
+    {
+      "text": "States these tests should fail against the current implementation before the fix is made",
+      "passed": false,
+      "evidence": "States 'That test fails with the current implementation' referring to the minimum regression test, but does not state that these tests (plural) should fail against the current implementation before the fix."
+    }
+  ],
+  "summary": {
+    "passed": 2,
+    "failed": 1,
+    "total": 3,
+    "pass_rate": 0.6666666666666666
+  }
+}

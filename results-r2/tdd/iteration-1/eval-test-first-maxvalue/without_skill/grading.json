@@ -1,0 +1,25 @@
+{
+  "assertion_results": [
+    {
+      "text": "Presents a failing test BEFORE any implementation code (strict red-green order)",
+      "passed": true,
+      "evidence": "The output has a section '## 2. Write the test first' with maxValue.test.js code before '## 3. Implement the smallest thing that passes' where maxValue.js is introduced."
+    },
+    {
+      "text": "Tests cover edge cases beyond the happy path (e.g. empty input, missing/non-numeric column values)",
+      "passed": true,
+      "evidence": "The output adds tests for 'returns null when rows is empty' and 'ignores missing column values' after the initial happy-path test."
+    },
+    {
+      "text": "Implementation is presented as the step that makes tests pass, not written first",
+      "passed": true,
+      "evidence": "The output explicitly says '## 3. Implement the smallest thing that passes' after the test section and explains 'Now the test should pass.'"
+    }
+  ],
+  "summary": {
+    "passed": 3,
+    "failed": 0,
+    "total": 3,
+    "pass_rate": 1
+  }
+}

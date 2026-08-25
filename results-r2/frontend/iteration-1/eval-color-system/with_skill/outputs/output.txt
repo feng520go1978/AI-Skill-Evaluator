@@ -1,0 +1,88 @@
+For a **developer-tool documentation site**, I’d avoid the common “black background + neon green” terminal aesthetic unless the product itself is deeply tied to systems tooling. Documentation benefits from calm reading conditions, strong code contrast, and a sense of precision.
+
+Here’s a palette built around **“precision instrument”**: technical, trustworthy, and modern without feeling like a generic AI/dev dashboard.
+
+## Palette: **Midnight Lab**
+
+| Role | Color | Hex | Rationale |
+|---|---|---|---|
+| Page background | Deep slate | `#0F172A` | Softer than pure black; reduces eye strain during long documentation sessions |
+| Surface / cards | Slate panel | `#162033` | Creates subtle hierarchy without excessive borders |
+| Primary text | Cool white | `#E6EDF7` | High readability while avoiding harsh contrast |
+| Secondary text | Muted steel | `#94A3B8` | Keeps metadata, descriptions, and breadcrumbs quiet |
+| Brand accent | Electric cyan | `#22D3EE` | Signals technical precision; works well for links and interactive states |
+| Accent hover | Bright cyan | `#67E8F9` | Gives responsive feedback without overpowering content |
+| Success | Compiler green | `#34D399` | Familiar coding/status association |
+| Warning | Amber | `#FBBF24` | Clear attention state |
+| Error | Coral red | `#FB7185` | Softer than alarm-red; readable in dark UI |
+| Code background | Ink black | `#0B1120` | Separates code blocks from surrounding content |
+
+## Why this works for developer docs
+
+### 1. It treats code as the hero
+Documentation is not a marketing landing page. The most important content is usually:
+
+- code examples
+- API references
+- CLI output
+- configuration snippets
+
+The near-black code surface (`#0B1120`) creates a distinct “workbench” area without making the entire site feel like a terminal.
+
+### 2. Cyan creates a technical identity
+Cyan has strong associations with:
+
+- network diagrams
+- debugging tools
+- developer consoles
+- data visualization
+
+It feels engineered rather than playful. Use it sparingly:
+
+- links
+- active navigation
+- inline highlights
+- focus rings
+- key UI actions
+
+Avoid using it for every icon or decoration.
+
+### 3. Slate keeps long reading comfortable
+Pure black/white documentation sites often feel harsh. The slate range gives you:
+
+- better perceived contrast
+- less fatigue
+- clearer content grouping
+
+## Suggested usage ratios
+
+```
+Backgrounds     ████████████████████ 70%
+Text            ████████             20%
+Accent colors   ██                    5%
+Status colors   █                     5%
+```
+
+The interface should feel mostly neutral, with color appearing when something needs attention.
+
+## Example semantic tokens
+
+```css:root {
+  --bg-page: #0F172A;
+  --bg-surface: #162033;
+  --bg-code: #0B1120;
+
+  --text-primary: #E6EDF7;
+  --text-secondary: #94A3B8;
+
+  --accent: #22D3EE;
+  --accent-hover: #67E8F9;
+
+  --success: #34D399;
+  --warning: #FBBF24;
+  --error: #FB7185;
+}
+```
+
+## One distinctive design move
+Use the cyan **only as a “signal line”**: a thin vertical marker beside the active documentation section, API endpoint headings, or currently selected navigation item. It creates the feeling of a live instrument panel rather than a generic website accent.

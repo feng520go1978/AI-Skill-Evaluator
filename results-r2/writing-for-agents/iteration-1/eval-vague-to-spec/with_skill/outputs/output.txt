@@ -1,0 +1,32 @@
+A coding agent needs measurable outcomes, scope, and acceptance criteria. A stronger version would be:
+
+> **Improve dashboard performance and UI quality.**
+>
+> **Performance goals**
+> - Reduce initial dashboard load time to under 2 seconds on a typical broadband connection.
+> - Reduce the number of network requests made during initial render by at least 30%.
+> - Identify and remove unnecessary API calls, duplicate data fetching, and unused JavaScript/CSS loaded on the dashboard page.
+> - Lazy-load non-critical components (for example: secondary charts, modals, and below-the-fold content) so they do not block the initial render.
+> - Add loading states for asynchronous content so users see useful feedback instead of blank areas.
+>
+> **UI improvements**
+> - Refresh the dashboard layout to improve visual hierarchy and readability.
+> - Use consistent spacing, typography, colors, and component styles across all dashboard sections.
+> - Ensure cards, charts, tables, and controls align to a consistent grid.
+> - Improve responsiveness so the dashboard works correctly on desktop, tablet, and mobile screen sizes.
+> - Add clear empty states, error states, and loading states for dashboard widgets.
+>
+> **Implementation requirements**
+> - Preserve all existing dashboard functionality and data accuracy.
+> - Do not remove existing features unless they are confirmed unused.
+> - Reuse existing design system components where available instead of creating duplicate components.
+> - Add or update tests for any changed dashboard logic.
+>
+> **Acceptance criteria**
+> - Before/after performance measurements are recorded using the project’s existing performance tooling or Lighthouse.
+> - Dashboard initial render is measurably faster than the current version.
+> - All dashboard pages pass existing automated tests.
+> - No layout regressions occur at supported screen sizes.
+> - A reviewer can identify the main improvements from a visual comparison of before and after screenshots.
+
+This gives an AI agent concrete targets while still leaving room to inspect the codebase and choose the right implementation approach.

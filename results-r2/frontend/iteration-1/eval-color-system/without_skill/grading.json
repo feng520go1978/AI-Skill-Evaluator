@@ -1,0 +1,25 @@
+{
+  "assertion_results": [
+    {
+      "text": "Provides specific colors or values, not just adjectives like 'muted blue'",
+      "passed": true,
+      "evidence": "The output provides explicit hex values throughout, e.g. \"Primary background | Deep Slate | `#0F172A`\" and \"Brand accent | Electric Cyan | `#22D3EE`.\""
+    },
+    {
+      "text": "Assigns functional roles to each color (background, text, accent, code blocks)",
+      "passed": true,
+      "evidence": "The palette table assigns roles such as \"Primary background,\" \"Primary text,\" \"Brand accent,\" and \"Code background\" with corresponding colors; usage guidance also maps \"Body text: `#F8FAFC`\" and \"Code blocks - Background: `#020617`.\""
+    },
+    {
+      "text": "Addresses readability/contrast for long-form reading",
+      "passed": true,
+      "evidence": "The output states \"Documentation is a reading environment first, so contrast, long-session comfort, and code readability matter\" and describes \"Cloud White | `#F8FAFC` | High readability for long documentation sessions.\""
+    }
+  ],
+  "summary": {
+    "passed": 3,
+    "failed": 0,
+    "total": 3,
+    "pass_rate": 1
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "assertion_results": [
+    {
+      "text": "Proposes consulting primary/high-trust sources (protocol specs, official docs) before secondary sources like blogs",
+      "passed": true,
+      "evidence": "The output states: \"### A. Primary technical specifications (highest trust)\" and lists RFC 6455 and WHATWG HTML standard before later discussing \"Engineering experience reports\" and \"vendor blogs cautiously.\""
+    },
+    {
+      "text": "Identifies at least 3 concrete technical comparison dimensions (e.g. directionality, reconnection, proxies)",
+      "passed": true,
+      "evidence": "The output identifies multiple dimensions, including \"Server → client updates,\" \"Client → server over same channel,\" \"Automatic reconnect,\" \"Browser/platform documentation\" covering \"Enterprise proxy compatibility,\" and \"Binary messages.\""
+    },
+    {
+      "text": "Includes a verification or cross-checking step rather than accepting single-source claims",
+      "passed": true,
+      "evidence": "The output includes: \"Then confirm each item against specifications rather than blogs\" and \"I would avoid concluding 'X is faster' from a single benchmark.\""
+    }
+  ],
+  "summary": {
+    "passed": 3,
+    "failed": 0,
+    "total": 3,
+    "pass_rate": 1
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "assertion_results": [
+    {
+      "text": "Proposes consulting primary/high-trust sources (protocol specs, official docs) before secondary sources like blogs",
+      "passed": true,
+      "evidence": "States: \"I would avoid starting from blog opinions\" and \"Primary information sources I would use\" with \"These are the highest-trust sources.\""
+    },
+    {
+      "text": "Identifies at least 3 concrete technical comparison dimensions (e.g. directionality, reconnection, proxies)",
+      "passed": true,
+      "evidence": "Identifies comparison dimensions including \"Is communication bidirectional?\", \"How does reconnection work?\", and infrastructure questions such as \"How are sticky sessions handled?\" and \"Are there proxy-specific problems?\""
+    },
+    {
+      "text": "Includes a verification or cross-checking step rather than accepting single-source claims",
+      "passed": true,
+      "evidence": "Includes a \"Verification steps\" section and states: \"Then verify every row against primary specs\"; also proposes experiments measuring latency, CPU, memory, bandwidth, and failure recovery."
+    }
+  ],
+  "summary": {
+    "passed": 3,
+    "failed": 0,
+    "total": 3,
+    "pass_rate": 1
+  }
+}

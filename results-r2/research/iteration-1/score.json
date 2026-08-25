@@ -1,0 +1,36 @@
+[
+  {
+    "skill": "research",
+    "dimensions": {
+      "capability": 89,
+      "lift": 73,
+      "cost": 100,
+      "speed": 100,
+      "stability": 37,
+      "security": 100
+    },
+    "overall": 83.1,
+    "verdict": "PASS",
+    "reasons": [
+      "unstable: pass-rate stddev 0.16 across runs"
+    ],
+    "evaluation_cost": {
+      "currency": "USD",
+      "skill_cost": {
+        "usd": 0.014507,
+        "tokens": 4124
+      },
+      "eval_overhead": {
+        "usd": 0.028209,
+        "judge_usd": 0.014069,
+        "judge_tokens": 9917,
+        "baseline_usd": 0.01414,
+        "baseline_tokens": 3616
+      },
+      "total_eval_cost": {
+        "usd": 0.042716
+      }
+    },
+    "securityFindings": []
+  }
+]

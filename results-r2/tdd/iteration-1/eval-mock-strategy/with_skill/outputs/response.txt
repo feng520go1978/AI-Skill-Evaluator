@@ -1,0 +1,108 @@
+For a welcome-email function, I would **not use a real SMTP server for most tests**. I’d test at the right seam instead: verify that your signup flow asks the email-sending component to send the correct message, and keep only a small number of end-to-end tests against an actual mail system.
+
+My approach:
+
+### 1. Unit test the signup behavior (most tests)
+Treat the mail sender as an external dependency.
+
+Example seam:
+
+```
+User signup service
+        |
+        v
+ EmailSender.send(welcome_email)
+        |
+        v
+ SMTP provider
+```
+
+Test that:
+
+- a new user signup triggers an email
+- the recipient is correct
+- the template/type is correct
+- the data passed into the template is correct
+
+You can use a fake email sender:
+
+```python
+def test_signup_sends_welcome_email():
+    email_sender = FakeEmailSender()
+    signup_service = SignupService(email_sender=email_sender)
+
+    signup_service.register("alice@example.com")
+
+    assert email_sender.sent_emails == [
+        {
+            "to": "alice@example.com",
+            "template": "welcome"
+        }
+    ]
+```
+
+This test is fast, deterministic, and doesn't depend on network availability.
+
+### 2. Test the email composition separately
+If your email generation has logic (HTML rendering, links, localization, personalization), test that at the template boundary:
+
+- subject is correct
+- required variables are present
+- unsubscribe links/tracking parameters are included if applicable
+
+Avoid asserting the entire generated HTML unless the HTML itself is the product you care about.
+
+### 3. Use a fake SMTP server for integration tests
+For a higher-level test, use something like:
+
+- MailHog
+- Mailpit
+- smtp4dev
+
+Your app talks SMTP, but the server just captures messages locally.
+
+Example flow:
+
+```
+Signup API
+    |
+    v
+Application SMTP client
+    |
+    v
+Local fake SMTP server
+    |
+    v
+Assert captured email
+```
+
+This catches configuration problems like:
+
+- SMTP authentication issues
+- wrong ports
+- encoding problems
+- MIME formatting issues
+
+without sending real emails.
+
+### 4. Avoid real SMTP in normal CI
+A real provider (SendGrid, SES, Gmail SMTP, etc.) introduces:
+
+- flaky network dependencies
+- rate limits
+- accidental emails to real users
+- credential management problems
+- slower tests
+
+I’d reserve it for a deployment smoke test, with a dedicated test account.
+
+### 5. A practical test pyramid
+
+| Test | SMTP? | Purpose |
+|---|---|---|
+| Signup service unit test | No | "Did we request a welcome email?" |
+| Email rendering test | No | "Is the message correct?" |
+| Integration test with Mailpit/MailHog | Fake SMTP | "Does the email pipeline work?" |
+| Production smoke test | Real provider | "Can we actually deliver?" |
+
+The key is to test **your behavior**, not that SMTP itself works. SMTP providers already test SMTP; your code needs tests around the contract you depend on.

@@ -1,0 +1,59 @@
+Before changing the implementation, I’d lock down the current intended behavior with regression tests around the known failure modes. Since this function is converting **user-entered titles**, I’d test correctness, safety, and edge cases.
+
+Assuming the desired slug behavior is “lowercase words separated by hyphens,” I’d add tests like:
+
+```js
+describe("slugify", () => {
+  test("lowercases a simple title", () => {
+    expect(slugify("Hello World")).toBe("hello-world");
+  });
+
+  test("replaces multiple spaces, not just the first one", () => {
+    expect(slugify("Hello Big World")).toBe("hello-big-world");
+  });
+
+  test("handles leading and trailing spaces", () => {
+    expect(slugify("  Hello World  ")).toBe("hello-world");
+  });
+
+  test("handles repeated spaces", () => {
+    expect(slugify("Hello   World")).toBe("hello-world");
+  });
+
+  test("does not leave uppercase characters", () => {
+    expect(slugify("My New TITLE")).toBe("my-new-title");
+  });
+
+  test("handles empty input", () => {
+    expect(slugify("")).toBe("");
+  });
+
+  test("handles punctuation in titles", () => {
+    expect(slugify("Hello, World!")).toBe("hello-world");
+  });
+
+  test("handles non-ASCII user input", () => {
+    expect(slugify("Café Résumé")).toBe("café-résumé");
+  });
+});
+```
+
+The **most important regression test for the current bug** is probably:
+
+```js
+test("replaces every space, not only the first", () => {
+  expect(slugify("A Very Long Title")).toBe("a-very-long-title");
+});
+```
+
+because JavaScript’s `String.replace(" ", "-")` only replaces the first occurrence. A naive fix like changing it to `.replace(/\s/, "-")` would still fail that test, so it forces the implementation toward a global replacement.
+
+I’d also decide explicitly whether these behaviors are part of the contract before fixing:
+
+- Should `"Hello   World"` become `"hello-world"` or `"hello---world"`?
+- Should punctuation be removed?
+- Should accents be preserved (`café`) or normalized (`cafe`)?
+- Should symbols like `&` become words (`"A & B"` → `"a-and-b"`)?
+- Should non-string inputs be accepted or rejected?
+
+Those tests prevent accidentally changing the slug format while fixing the obvious bug.

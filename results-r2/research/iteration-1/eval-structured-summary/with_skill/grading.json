@@ -1,0 +1,25 @@
+{
+  "assertion_results": [
+    {
+      "text": "Output uses clear section structure suitable for a decision document",
+      "passed": true,
+      "evidence": "Uses a decision-document structure with headings including \"Executive Summary\", \"Decision Context\", \"Costs and Risks\", \"Deployment Recommendation\", \"Decision Criteria\", and \"Suggested Engineering Position\"."
+    },
+    {
+      "text": "Distinguishes confident facts from uncertain or time-sensitive claims",
+      "passed": true,
+      "evidence": "Separates factual statements such as \"HTTP/3 support is effectively universal among modern clients\" from qualified statements such as \"Support maturity varies by feature set, operational tooling, and platform\" and \"Expected impact\" tables using scenario-dependent benefits."
+    },
+    {
+      "text": "Includes caveats about verification or recency rather than presenting everything as settled",
+      "passed": true,
+      "evidence": "Includes qualification and measurement caveats such as \"Benefits depend heavily on workload\" and the recommendation to \"Measure: adoption percentage, latency, errors, fallback rates\" before deeper investment."
+    }
+  ],
+  "summary": {
+    "passed": 3,
+    "failed": 0,
+    "total": 3,
+    "pass_rate": 1
+  }
+}

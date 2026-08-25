@@ -1,0 +1,84 @@
+For a developer-tool documentation site, I’d aim for a palette that feels **precise, technical, calm, and trustworthy** rather than “cyberpunk.” Documentation is a reading environment first, so contrast, long-session comfort, and code readability matter more than visual novelty.
+
+## Palette: “Midnight Terminal”
+
+{"query":["developer documentation website dark theme UI","modern developer portal interface"],"aspect_ratio":"16:9"}
+
+| Role | Color | Hex | Rationale |
+|---|---|---|---|
+| Primary background | Deep Slate | `#0F172A` | A softer alternative to pure black; reduces eye strain while keeping a technical feel. |
+| Secondary background | Terminal Navy | `#111827` | Creates hierarchy for sidebars, code panels, and navigation. |
+| Surface / cards | Graphite Blue | `#1E293B` | Gives panels separation without heavy borders. |
+| Primary text | Cloud White | `#F8FAFC` | High readability for long documentation sessions. |
+| Secondary text | Cool Gray | `#94A3B8` | Keeps metadata, descriptions, and labels visually quiet. |
+| Brand accent | Electric Cyan | `#22D3EE` | Signals technology, links, interactive elements, and focus states. |
+| Secondary accent | Developer Green | `#34D399` | Useful for success states, CLI output, and “installed/verified” indicators. |
+| Warning | Amber | `#FBBF24` | Familiar developer convention for caution messages. |
+| Error | Coral Red | `#F87171` | Strong enough for failures without feeling aggressive. |
+| Code background | Near Black | `#020617` | Separates code from prose and mimics terminal environments. |
+| Inline code highlight | Muted Indigo | `#312E81` | Adds distinction without overwhelming syntax colors. |
+
+## Usage guidance
+
+### Navigation
+- Background: `#0F172A`
+- Active link: `#22D3EE`
+- Inactive links: `#94A3B8`
+
+The cyan accent creates a clear “you are here” indicator without making every element compete for attention.
+
+### Documentation content
+- Page background: `#0F172A`
+- Body text: `#F8FAFC`
+- Headings: `#FFFFFF`
+- Supporting text: `#94A3B8`
+
+The contrast hierarchy mirrors how developers scan docs: title → section → explanation → details.
+
+### Code blocks
+- Background: `#020617`
+- Border: `#1E293B`
+- Syntax:
+  - Keywords: cyan
+  - Strings: green
+  - Constants: amber
+  - Errors: red
+
+A darker code surface helps examples feel like a familiar IDE environment.
+
+### Buttons
+Primary:
+- Background: `#22D3EE`
+- Text: `#082F49`
+
+Secondary:
+- Border: `#334155`
+- Text: `#F8FAFC`
+
+The primary action stands out but avoids the common “giant glowing neon button” developer aesthetic.
+
+## Light-mode companion palette
+
+If the docs need light mode:
+
+| Role | Hex |
+|---|---|
+| Background | `#F8FAFC` |
+| Surface | `#FFFFFF` |
+| Text | `#0F172A` |
+| Muted text | `#475569` |
+| Border | `#E2E8F0` |
+| Accent | `#0891B2` |
+| Success | `#059669` |
+| Warning | `#D97706` |
+| Error | `#DC2626` |
+
+## Why this works for developer tools
+
+- **Feels technical without cliché:** avoids excessive neon, gradients, and “hacker” imagery.
+- **Supports dense information:** muted surfaces let documentation content dominate.
+- **Matches developer expectations:** terminal-inspired dark backgrounds, familiar status colors, clear syntax hierarchy.
+- **Scales well:** works for API references, SDK docs, dashboards, changelogs, and CLI documentation.
+- **Accessible:** the palette naturally supports strong text contrast and semantic status colors.
+
+A good brand personality for this palette would be: **“the reliable engineer sitting next to you, not the flashy startup demo.”**

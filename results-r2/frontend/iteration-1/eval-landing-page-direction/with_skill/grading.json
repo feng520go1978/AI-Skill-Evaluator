@@ -1,0 +1,25 @@
+{
+  "assertion_results": [
+    {
+      "text": "Commits to a SPECIFIC direction rather than listing generic options or hedging",
+      "passed": true,
+      "evidence": "The output commits to a direction: \"I’d position the app less like a productivity tool and more like a quiet writing studio\" and states \"The design’s single bold choice is treating the interface as a living manuscript rather than a dashboard.\""
+    },
+    {
+      "text": "Typography and color choices are concrete (named characteristics, not just 'nice fonts')",
+      "passed": true,
+      "evidence": "The output specifies colors with names and hex codes, including \"Warm parchment #F3EEE4\" and \"Charcoal ink #181716\", and names typefaces including \"Fraunces\", \"Literata\", \"Inter\", \"IBM Plex Sans\", and \"IBM Plex Mono\" with usage guidance."
+    },
+    {
+      "text": "Design choices are explicitly connected to the target audience (writers) rather than generic best practices",
+      "passed": true,
+      "evidence": "The output repeatedly ties choices to writers, e.g. \"For writers, the emotional promise is different: capture a thought before it disappears, develop a voice, return to unfinished ideas\" and \"This communicates the app’s identity instantly: it is not just storing notes; it is helping writers think.\""
+    }
+  ],
+  "summary": {
+    "passed": 3,
+    "failed": 0,
+    "total": 3,
+    "pass_rate": 1
+  }
+}

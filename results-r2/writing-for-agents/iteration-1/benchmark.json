@@ -1,0 +1,45 @@
+{
+  "run_summary": {
+    "with_skill": {
+      "pass_rate": {
+        "mean": 0.888889,
+        "stddev": 0.157135
+      },
+      "time_seconds": {
+        "mean": 3.182889,
+        "stddev": 4.611593
+      },
+      "tokens": {
+        "mean": 3079.333333,
+        "stddev": 354.083167
+      },
+      "cost_usd": {
+        "mean": 0.005078,
+        "stddev": 0.001405
+      }
+    },
+    "without_skill": {
+      "pass_rate": {
+        "mean": 0.777778,
+        "stddev": 0.31427
+      },
+      "time_seconds": {
+        "mean": 3.302333,
+        "stddev": 4.989883
+      },
+      "tokens": {
+        "mean": 798.666667,
+        "stddev": 426.628123
+      },
+      "cost_usd": {
+        "mean": 0.003066,
+        "stddev": 0.001696
+      }
+    },
+    "delta": {
+      "pass_rate": 0.111111,
+      "time_seconds": -0.119444,
+      "tokens": 2280.666666
+    }
+  }
+}

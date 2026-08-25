@@ -1,0 +1,25 @@
+{
+  "assertion_results": [
+    {
+      "text": "Commits to a SPECIFIC direction rather than listing generic options or hedging",
+      "passed": true,
+      "evidence": "Output commits to “a quiet creative studio” direction and names the concept “The writer’s desk, reimagined,” with specific choices like avoiding “productivity SaaS” aesthetics."
+    },
+    {
+      "text": "Typography and color choices are concrete (named characteristics, not just 'nice fonts')",
+      "passed": true,
+      "evidence": "Output specifies “a distinctive serif for headlines,” “a clean sans-serif for UI,” and colors including “#FAF7F2,” “deep navy,” “forest green,” “muted burgundy,” “midnight blue,” and “deep green.”"
+    },
+    {
+      "text": "Design choices are explicitly connected to the target audience (writers) rather than generic best practices",
+      "passed": true,
+      "evidence": "Output repeatedly ties choices to writers, e.g. “Writers spend their lives with words; the landing page should respect that” and “The audience identifies as creators, not ‘users.’”"
+    }
+  ],
+  "summary": {
+    "passed": 3,
+    "failed": 0,
+    "total": 3,
+    "pass_rate": 1
+  }
+}

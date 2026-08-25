@@ -1,0 +1,25 @@
+{
+  "assertion_results": [
+    {
+      "text": "Provides specific colors or values, not just adjectives like 'muted blue'",
+      "passed": true,
+      "evidence": "The output provides named colors with hex values, e.g. 'Page background | Deep slate | `#0F172A`', 'Brand accent | Electric cyan | `#22D3EE`', and 'Code background | Ink black | `#0B1120`'."
+    },
+    {
+      "text": "Assigns functional roles to each color (background, text, accent, code blocks)",
+      "passed": true,
+      "evidence": "The palette table assigns roles including 'Page background', 'Surface / cards', 'Primary text', 'Secondary text', 'Brand accent', 'Success', 'Warning', 'Error', and 'Code background' with corresponding colors."
+    },
+    {
+      "text": "Addresses readability/contrast for long-form reading",
+      "passed": true,
+      "evidence": "The output states '#0F172A' 'reduces eye strain during long documentation sessions' and explains that the slate range provides 'better perceived contrast' and 'less fatigue' for long reading."
+    }
+  ],
+  "summary": {
+    "passed": 3,
+    "failed": 0,
+    "total": 3,
+    "pass_rate": 1
+  }
+}

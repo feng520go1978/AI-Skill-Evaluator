@@ -1,0 +1,41 @@
+A coding agent needs measurable goals, scope, and acceptance criteria. A stronger version of the requirement would be:
+
+> **Improve the dashboard’s performance and visual design.**
+>
+> ### Performance requirements
+> - Reduce initial dashboard load time so that the first meaningful render completes in under **2 seconds** on a standard broadband connection.
+> - Measure and improve Core Web Vitals:
+>   - Largest Contentful Paint (LCP): target **< 2.5s**
+>   - Cumulative Layout Shift (CLS): target **< 0.1**
+>   - First Input Delay / Interaction to Next Paint: target **< 200ms**
+> - Identify and fix the largest performance bottlenecks:
+>   - Lazy-load non-critical dashboard widgets below the fold.
+>   - Avoid loading unused JavaScript bundles.
+>   - Compress and resize images/assets.
+>   - Cache API responses where data freshness allows.
+>   - Prevent unnecessary component re-renders.
+> - Add loading states for widgets that fetch asynchronous data.
+> - Ensure the dashboard remains usable while data is still loading.
+>
+> ### Visual design requirements
+> - Update the dashboard UI to have a cleaner, more modern layout while preserving all existing functionality.
+> - Improve:
+>   - Spacing and alignment consistency.
+>   - Typography hierarchy.
+>   - Color contrast and readability.
+>   - Card, table, and chart styling consistency.
+>   - Mobile and tablet responsiveness.
+> - Use a consistent design system:
+>   - Standardize padding, border radius, font sizes, and component styles.
+>   - Replace inconsistent UI patterns with reusable components.
+> - Ensure all interactive elements have clear hover, focus, and disabled states.
+>
+> ### Acceptance criteria
+> - All existing dashboard features continue to work without regressions.
+> - Automated tests pass after the changes.
+> - Lighthouse performance score improves to **90+** on desktop.
+> - The dashboard passes accessibility checks for WCAG AA compliance.
+> - A before/after performance comparison is included showing load time and Core Web Vitals improvements.
+> - Screenshots or a design review link are provided showing the updated UI.
+
+This gives an AI coding agent concrete implementation targets instead of requiring it to guess what “faster” and “nicer” mean.

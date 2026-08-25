@@ -1,0 +1,25 @@
+{
+  "assertion_results": [
+    {
+      "text": "Examines benchmark methodology differences before trusting either claim",
+      "passed": true,
+      "evidence": "The response says it would \"treat the disagreement as a benchmark validity problem\" and compares workload, metrics, library versions, runtime, hardware, dataset size, warmup, runs, and reporting before deciding."
+    },
+    {
+      "text": "Flags potential bias (vendor-published benchmarks, outdated versions, non-matching workload)",
+      "passed": false,
+      "evidence": "The response flags some bias sources, such as \"Is Source A maintained by Library X’s authors?\" and \"Benchmark uses tiny inputs,\" but it does not explicitly flag vendor-published benchmarks or outdated versions as bias concerns."
+    },
+    {
+      "text": "Concludes with reproducing the benchmark against one's own real workload as the deciding step",
+      "passed": true,
+      "evidence": "The response recommends reproducing \"Source A’s exact benchmark,\" \"Source B’s exact benchmark,\" and \"a neutral benchmark designed independently,\" then concludes that \"the relevant benchmark is D\" and \"identify which benchmark matches the decision you actually need to make.\""
+    }
+  ],
+  "summary": {
+    "passed": 2,
+    "failed": 1,
+    "total": 3,
+    "pass_rate": 0.6666666666666666
+  }
+}

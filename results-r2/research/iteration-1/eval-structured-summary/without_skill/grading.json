@@ -1,0 +1,25 @@
+{
+  "assertion_results": [
+    {
+      "text": "Output uses clear section structure suitable for a decision document",
+      "passed": true,
+      "evidence": "The output is organized with headings such as \"Executive Summary\", \"Current Adoption State\", \"Costs and Risks\", \"Recommendation Framework\", and \"Key Decision Questions\"."
+    },
+    {
+      "text": "Distinguishes confident facts from uncertain or time-sensitive claims",
+      "passed": false,
+      "evidence": "The output contains some qualifiers such as \"Potential issues\" and \"HTTP/3 is not automatically faster everywhere,\" but it does not consistently distinguish factual claims from uncertain or time-sensitive claims with explicit confidence or uncertainty framing."
+    },
+    {
+      "text": "Includes caveats about verification or recency rather than presenting everything as settled",
+      "passed": false,
+      "evidence": "The output recommends measurement and validation (for example, \"measure real user impact\" and \"Required checks\"), but it does not include explicit caveats about verifying recency or that adoption/support claims may change over time."
+    }
+  ],
+  "summary": {
+    "passed": 1,
+    "failed": 2,
+    "total": 3,
+    "pass_rate": 0.3333333333333333
+  }
+}

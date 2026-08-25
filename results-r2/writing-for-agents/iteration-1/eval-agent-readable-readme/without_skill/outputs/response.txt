@@ -1,0 +1,86 @@
+:::writing{variant="document" id="48391" title="README Section: Running deploykit"}
+## Running `deploykit`
+
+`deploykit` is the repository CLI for initializing, planning, applying, and rolling back deployments.
+
+### Prerequisites
+
+Before running `deploykit`, ensure the repository dependencies are installed and the CLI is available in your environment.
+
+Verify the CLI is installed:
+
+```bash
+deploykit --help
+```
+
+### Command flow
+
+Most workflows follow this order:
+
+1. `init` — prepare deployment configuration
+2. `plan` — preview the changes that will be applied
+3. `apply` — execute the deployment
+4. `rollback` — revert a previous deployment
+
+### Initialize a deployment
+
+Run `init` to create or validate the deployment configuration:
+
+```bash
+deploykit init
+```
+
+Use this command when setting up a new environment or when deployment metadata needs to be generated.
+
+### Review planned changes
+
+Run `plan` before applying changes:
+
+```bash
+deploykit plan
+```
+
+`plan` should be used to inspect the expected actions before making any modifications. AI coding agents should run this step before `apply` to verify that the proposed deployment matches the intended code changes.
+
+### Apply a deployment
+
+Run `apply` to execute the deployment plan:
+
+```bash
+deploykit apply
+```
+
+Only run `apply` after reviewing the output from `plan`.
+
+### Roll back a deployment
+
+Run `rollback` to revert the latest deployment:
+
+```bash
+deploykit rollback
+```
+
+Use rollback when a deployment introduces unexpected behavior or when restoring the previous known-good state.
+
+### Typical agent workflow
+
+When modifying deployment-related code, follow this sequence:
+
+```bash
+deploykit init
+deploykit plan
+deploykit apply
+```
+
+If validation fails after deployment:
+
+```bash
+deploykit rollback
+```
+
+### Notes for AI coding agents
+
+- Prefer running `plan` before any `apply` operation.
+- Do not skip `init` when working in a fresh checkout or newly created environment.
+- Treat `apply` as a state-changing operation and verify the plan output first.
+- Use `rollback` only when reverting an already-applied deployment.:::

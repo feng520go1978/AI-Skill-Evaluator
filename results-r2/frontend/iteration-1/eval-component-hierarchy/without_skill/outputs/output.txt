@@ -1,0 +1,257 @@
+A strong pricing page should guide users from **understanding → comparing → choosing → resolving objections**. For 3 tiers plus FAQ, structure the page so the middle tier receives the strongest visual and conversion emphasis.
+
+## Component hierarchy
+
+```
+PricingPage
+├── PricingHero
+│   ├── Eyebrow (optional)
+│   ├── Heading
+│   ├── SupportingCopy
+│   └── BillingToggle (Monthly / Annual)
+│
+├── PricingGrid
+│   ├── PricingCard (Tier 1: Starter)
+│   │   ├── TierHeader
+│   │   ├── PriceDisplay
+│   │   ├── BillingNote
+│   │   ├── FeatureList
+│   │   └── CTAButton
+│   │
+│   ├── PricingCard (Tier 2: Pro / Recommended)
+│   │   ├── PopularBadge
+│   │   ├── TierHeader
+│   │   ├── PriceDisplay
+│   │   ├── BillingNote
+│   │   ├── FeatureList
+│   │   └── PrimaryCTAButton
+│   │
+│   └── PricingCard (Tier 3: Enterprise)
+│       ├── TierHeader
+│       ├── PriceDisplay ("Custom" or value)
+│       ├── FeatureList
+│       └── ContactSalesCTA
+│
+├── ComparisonSupport (optional)
+│   ├── FeatureHighlights
+│   └── TrustSignals
+│
+├── FAQSection
+│   ├── FAQHeader
+│   ├── FAQAccordion
+│   │   ├── FAQItem
+│   │   ├── FAQItem
+│   │   └── FAQItem
+│   └── ContactSupportCTA
+│
+└── FinalCTA
+```
+
+---
+
+## Visual emphasis strategy
+
+### 1. Hero: establish confidence, not complexity
+**Goal:** Reduce hesitation before users see prices.
+
+- Large, simple headline:
+  - “Choose the plan that fits your team”
+  - “Simple pricing that scales with you”
+- Keep copy short.
+- Put annual/monthly toggle near the pricing cards, not buried elsewhere.
+- Add reassurance:
+  - Free trial
+  - No credit card required
+  - Cancel anytime
+
+Visual weight:
+```
+Headline ██████████
+Subcopy  █████
+Toggle   ████
+```
+
+---
+
+### 2. Pricing cards: create a clear hierarchy
+
+Three cards should not have equal visual weight.
+
+Recommended emphasis:
+
+```
+Starter       Pro (Recommended)       Enterprise
+
+ 80%              120%                  90%
+ height           height                 height
+ neutral          highlighted            premium
+```
+
+### Tier 1 — Starter
+**Purpose:** Entry point.
+
+Visual treatment:
+- Lowest emphasis
+- Neutral border
+- Shorter feature list
+- Secondary CTA
+
+Example:
+> Get started
+
+---
+
+### Tier 2 — Pro (primary conversion target)
+**Purpose:** Default choice.
+
+Visual treatment:
+- Slightly larger card
+- Elevated position (desktop)
+- Stronger border/shadow
+- Badge:
+  - “Most Popular”
+  - “Best Value”
+  - “Recommended”
+- Primary button styling
+
+Example:
+
+```
+        ★ Recommended
+
+       PRO
+     $29/month
+
+  ✓ Everything in Starter
+  ✓ Advanced analytics
+  ✓ Team collaboration
+
+     [Start Free Trial]
+```
+
+This card should attract attention before users consciously compare.
+
+---
+
+### Tier 3 — Enterprise
+**Purpose:** Capture high-value users without distracting everyone.
+
+Visual treatment:
+- Premium but not dominant
+- Emphasize flexibility:
+  - Custom limits
+  - Security
+  - Support
+  - Integrations
+
+CTA changes from purchase to conversation:
+
+Instead of:
+> Buy now
+
+Use:
+> Contact Sales
+
+---
+
+## Feature list strategy
+
+Avoid long identical lists. Use progressive disclosure.
+
+Example:
+
+```
+Starter
+✓ 5 projects
+✓ Basic analytics
+✓ Email support
+
+Pro
+✓ Everything in Starter
+✓ Unlimited projects
+✓ Advanced analytics
+✓ Priority support
+
+Enterprise
+✓ Everything in Pro
+✓ SSO
+✓ Custom contracts
+✓ Dedicated support
+```
+
+Highlight differences rather than repeating everything.
+
+---
+
+## FAQ hierarchy
+
+FAQ should answer purchase objections, not explain the product.
+
+Recommended order:
+
+```
+FAQSection
+
+1. Billing questions
+   "Can I change plans later?"
+
+2. Trial questions
+   "Is there a free trial?"
+
+3. Usage questions
+   "What happens if I exceed limits?"
+
+4. Account questions
+   "Can I cancel anytime?"
+
+5. Enterprise questions
+   "Do you support custom agreements?"
+```
+
+Visual treatment:
+- Full-width section
+- Accordion rows
+- Plenty of whitespace
+- Keep answers concise
+
+---
+
+## Responsive behavior
+
+Desktop:
+
+```
+[ Starter ] [ ⭐ Pro ] [ Enterprise ]
+```
+
+Mobile:
+
+```
+⭐ Pro
+[CTA]
+
+Starter
+[CTA]
+
+Enterprise
+[CTA]
+
+FAQ
+```
+
+Put the recommended plan first on mobile because users scroll rather than scan horizontally.
+
+---
+
+## Key conversion principles
+
+| Element | Emphasis |
+|---|---|
+| Recommended badge | High |
+| Pro CTA | Highest |
+| Price | High |
+| Feature differences | Medium |
+| FAQ | Trust-building |
+| Enterprise details | Targeted |
+
+The page should make the decision feel like: **“Most people choose Pro; Starter is for trying it; Enterprise is for special needs.”**

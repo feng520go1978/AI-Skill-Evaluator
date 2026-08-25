@@ -1,0 +1,25 @@
+{
+  "assertion_results": [
+    {
+      "text": "Commands are documented with explicit invocation syntax and expected outcome per command",
+      "passed": true,
+      "evidence": "Each command section includes an invocation code block (for example `deploykit init`, `deploykit plan`, `deploykit apply`, `deploykit rollback`) and a 'Completion criteria' section describing expected results such as 'The deploykit configuration and required local state are created' and 'The rollback operation completes.'"
+    },
+    {
+      "text": "Preconditions or ordering constraints are stated explicitly (e.g. must run init before apply)",
+      "passed": true,
+      "evidence": "The README states 'Use the commands below in order for the normal deployment lifecycle' and later states 'Use this before `apply` to inspect intended changes' and 'Run this only after confirming the output from `deploykit plan`.'"
+    },
+    {
+      "text": "Writing avoids ambiguous pronouns/vague references that would confuse an automated reader",
+      "passed": true,
+      "evidence": "Commands and references are anchored by headings and explicit names, for example '#### `deploykit apply`' followed by 'Execute the deployment plan' and 'Run this only after confirming the output from `deploykit plan`,' making references resolve to specific commands."
+    }
+  ],
+  "summary": {
+    "passed": 3,
+    "failed": 0,
+    "total": 3,
+    "pass_rate": 1
+  }
+}

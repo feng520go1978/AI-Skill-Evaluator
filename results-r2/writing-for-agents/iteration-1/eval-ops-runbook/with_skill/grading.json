@@ -1,0 +1,25 @@
+{
+  "assertion_results": [
+    {
+      "text": "Diagnostic steps appear in a logical ordered sequence covering the three failure domains (network/SFTP, file format/transformation, database)",
+      "passed": true,
+      "evidence": "The runbook orders recovery as \"2. Check SFTP source files\", \"3. Validate downloaded CSV files\", \"4. Check transformation errors\", and \"5. Verify Postgres load state\"."
+    },
+    {
+      "text": "Each step indicates how to determine success or failure",
+      "passed": true,
+      "evidence": "Each major section includes \"Completion criteria\", e.g. \"The failed pipeline stage and error message are identified\" and \"Database state is known and safe for a retry\"."
+    },
+    {
+      "text": "No critical steps left implicit (e.g. does not assume the reader knows where logs live)",
+      "passed": false,
+      "evidence": "The runbook instructs the reader to \"Review the importer logs\" and \"Check Postgres logs\" but does not specify where those logs are located or how to find them."
+    }
+  ],
+  "summary": {
+    "passed": 2,
+    "failed": 1,
+    "total": 3,
+    "pass_rate": 0.6666666666666666
+  }
+}

@@ -1,0 +1,2634 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Agent Skills Eval report</title>
+  <style>
+  :root {
+    --fg: #1a1f24;
+    --muted: #6a737d;
+    --bg: #ffffff;
+    --bg-alt: #f6f8fa;
+    --border: #e1e4e8;
+    --ok: #1a7f37;
+    --warn: #b08800;
+    --bad: #cf222e;
+    --ok-bg: #dafbe1;
+    --warn-bg: #fff8c5;
+    --bad-bg: #ffebe9;
+    --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 14px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; color: var(--fg); background: var(--bg); }
+  header.hero { background: linear-gradient(180deg, #fafbfc 0%, #f0f2f5 100%); border-bottom: 1px solid var(--border); padding: 24px 32px; }
+  header.hero h1 { margin: 0 0 4px; font-size: 22px; }
+  header.hero .meta { color: var(--muted); font-size: 13px; }
+  header.hero .totals { margin-top: 16px; display: flex; gap: 16px; flex-wrap: wrap; }
+  header.hero .stat { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 12px 16px; min-width: 120px; }
+  header.hero .stat .label { display: block; font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
+  header.hero .stat .value { display: block; font-size: 22px; font-weight: 600; margin-top: 2px; }
+  header.hero .stat.ok .value { color: var(--ok); }
+  header.hero .stat.bad .value { color: var(--bad); }
+  main { padding: 24px 32px; max-width: 1200px; margin: 0 auto; }
+  h2 { margin: 0 0 4px; font-size: 18px; }
+  .muted { color: var(--muted); font-size: 12px; }
+  table.summary { width: 100%; border-collapse: collapse; margin-bottom: 32px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+  table.summary th, table.summary td { padding: 10px 12px; border-bottom: 1px solid var(--border); text-align: left; }
+  table.summary th { background: var(--bg-alt); font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); }
+  table.summary td.num { text-align: right; font-variant-numeric: tabular-nums; }
+  table.summary tr.skill-row.bad { background: var(--bad-bg); }
+  table.summary tr.skill-row.warn { background: var(--warn-bg); }
+  table.summary tr.skill-row.ok td { background: transparent; }
+  table.summary tr.skill-row a { color: var(--fg); text-decoration: none; font-weight: 500; }
+  table.summary tr.skill-row a:hover { text-decoration: underline; }
+  .bar { width: 100px; height: 10px; background: var(--bg-alt); border-radius: 5px; overflow: hidden; }
+  .bar .fill { height: 100%; }
+  .bar.ok .fill { background: var(--ok); }
+  .bar.warn .fill { background: var(--warn); }
+  .bar.bad .fill { background: var(--bad); }
+  article.skill { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 20px; margin-bottom: 20px; }
+  article.skill header h2 .badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: 500; vertical-align: middle; margin-left: 8px; }
+  article.skill header h2 .badge.ok { background: var(--ok-bg); color: var(--ok); }
+  article.skill header h2 .badge.warn { background: var(--warn-bg); color: var(--warn); }
+  article.skill header h2 .badge.bad { background: var(--bad-bg); color: var(--bad); }
+  article.skill .delta { margin-top: 8px; font-size: 13px; }
+  article.skill .delta.ok { color: var(--ok); }
+  article.skill .delta.bad { color: var(--bad); }
+  details.eval { border: 1px solid var(--border); border-radius: 6px; margin-top: 12px; }
+  details.eval > summary { padding: 10px 14px; cursor: pointer; display: flex; gap: 10px; align-items: center; }
+  details.eval[open] > summary { border-bottom: 1px solid var(--border); }
+  details.eval.bad > summary { background: var(--bad-bg); }
+  details.eval.ok > summary { background: var(--ok-bg); }
+  details.eval .eval-status { font-weight: 600; }
+  details.eval.bad .eval-status { color: var(--bad); }
+  details.eval.ok .eval-status { color: var(--ok); }
+  .eval-body { padding: 12px 16px; }
+  .run { padding: 12px 0; border-top: 1px dashed var(--border); }
+  .run:first-child { border-top: none; padding-top: 0; }
+  .run-head { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+  .mode { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.04em; }
+  .mode-with_skill { background: #ddf4ff; color: #0969da; }
+  .mode-without_skill { background: #fff1e5; color: #bc4c00; }
+  .status.ok { color: var(--ok); font-weight: 600; }
+  .status.bad { color: var(--bad); font-weight: 600; }
+  .run details > summary { cursor: pointer; font-size: 12px; color: var(--muted); padding: 4px 0; }
+  .run details[open] > summary { color: var(--fg); }
+  .run pre { background: var(--bg-alt); border: 1px solid var(--border); border-radius: 6px; padding: 10px 12px; font-family: var(--mono); font-size: 12px; line-height: 1.45; overflow-x: auto; white-space: pre-wrap; word-break: break-word; max-height: 400px; overflow-y: auto; }
+  table.assertions { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 13px; }
+  table.assertions th, table.assertions td { padding: 6px 8px; border-bottom: 1px solid var(--border); text-align: left; vertical-align: top; }
+  table.assertions th { background: var(--bg-alt); font-size: 11px; text-transform: uppercase; color: var(--muted); }
+  table.assertions tr.bad td { background: var(--bad-bg); }
+  table.assertions .check { color: var(--ok); font-weight: 600; }
+  table.assertions .x { color: var(--bad); font-weight: 600; }
+  table.assertions .evidence { color: var(--muted); font-size: 12px; }
+  details.tools { margin: 12px 0; }
+  details.tools > summary { cursor: pointer; font-size: 12px; color: var(--muted); padding: 4px 0; }
+  details.tools[open] > summary { color: var(--fg); font-weight: 500; }
+  table.tool-calls { width: 100%; border-collapse: collapse; margin: 6px 0 8px; font-size: 13px; }
+  table.tool-calls th, table.tool-calls td { padding: 6px 8px; border-bottom: 1px solid var(--border); text-align: left; vertical-align: top; }
+  table.tool-calls th { background: var(--bg-alt); font-size: 11px; text-transform: uppercase; color: var(--muted); }
+  table.tool-calls .tool-name { font-family: var(--mono); color: #b08800; font-weight: 600; }
+  pre.tool-args { background: var(--bg-alt); border: 1px solid var(--border); border-radius: 4px; padding: 6px 8px; margin: 0; font-family: var(--mono); font-size: 12px; line-height: 1.4; overflow-x: auto; white-space: pre-wrap; word-break: break-word; max-height: 240px; overflow-y: auto; }
+  .empty { padding: 60px 20px; text-align: center; color: var(--muted); }
+</style>
+</head>
+<body>
+  <header class="hero">
+    <h1>Agent Skills Eval report</h1>
+    <div class="meta">
+      generated 2026-08-25T10:00:51.533Z
+      · target <code>auto</code>
+      · judge <code>auto</code>
+    </div>
+    <div class="totals">
+      <div class="stat"><span class="label">skills</span><span class="value">1</span></div>
+      <div class="stat"><span class="label">evals</span><span class="value">3</span></div>
+      <div class="stat ok"><span class="label">passed</span><span class="value">8</span></div>
+      <div class="stat bad"><span class="label">failed</span><span class="value">1</span></div>
+      <div class="stat ok"><span class="label">pass rate</span><span class="value">88.9%</span></div>
+    </div>
+  </header>
+  <main>
+        <table class="summary">
+          <thead>
+            <tr>
+              <th>Skill</th>
+              <th class="num">Evals</th>
+              <th class="num">Passed</th>
+              <th class="num">Pass rate</th>
+              <th></th>
+              <th class="num">Avg time</th>
+              <th class="num">Avg tokens</th>
+            </tr>
+          </thead>
+          <tbody>
+    <tr class="skill-row ok">
+      <td><a href="#skill-frontend-design">frontend-design</a>
+          <div class="muted"></div></td>
+      <td class="num">3</td>
+      <td class="num">8/9</td>
+      <td class="num">88.9%</td>
+      <td class="bar-cell"><div class="bar ok"><div class="fill" style="width:89%"></div></div></td>
+      <td class="num">20ms</td>
+      <td class="num">2688</td>
+    </tr>
+  </tbody>
+        </table>
+        
+    <article class="skill" id="skill-frontend-design">
+      <header>
+        <h2>frontend-design <span class="badge ok">88.9%</span></h2>
+        <div class="muted"></div>
+        <div class="muted">8/9 assertions · 3 evals · 20ms avg · 2688 tokens avg</div>
+        <div class="delta ok">Δ vs baseline: pass-rate +11.11pp · time +0.49s · tokens +1701.33</div>
+      </header>
+      <div class="evals">
+    <details class="eval ok">
+      <summary>
+        <span class="eval-status">✓</span>
+        <span class="eval-name">eval-color-system</span>
+        <span class="muted">6/6 assertions</span>
+      </summary>
+      <div class="eval-body">
+    <section class="run">
+      <header class="run-head">
+        <span class="mode mode-with_skill">with_skill</span>
+        <span class="status ok">PASS</span>
+        <span class="muted">20ms · 2441 tokens · 3/3</span>
+      </header>
+      <details class="prompt"><summary>system prompt</summary><pre>&lt;skill name=&quot;frontend-design&quot;&gt;
+&lt;description&gt;Guidance for distinctive, intentional visual design when building new UI or reshaping an existing one. Helps with aesthetic direction, typography, and making choices that don't read as templated defaults.&lt;/description&gt;
+&lt;instructions&gt;
+# Frontend Design
+
+Approach this as the design lead at a small studio known for giving every client a visual identity that could not be mistaken for anyone else's. This client has already rejected proposals that felt templated, and is paying for a distinctive point of view: make deliberate, opinionated choices about palette, typography, and layout that are specific to this brief, and take one real aesthetic risk you can justify.
+
+## Ground it in the subject
+
+If the brief does not pin down what the product or subject is, pin it yourself before designing: name one concrete subject, its audience, and the page's single job, and state your choice. If there's any information in your memory about the human's preferences, context about what they're building, or designs you've made before – use that as a hint. The subject's own world, its materials, instruments, artifacts, and vernacular, is where distinctive choices come from. Build with the brief's real content and subject matter throughout.
+
+## Design principles
+
+For web designs, the hero is a thesis. Open with the most characteristic thing in the subject's world, in whatever form makes sense for it: a headline, an image, an animation, a live demo, an interactive moment. Be deliberate with your choice: a big number with a small label, supporting stats, and a gradient accent is the template answer, only use if that's truly the best option.
+
+Typography carries the personality of the page. Pair the display and body faces deliberately, not the same families you would reach for on any other project, and set a clear type scale with intentional weights, widths, and spacing. Make the type treatment itself a memorable part of the design, not a neutral delivery vehicle for the content.
+
+Structure is information. Structural devices, numbering, eyebrows, dividers, labels, should encode something true about the content, not decorate it. Many generic designs use numbered markers (01 / 02 / 03), but that's only appropriate if the content actually is a sequence - like a real process or a typed timeline where order carries information the reader needs. Question if choices like numbered markers actually make sense before incorporating them.
+
+Leverage motion deliberately. Think about where and if animation can serve the subject: a page-load sequence, a scroll-triggered reveal, hover micro-interactions, ambient atmosphere. An orchestrated moment usually lands harder than scattered effects; choose what the direction calls for. However, sometimes less is more, and extra animation contributes to the feeling that the design is AI-generated.
+
+Match complexity to the vision. Maximalist directions need elaborate execution; minimal directions need precision in spacing, type, and detail. Elegance is executing the chosen vision well.
+
+Consider written content carefully. Often a design brief may not contain real content, and it's up to you to come up with copy. Copy can make a design feel as templated as the design itself. See the below section on writing for more guidance.
+
+## Process: brainstorm, explore, plan, critique, build, critique again
+
+For calibration: AI-generated design right now clusters around three looks: (1) a warm cream background (near #F4F1EA) with a high-contrast serif display and a terracotta accent; (2) a near-black background with a single bright acid-green or vermilion accent; (3) a broadsheet-style layout with hairline rules, zero border-radius, and dense newspaper-like columns. All three are legitimate for some briefs, but they are defaults rather than choices, and they appear regardless of subject. Where the brief pins down a visual direction, follow it exactly — the brief's own words always win, including when it asks for one of these looks. Where it leaves an axis free, don't spend that freedom on one of these defaults. Just like a human designer who's hired, there's often a careful balance between doing what you're good at and taking each project as a chance to experiment and learn.
+
+Work in two passes. First, brainstorm a short design plan based on the human's design brief: create a compact token system with color, type, layout, and signature. Color: describe the palette as 4–6 named hex values. Type: the typefaces for 2+ roles (a characterful display face that's used with restraint, a complementary body face, and a utility face for captions or data if needed). Layout: a layout concept, using one-sentence prose descriptions and ASCII wireframes to ideate and compare. Signature: the single unique element this page will be remembered by that embodies the brief in an appropriate way.
+
+Then review that plan against the brief before building: if any part of it reads like the generic default you would produce for any similar page (work through a similar prompt to see if you arrive somewhere similar) rather than a choice made for this specific brief — revise that part, say what you changed and why. Only after you've confirmed the relative uniqueness of your design plan should you start to write the code, following the revised plan exactly and deriving every color and type decision from it.
+
+When writing the code, be careful of structuring your CSS selector specificities. It's easy to generate CSS classes that cancel each other out (especially with a type-based selector like .section and a element-based selector like .cta). This can happen often with paddings/margins between sections.
+
+Try to do a lot of this planning and iteration in your thinking, and only show ideas to the user when you have higher confidence it'll delight them.
+
+## Restraint and self-critique
+
+Spend your boldness in one place. Let the signature element be the one memorable thing, keep everything around it quiet and disciplined, and cut any decoration that does not serve the brief. Not taking a risk can be a risk itself! Build to a quality floor without announcing it: responsive down to mobile, visible keyboard focus, reduced motion respected. Critique your own work as you build, taking screenshots if your environment supports it – a picture is worth 1000 tokens. Consider Chanel's advice: before leaving the house, take a look in the mirror and remove one accessory. Human creators have memory and always try to do something new, so if you have a space to quickly jot down notes about what you've tried, it can help you in future passes.
+
+## More on writing in design
+
+Words appear in a design for one reason: to make it easier to understand, and therefore easier to use. They are design material, not decoration. Bring the same intentionality to copy that you would bring to spacing and color. Before writing anything, ask what the design needs to say, and how it can best be said to help the person navigate the experience.
+
+Write from the end user's side of the screen. Name things by what people control and recognize, never by how the system is built. A person manages notifications, not webhook config. Describe what something does in plain terms rather than selling it. Being specific is always better than being clever.
+
+Use active voice as default. A control should say exactly what happens when it's used: &quot;Save changes,&quot; not &quot;Submit.&quot; An action keeps the same name through the whole flow, so the button that says &quot;Publish&quot; produces a toast that says &quot;Published.&quot; The vocabulary of an interface is the signposting for someone navigating the product. Cohesion and consistency are how people learn their way around.
+
+Treat failure and emptiness as moments for direction, not mood. Explain what went wrong and how to fix it, in the interface's voice rather than a person's. Errors don't apologize, and they are never vague about what happened. An empty screen is an invitation to act.
+
+Keep the register conversational and tuned: plain verbs, sentence case, no filler, with tone matched to the brand and the audience. Let each element do exactly one job. A label labels, an example demonstrates, and nothing quietly does double duty.
+&lt;/instructions&gt;
+&lt;/skill&gt;</pre></details>
+      <details class="prompt" open><summary>user prompt</summary><pre>Give me a color palette for a developer-tool documentation site. Include rationale.</pre></details>
+      <details class="output" open><summary>output</summary><pre>For a **developer-tool documentation site**, I’d avoid the common “black background + neon green” terminal aesthetic unless the product itself is deeply tied to systems tooling. Documentation benefits from calm reading conditions, strong code contrast, and a sense of precision.
+
+Here’s a palette built around **“precision instrument”**: technical, trustworthy, and modern without feeling like a generic AI/dev dashboard.
+
+## Palette: **Midnight Lab**
+
+| Role | Color | Hex | Rationale |
+|---|---|---|---|
+| Page background | Deep slate | `#0F172A` | Softer than pure black; reduces eye strain during long documentation sessions |
+| Surface / cards | Slate panel | `#162033` | Creates subtle hierarchy without excessive borders |
+| Primary text | Cool white | `#E6EDF7` | High readability while avoiding harsh contrast |
+| Secondary text | Muted steel | `#94A3B8` | Keeps metadata, descriptions, and breadcrumbs quiet |
+| Brand accent | Electric cyan | `#22D3EE` | Signals technical precision; works well for links and interactive states |
+| Accent hover | Bright cyan | `#67E8F9` | Gives responsive feedback without overpowering content |
+| Success | Compiler green | `#34D399` | Familiar coding/status association |
+| Warning | Amber | `#FBBF24` | Clear attention state |
+| Error | Coral red | `#FB7185` | Softer than alarm-red; readable in dark UI |
+| Code background | Ink black | `#0B1120` | Separates code blocks from surrounding content |
+
+## Why this works for developer docs
+
+### 1. It treats code as the hero
+Documentation is not a marketing landing page. The most important content is usually:
+
+- code examples
+- API references
+- CLI output
+- configuration snippets
+
+The near-black code surface (`#0B1120`) creates a distinct “workbench” area without making the entire site feel like a terminal.
+
+### 2. Cyan creates a technical identity
+Cyan has strong associations with:
+
+- network diagrams
+- debugging tools
+- developer consoles
+- data visualization
+
+It feels engineered rather than playful. Use it sparingly:
+
+- links
+- active navigation
+- inline highlights
+- focus rings
+- key UI actions
+
+Avoid using it for every icon or decoration.
+
+### 3. Slate keeps long reading comfortable
+Pure black/white documentation sites often feel harsh. The slate range gives you:
+
+- better perceived contrast
+- less fatigue
+- clearer content grouping
+
+## Suggested usage ratios
+
+```
+Backgrounds     ████████████████████ 70%
+Text            ████████             20%
+Accent colors   ██                    5%
+Status colors   █                     5%
+```
+
+The interface should feel mostly neutral, with color appearing when something needs attention.
+
+## Example semantic tokens
+
+```css:root {
+  --bg-page: #0F172A;
+  --bg-surface: #162033;
+  --bg-code: #0B1120;
+
+  --text-primary: #E6EDF7;
+  --text-secondary: #94A3B8;
+
+  --accent: #22D3EE;
+  --accent-hover: #67E8F9;
+
+  --success: #34D399;
+  --warning: #FBBF24;
+  --error: #FB7185;
+}
+```
+
+## One distinctive design move
+Use the cyan **only as a “signal line”**: a thin vertical marker beside the active documentation section, API endpoint headings, or currently selected navigation item. It creates the feeling of a live instrument panel rather than a generic website accent.</pre></details>
+      
+      <table class="assertions"><thead><tr><th>#</th><th></th><th>Assertion</th><th>Evidence</th></tr></thead><tbody>
+        <tr class="ok">
+          <td class="num">1</td>
+          <td><span class='check'>✓</span></td>
+          <td>Provides specific colors or values, not just adjectives like 'muted blue'</td>
+          <td><span class="evidence">The output provides named colors with hex values, e.g. 'Page background | Deep slate | `#0F172A`', 'Brand accent | Electric cyan | `#22D3EE`', and 'Code background | Ink black | `#0B1120`'.</span></td>
+        </tr>
+
+        <tr class="ok">
+          <td class="num">2</td>
+          <td><span class='check'>✓</span></td>
+          <td>Assigns functional roles to each color (background, text, accent, code blocks)</td>
+          <td><span class="evidence">The palette table assigns roles including 'Page background', 'Surface / cards', 'Primary text', 'Secondary text', 'Brand accent', 'Success', 'Warning', 'Error', and 'Code background' with corresponding colors.</span></td>
+        </tr>
+
+        <tr class="ok">
+          <td class="num">3</td>
+          <td><span class='check'>✓</span></td>
+          <td>Addresses readability/contrast for long-form reading</td>
+          <td><span class="evidence">The output states '#0F172A' 'reduces eye strain during long documentation sessions' and explains that the slate range provides 'better perceived contrast' and 'less fatigue' for long reading.</span></td>
+        </tr></tbody></table>
+      <details class="judge"><summary>judge prompt</summary><pre>You are grading an agentskills.io evaluation run.
+Grading principles:
+- Require concrete evidence for every PASS; quote or reference the output.
+- Do not give the benefit of the doubt.
+- PASS an assertion only if every condition in the assertion text holds.
+- A label without substance is a FAIL.
+- Tool calls (when present) are authoritative evidence of model behavior.
+Return STRICT JSON only. No markdown. Shape:
+{&quot;assertion_results&quot;:[{&quot;text&quot;:&quot;...&quot;,&quot;passed&quot;:true,&quot;evidence&quot;:&quot;...&quot;}],&quot;summary&quot;:{&quot;passed&quot;:0,&quot;failed&quot;:0,&quot;total&quot;:0,&quot;pass_rate&quot;:0}}
+Rules:
+- Include every assertion exactly once and copy the full assertion text verbatim into text.
+- Use short concrete evidence: quote, snippet, or file reference.
+- Summary may be included, but it will be recomputed by the caller.
+Assertions:
+[
+  &quot;Provides specific colors or values, not just adjectives like 'muted blue'&quot;,
+  &quot;Assigns functional roles to each color (background, text, accent, code blocks)&quot;,
+  &quot;Addresses readability/contrast for long-form reading&quot;
+]
+Model output:
+For a **developer-tool documentation site**, I’d avoid the common “black background + neon green” terminal aesthetic unless the product itself is deeply tied to systems tooling. Documentation benefits from calm reading conditions, strong code contrast, and a sense of precision.
+
+Here’s a palette built around **“precision instrument”**: technical, trustworthy, and modern without feeling like a generic AI/dev dashboard.
+
+## Palette: **Midnight Lab**
+
+| Role | Color | Hex | Rationale |
+|---|---|---|---|
+| Page background | Deep slate | `#0F172A` | Softer than pure black; reduces eye strain during long documentation sessions |
+| Surface / cards | Slate panel | `#162033` | Creates subtle hierarchy without excessive borders |
+| Primary text | Cool white | `#E6EDF7` | High readability while avoiding harsh contrast |
+| Secondary text | Muted steel | `#94A3B8` | Keeps metadata, descriptions, and breadcrumbs quiet |
+| Brand accent | Electric cyan | `#22D3EE` | Signals technical precision; works well for links and interactive states |
+| Accent hover | Bright cyan | `#67E8F9` | Gives responsive feedback without overpowering content |
+| Success | Compiler green | `#34D399` | Familiar coding/status association |
+| Warning | Amber | `#FBBF24` | Clear attention state |
+| Error | Coral red | `#FB7185` | Softer than alarm-red; readable in dark UI |
+| Code background | Ink black | `#0B1120` | Separates code blocks from surrounding content |
+
+## Why this works for developer docs
+
+### 1. It treats code as the hero
+Documentation is not a marketing landing page. The most important content is usually:
+
+- code examples
+- API references
+- CLI output
+- configuration snippets
+
+The near-black code surface (`#0B1120`) creates a distinct “workbench” area without making the entire site feel like a terminal.
+
+### 2. Cyan creates a technical identity
+Cyan has strong associations with:
+
+- network diagrams
+- debugging tools
+- developer consoles
+- data visualization
+
+It feels engineered rather than playful. Use it sparingly:
+
+- links
+- active navigation
+- inline highlights
+- focus rings
+- key UI actions
+
+Avoid using it for every icon or decoration.
+
+### 3. Slate keeps long reading comfortable
+Pure black/white documentation sites often feel harsh. The slate range gives you:
+
+- better perceived contrast
+- less fatigue
+- clearer content grouping
+
+## Suggested usage ratios
+
+```
+Backgrounds     ████████████████████ 70%
+Text            ████████             20%
+Accent colors   ██                    5%
+Status colors   █                     5%
+```
+
+The interface should feel mostly neutral, with color appearing when something needs attention.
+
+## Example semantic tokens
+
+```css:root {
+  --bg-page: #0F172A;
+  --bg-surface: #162033;
+  --bg-code: #0B1120;
+
+  --text-primary: #E6EDF7;
+  --text-secondary: #94A3B8;
+
+  --accent: #22D3EE;
+  --accent-hover: #67E8F9;
+
+  --success: #34D399;
+  --warning: #FBBF24;
+  --error: #FB7185;
+}
+```
+
+## One distinctive design move
+Use the cyan **only as a “signal line”**: a thin vertical marker beside the active documentation section, API endpoint headings, or currently selected navigation item. It creates the feeling of a live instrument panel rather than a generic website accent.
+Output files:
+No output files were captured.</pre></details>
+    </section>
+  
+
+    <section class="run">
+      <header class="run-head">
+        <span class="mode mode-without_skill">without_skill</span>
+        <span class="status ok">PASS</span>
+        <span class="muted">17ms · 905 tokens · 3/3</span>
+      </header>
+      
+      <details class="prompt" open><summary>user prompt</summary><pre>Give me a color palette for a developer-tool documentation site. Include rationale.</pre></details>
+      <details class="output" open><summary>output</summary><pre>For a developer-tool documentation site, I’d aim for a palette that feels **precise, technical, calm, and trustworthy** rather than “cyberpunk.” Documentation is a reading environment first, so contrast, long-session comfort, and code readability matter more than visual novelty.
+
+## Palette: “Midnight Terminal”
+
+{&quot;query&quot;:[&quot;developer documentation website dark theme UI&quot;,&quot;modern developer portal interface&quot;],&quot;aspect_ratio&quot;:&quot;16:9&quot;}
+
+| Role | Color | Hex | Rationale |
+|---|---|---|---|
+| Primary background | Deep Slate | `#0F172A` | A softer alternative to pure black; reduces eye strain while keeping a technical feel. |
+| Secondary background | Terminal Navy | `#111827` | Creates hierarchy for sidebars, code panels, and navigation. |
+| Surface / cards | Graphite Blue | `#1E293B` | Gives panels separation without heavy borders. |
+| Primary text | Cloud White | `#F8FAFC` | High readability for long documentation sessions. |
+| Secondary text | Cool Gray | `#94A3B8` | Keeps metadata, descriptions, and labels visually quiet. |
+| Brand accent | Electric Cyan | `#22D3EE` | Signals technology, links, interactive elements, and focus states. |
+| Secondary accent | Developer Green | `#34D399` | Useful for success states, CLI output, and “installed/verified” indicators. |
+| Warning | Amber | `#FBBF24` | Familiar developer convention for caution messages. |
+| Error | Coral Red | `#F87171` | Strong enough for failures without feeling aggressive. |
+| Code background | Near Black | `#020617` | Separates code from prose and mimics terminal environments. |
+| Inline code highlight | Muted Indigo | `#312E81` | Adds distinction without overwhelming syntax colors. |
+
+## Usage guidance
+
+### Navigation
+- Background: `#0F172A`
+- Active link: `#22D3EE`
+- Inactive links: `#94A3B8`
+
+The cyan accent creates a clear “you are here” indicator without making every element compete for attention.
+
+### Documentation content
+- Page background: `#0F172A`
+- Body text: `#F8FAFC`
+- Headings: `#FFFFFF`
+- Supporting text: `#94A3B8`
+
+The contrast hierarchy mirrors how developers scan docs: title → section → explanation → details.
+
+### Code blocks
+- Background: `#020617`
+- Border: `#1E293B`
+- Syntax:
+  - Keywords: cyan
+  - Strings: green
+  - Constants: amber
+  - Errors: red
+
+A darker code surface helps examples feel like a familiar IDE environment.
+
+### Buttons
+Primary:
+- Background: `#22D3EE`
+- Text: `#082F49`
+
+Secondary:
+- Border: `#334155`
+- Text: `#F8FAFC`
+
+The primary action stands out but avoids the common “giant glowing neon button” developer aesthetic.
+
+## Light-mode companion palette
+
+If the docs need light mode:
+
+| Role | Hex |
+|---|---|
+| Background | `#F8FAFC` |
+| Surface | `#FFFFFF` |
+| Text | `#0F172A` |
+| Muted text | `#475569` |
+| Border | `#E2E8F0` |
+| Accent | `#0891B2` |
+| Success | `#059669` |
+| Warning | `#D97706` |
+| Error | `#DC2626` |
+
+## Why this works for developer tools
+
+- **Feels technical without cliché:** avoids excessive neon, gradients, and “hacker” imagery.
+- **Supports dense information:** muted surfaces let documentation content dominate.
+- **Matches developer expectations:** terminal-inspired dark backgrounds, familiar status colors, clear syntax hierarchy.
+- **Scales well:** works for API references, SDK docs, dashboards, changelogs, and CLI documentation.
+- **Accessible:** the palette naturally supports strong text contrast and semantic status colors.
+
+A good brand personality for this palette would be: **“the reliable engineer sitting next to you, not the flashy startup demo.”**</pre></details>
+      
+      <table class="assertions"><thead><tr><th>#</th><th></th><th>Assertion</th><th>Evidence</th></tr></thead><tbody>
+        <tr class="ok">
+          <td class="num">1</td>
+          <td><span class='check'>✓</span></td>
+          <td>Provides specific colors or values, not just adjectives like 'muted blue'</td>
+          <td><span class="evidence">The output provides explicit hex values throughout, e.g. &quot;Primary background | Deep Slate | `#0F172A`&quot; and &quot;Brand accent | Electric Cyan | `#22D3EE`.&quot;</span></td>
+        </tr>
+
+        <tr class="ok">
+          <td class="num">2</td>
+          <td><span class='check'>✓</span></td>
+          <td>Assigns functional roles to each color (background, text, accent, code blocks)</td>
+          <td><span class="evidence">The palette table assigns roles such as &quot;Primary background,&quot; &quot;Primary text,&quot; &quot;Brand accent,&quot; and &quot;Code background&quot; with corresponding colors; usage guidance also maps &quot;Body text: `#F8FAFC`&quot; and &quot;Code blocks - Background: `#020617`.&quot;</span></td>
+        </tr>
+
+        <tr class="ok">
+          <td class="num">3</td>
+          <td><span class='check'>✓</span></td>
+          <td>Addresses readability/contrast for long-form reading</td>
+          <td><span class="evidence">The output states &quot;Documentation is a reading environment first, so contrast, long-session comfort, and code readability matter&quot; and describes &quot;Cloud White | `#F8FAFC` | High readability for long documentation sessions.&quot;</span></td>
+        </tr></tbody></table>
+      <details class="judge"><summary>judge prompt</summary><pre>You are grading an agentskills.io evaluation run.
+Grading principles:
+- Require concrete evidence for every PASS; quote or reference the output.
+- Do not give the benefit of the doubt.
+- PASS an assertion only if every condition in the assertion text holds.
+- A label without substance is a FAIL.
+- Tool calls (when present) are authoritative evidence of model behavior.
+Return STRICT JSON only. No markdown. Shape:
+{&quot;assertion_results&quot;:[{&quot;text&quot;:&quot;...&quot;,&quot;passed&quot;:true,&quot;evidence&quot;:&quot;...&quot;}],&quot;summary&quot;:{&quot;passed&quot;:0,&quot;failed&quot;:0,&quot;total&quot;:0,&quot;pass_rate&quot;:0}}
+Rules:
+- Include every assertion exactly once and copy the full assertion text verbatim into text.
+- Use short concrete evidence: quote, snippet, or file reference.
+- Summary may be included, but it will be recomputed by the caller.
+Assertions:
+[
+  &quot;Provides specific colors or values, not just adjectives like 'muted blue'&quot;,
+  &quot;Assigns functional roles to each color (background, text, accent, code blocks)&quot;,
+  &quot;Addresses readability/contrast for long-form reading&quot;
+]
+Model output:
+For a developer-tool documentation site, I’d aim for a palette that feels **precise, technical, calm, and trustworthy** rather than “cyberpunk.” Documentation is a reading environment first, so contrast, long-session comfort, and code readability matter more than visual novelty.
+
+## Palette: “Midnight Terminal”
+
+{&quot;query&quot;:[&quot;developer documentation website dark theme UI&quot;,&quot;modern developer portal interface&quot;],&quot;aspect_ratio&quot;:&quot;16:9&quot;}
+
+| Role | Color | Hex | Rationale |
+|---|---|---|---|
+| Primary background | Deep Slate | `#0F172A` | A softer alternative to pure black; reduces eye strain while keeping a technical feel. |
+| Secondary background | Terminal Navy | `#111827` | Creates hierarchy for sidebars, code panels, and navigation. |
+| Surface / cards | Graphite Blue | `#1E293B` | Gives panels separation without heavy borders. |
+| Primary text | Cloud White | `#F8FAFC` | High readability for long documentation sessions. |
+| Secondary text | Cool Gray | `#94A3B8` | Keeps metadata, descriptions, and labels visually quiet. |
+| Brand accent | Electric Cyan | `#22D3EE` | Signals technology, links, interactive elements, and focus states. |
+| Secondary accent | Developer Green | `#34D399` | Useful for success states, CLI output, and “installed/verified” indicators. |
+| Warning | Amber | `#FBBF24` | Familiar developer convention for caution messages. |
+| Error | Coral Red | `#F87171` | Strong enough for failures without feeling aggressive. |
+| Code background | Near Black | `#020617` | Separates code from prose and mimics terminal environments. |
+| Inline code highlight | Muted Indigo | `#312E81` | Adds distinction without overwhelming syntax colors. |
+
+## Usage guidance
+
+### Navigation
+- Background: `#0F172A`
+- Active link: `#22D3EE`
+- Inactive links: `#94A3B8`
+
+The cyan accent creates a clear “you are here” indicator without making every element compete for attention.
+
+### Documentation content
+- Page background: `#0F172A`
+- Body text: `#F8FAFC`
+- Headings: `#FFFFFF`
+- Supporting text: `#94A3B8`
+
+The contrast hierarchy mirrors how developers scan docs: title → section → explanation → details.
+
+### Code blocks
+- Background: `#020617`
+- Border: `#1E293B`
+- Syntax:
+  - Keywords: cyan
+  - Strings: green
+  - Constants: amber
+  - Errors: red
+
+A darker code surface helps examples feel like a familiar IDE environment.
+
+### Buttons
+Primary:
+- Background: `#22D3EE`
+- Text: `#082F49`
+
+Secondary:
+- Border: `#334155`
+- Text: `#F8FAFC`
+
+The primary action stands out but avoids the common “giant glowing neon button” developer aesthetic.
+
+## Light-mode companion palette
+
+If the docs need light mode:
+
+| Role | Hex |
+|---|---|
+| Background | `#F8FAFC` |
+| Surface | `#FFFFFF` |
+| Text | `#0F172A` |
+| Muted text | `#475569` |
+| Border | `#E2E8F0` |
+| Accent | `#0891B2` |
+| Success | `#059669` |
+| Warning | `#D97706` |
+| Error | `#DC2626` |
+
+## Why this works for developer tools
+
+- **Feels technical without cliché:** avoids excessive neon, gradients, and “hacker” imagery.
+- **Supports dense information:** muted surfaces let documentation content dominate.
+- **Matches developer expectations:** terminal-inspired dark backgrounds, familiar status colors, clear syntax hierarchy.
+- **Scales well:** works for API references, SDK docs, dashboards, changelogs, and CLI documentation.
+- **Accessible:** the palette naturally supports strong text contrast and semantic status colors.
+
+A good brand personality for this palette would be: **“the reliable engineer sitting next to you, not the flashy startup demo.”**
+Output files:
+No output files were captured.</pre></details>
+    </section>
+  </div>
+    </details>
+  
+
+    <details class="eval bad">
+      <summary>
+        <span class="eval-status">✗</span>
+        <span class="eval-name">eval-component-hierarchy</span>
+        <span class="muted">3/6 assertions</span>
+      </summary>
+      <div class="eval-body">
+    <section class="run">
+      <header class="run-head">
+        <span class="mode mode-with_skill">with_skill</span>
+        <span class="status bad">FAIL</span>
+        <span class="muted">22ms · 2961 tokens · 2/3</span>
+      </header>
+      <details class="prompt"><summary>system prompt</summary><pre>&lt;skill name=&quot;frontend-design&quot;&gt;
+&lt;description&gt;Guidance for distinctive, intentional visual design when building new UI or reshaping an existing one. Helps with aesthetic direction, typography, and making choices that don't read as templated defaults.&lt;/description&gt;
+&lt;instructions&gt;
+# Frontend Design
+
+Approach this as the design lead at a small studio known for giving every client a visual identity that could not be mistaken for anyone else's. This client has already rejected proposals that felt templated, and is paying for a distinctive point of view: make deliberate, opinionated choices about palette, typography, and layout that are specific to this brief, and take one real aesthetic risk you can justify.
+
+## Ground it in the subject
+
+If the brief does not pin down what the product or subject is, pin it yourself before designing: name one concrete subject, its audience, and the page's single job, and state your choice. If there's any information in your memory about the human's preferences, context about what they're building, or designs you've made before – use that as a hint. The subject's own world, its materials, instruments, artifacts, and vernacular, is where distinctive choices come from. Build with the brief's real content and subject matter throughout.
+
+## Design principles
+
+For web designs, the hero is a thesis. Open with the most characteristic thing in the subject's world, in whatever form makes sense for it: a headline, an image, an animation, a live demo, an interactive moment. Be deliberate with your choice: a big number with a small label, supporting stats, and a gradient accent is the template answer, only use if that's truly the best option.
+
+Typography carries the personality of the page. Pair the display and body faces deliberately, not the same families you would reach for on any other project, and set a clear type scale with intentional weights, widths, and spacing. Make the type treatment itself a memorable part of the design, not a neutral delivery vehicle for the content.
+
+Structure is information. Structural devices, numbering, eyebrows, dividers, labels, should encode something true about the content, not decorate it. Many generic designs use numbered markers (01 / 02 / 03), but that's only appropriate if the content actually is a sequence - like a real process or a typed timeline where order carries information the reader needs. Question if choices like numbered markers actually make sense before incorporating them.
+
+Leverage motion deliberately. Think about where and if animation can serve the subject: a page-load sequence, a scroll-triggered reveal, hover micro-interactions, ambient atmosphere. An orchestrated moment usually lands harder than scattered effects; choose what the direction calls for. However, sometimes less is more, and extra animation contributes to the feeling that the design is AI-generated.
+
+Match complexity to the vision. Maximalist directions need elaborate execution; minimal directions need precision in spacing, type, and detail. Elegance is executing the chosen vision well.
+
+Consider written content carefully. Often a design brief may not contain real content, and it's up to you to come up with copy. Copy can make a design feel as templated as the design itself. See the below section on writing for more guidance.
+
+## Process: brainstorm, explore, plan, critique, build, critique again
+
+For calibration: AI-generated design right now clusters around three looks: (1) a warm cream background (near #F4F1EA) with a high-contrast serif display and a terracotta accent; (2) a near-black background with a single bright acid-green or vermilion accent; (3) a broadsheet-style layout with hairline rules, zero border-radius, and dense newspaper-like columns. All three are legitimate for some briefs, but they are defaults rather than choices, and they appear regardless of subject. Where the brief pins down a visual direction, follow it exactly — the brief's own words always win, including when it asks for one of these looks. Where it leaves an axis free, don't spend that freedom on one of these defaults. Just like a human designer who's hired, there's often a careful balance between doing what you're good at and taking each project as a chance to experiment and learn.
+
+Work in two passes. First, brainstorm a short design plan based on the human's design brief: create a compact token system with color, type, layout, and signature. Color: describe the palette as 4–6 named hex values. Type: the typefaces for 2+ roles (a characterful display face that's used with restraint, a complementary body face, and a utility face for captions or data if needed). Layout: a layout concept, using one-sentence prose descriptions and ASCII wireframes to ideate and compare. Signature: the single unique element this page will be remembered by that embodies the brief in an appropriate way.
+
+Then review that plan against the brief before building: if any part of it reads like the generic default you would produce for any similar page (work through a similar prompt to see if you arrive somewhere similar) rather than a choice made for this specific brief — revise that part, say what you changed and why. Only after you've confirmed the relative uniqueness of your design plan should you start to write the code, following the revised plan exactly and deriving every color and type decision from it.
+
+When writing the code, be careful of structuring your CSS selector specificities. It's easy to generate CSS classes that cancel each other out (especially with a type-based selector like .section and a element-based selector like .cta). This can happen often with paddings/margins between sections.
+
+Try to do a lot of this planning and iteration in your thinking, and only show ideas to the user when you have higher confidence it'll delight them.
+
+## Restraint and self-critique
+
+Spend your boldness in one place. Let the signature element be the one memorable thing, keep everything around it quiet and disciplined, and cut any decoration that does not serve the brief. Not taking a risk can be a risk itself! Build to a quality floor without announcing it: responsive down to mobile, visible keyboard focus, reduced motion respected. Critique your own work as you build, taking screenshots if your environment supports it – a picture is worth 1000 tokens. Consider Chanel's advice: before leaving the house, take a look in the mirror and remove one accessory. Human creators have memory and always try to do something new, so if you have a space to quickly jot down notes about what you've tried, it can help you in future passes.
+
+## More on writing in design
+
+Words appear in a design for one reason: to make it easier to understand, and therefore easier to use. They are design material, not decoration. Bring the same intentionality to copy that you would bring to spacing and color. Before writing anything, ask what the design needs to say, and how it can best be said to help the person navigate the experience.
+
+Write from the end user's side of the screen. Name things by what people control and recognize, never by how the system is built. A person manages notifications, not webhook config. Describe what something does in plain terms rather than selling it. Being specific is always better than being clever.
+
+Use active voice as default. A control should say exactly what happens when it's used: &quot;Save changes,&quot; not &quot;Submit.&quot; An action keeps the same name through the whole flow, so the button that says &quot;Publish&quot; produces a toast that says &quot;Published.&quot; The vocabulary of an interface is the signposting for someone navigating the product. Cohesion and consistency are how people learn their way around.
+
+Treat failure and emptiness as moments for direction, not mood. Explain what went wrong and how to fix it, in the interface's voice rather than a person's. Errors don't apologize, and they are never vague about what happened. An empty screen is an invitation to act.
+
+Keep the register conversational and tuned: plain verbs, sentence case, no filler, with tone matched to the brand and the audience. Let each element do exactly one job. A label labels, an example demonstrates, and nothing quietly does double duty.
+&lt;/instructions&gt;
+&lt;/skill&gt;</pre></details>
+      <details class="prompt" open><summary>user prompt</summary><pre>For a pricing page with 3 tiers plus FAQ, plan the component hierarchy and visual emphasis strategy.</pre></details>
+      <details class="output" open><summary>output</summary><pre>For a pricing page, the hierarchy should make the decision path obvious:
+
+1. **Understand the offer**
+2. **Compare tiers**
+3. **Choose a plan**
+4. **Resolve hesitation (FAQ)**
+
+The visual emphasis should not make all three tiers compete equally. Usually, one plan should be the “guided choice,” while still making alternatives credible.
+
+## Component hierarchy
+
+```
+PricingPage
+├── PricingHero
+│   ├── Eyebrow (&quot;Simple pricing&quot; / category label)
+│   ├── Heading
+│   ├── Supporting copy
+│   └── BillingToggle (monthly/yearly)
+│
+├── PricingGrid
+│   ├── PricingCard (Starter)
+│   │   ├── PlanHeader
+│   │   │   ├── PlanName
+│   │   │   ├── AudienceLabel
+│   │   │   └── Price
+│   │   ├── FeatureSummary
+│   │   ├── FeatureList
+│   │   ├── Limits/UsageDetails
+│   │   └── CTAButton
+│   │
+│   ├── PricingCard (Pro / Recommended)
+│   │   ├── RecommendedBadge
+│   │   ├── PlanHeader
+│   │   ├── Price
+│   │   ├── FeatureSummary
+│   │   ├── FeatureList
+│   │   ├── Limits/UsageDetails
+│   │   └── CTAButton
+│   │
+│   └── PricingCard (Enterprise)
+│       ├── PlanHeader
+│       ├── CustomPricingMessage
+│       ├── FeatureList
+│       ├── SalesNotes
+│       └── ContactCTA
+│
+├── TrustSection
+│   ├── CustomerLogos
+│   ├── UsageStats
+│   └── Testimonials
+│
+├── FAQSection
+│   ├── FAQHeader
+│   └── AccordionList
+│       └── FAQItem
+│           ├── Question
+│           └── Answer
+│
+└── FinalCTA
+    ├── Heading
+    └── ActionButtons
+```
+
+---
+
+## Visual emphasis strategy
+
+### 1. Hero: reduce uncertainty, don’t oversell
+
+**Goal:** answer “Which plan fits me?” before showing prices.
+
+Structure:
+
+```
+             Pricing
+   Plans that scale with your team
+
+     Monthly ○────● Yearly (save 20%)
+
+```
+
+Emphasis:
+- Large heading
+- Short supporting statement
+- Billing toggle near pricing cards
+- Avoid excessive decorative content above the decision point
+
+---
+
+### 2. Pricing cards: create a clear focal point
+
+Recommended layout:
+
+```
+┌─────────┐  ┌────────────────┐  ┌───────────┐
+│ Starter │  │ ★ Most popular │  │ Enterprise│
+│         │  │     Pro        │  │           │
+│  $19    │  │     $49        │  │ Contact   │
+│         │  │                │  │           │
+│ CTA     │  │ CTA (primary)  │  │ CTA       │
+└─────────┘  └────────────────┘  └───────────┘
+```
+
+### Recommended tier treatment
+
+| Tier | Visual role | Treatment |
+|---|---|---|
+| Starter | Entry point | Quiet, neutral card |
+| Pro | Default choice | Elevated card, stronger contrast, primary CTA |
+| Enterprise | High-touch option | Distinct but restrained |
+
+---
+
+## Recommended card anatomy
+
+Each card should follow the same rhythm:
+
+```
+Plan name
+Short audience description
+
+Price
+Billing period
+
+Primary benefit statement
+
+✓ Feature
+✓ Feature
+✓ Feature
+
+[Choose plan]
+```
+
+Avoid:
+- Different card structures
+- Long feature dumps
+- Making Enterprise look like a missing price option
+
+---
+
+## Pro tier emphasis techniques
+
+Use **one or two** of these, not all:
+
+### Option A: Elevation
+- Slightly larger card
+- Higher position
+- More whitespace
+
+### Option B: Accent frame
+- Thin border
+- Small “Recommended” label
+
+### Option C: Stronger CTA
+- Filled button vs outlined buttons
+
+Avoid:
+- Huge glowing gradients
+- Oversized badges
+- Making the other plans visually disappear
+
+---
+
+## Feature comparison strategy
+
+For only 3 tiers, keep comparison inside cards.
+
+For complex products:
+
+```
+PricingCards
+
+↓
+
+&quot;Compare all features&quot;
+
+↓
+
+FeatureComparisonTable
+```
+
+Do not force users into a giant matrix before they understand the plans.
+
+---
+
+## FAQ hierarchy
+
+FAQ should remove buying friction, not become a documentation dump.
+
+Recommended categories:
+
+```
+FAQ
+├── Billing
+│   ├── Can I change plans later?
+│   └── How does annual billing work?
+│
+├── Usage
+│   ├── What happens when I exceed limits?
+│
+├── Product
+│   ├── What features are included?
+│
+└── Security / Enterprise
+    ├── Do you support SSO?
+```
+
+Visual treatment:
+- Full-width accordion
+- Narrow reading width (~700px)
+- Plenty of vertical spacing
+- Questions written from customer anxiety, not internal terminology
+
+---
+
+## Responsive behavior
+
+Desktop:
+
+```
+[Starter] [Pro] [Enterprise]
+```
+
+Mobile:
+
+```
+[Pro]        ← recommended first
+
+[Starter]
+
+[Enterprise]
+```
+
+Put the recommended plan first on mobile because users scan vertically.
+
+---
+
+## Design direction recommendation
+
+For a distinctive pricing page, avoid the common “three floating white cards on a gradient background” pattern.
+
+A stronger approach:
+
+- **Background:** quiet neutral canvas
+- **Cards:** editorial, structured blocks
+- **Pro tier:** a single memorable visual accent
+- **Typography:** large plan names, compact feature text
+- **Signature element:** make the recommendation feel like a concierge choice (“Best for growing teams”) rather than a sales badge
+
+The page should feel like a confident recommendation system, not a spreadsheet of prices.</pre></details>
+      
+      <table class="assertions"><thead><tr><th>#</th><th></th><th>Assertion</th><th>Evidence</th></tr></thead><tbody>
+        <tr class="ok">
+          <td class="num">1</td>
+          <td><span class='check'>✓</span></td>
+          <td>States which pricing tier receives emphasis and by what visual mechanism</td>
+          <td><span class="evidence">The output identifies “Pro / Recommended” as the emphasized tier and states mechanisms including “Elevated card, stronger contrast, primary CTA” and “Recommended label.”</span></td>
+        </tr>
+
+        <tr class="ok">
+          <td class="num">2</td>
+          <td><span class='check'>✓</span></td>
+          <td>Maintains structural consistency across the three tiers while differentiating emphasis</td>
+          <td><span class="evidence">The output says “Each card should follow the same rhythm” and provides tier differentiation: “Starter | Quiet, neutral card,” “Pro | Elevated card, stronger contrast, primary CTA,” and “Enterprise | Distinct but restrained.”</span></td>
+        </tr>
+
+        <tr class="bad">
+          <td class="num">3</td>
+          <td><span class='x'>✗</span></td>
+          <td>FAQ treatment is deliberately de-emphasized relative to pricing tiers with a stated reason</td>
+          <td><span class="evidence">The output states “FAQ should remove buying friction, not become a documentation dump” and places FAQ after PricingGrid, but it does not explicitly state that FAQ is de-emphasized relative to the pricing tiers.</span></td>
+        </tr></tbody></table>
+      <details class="judge"><summary>judge prompt</summary><pre>You are grading an agentskills.io evaluation run.
+Grading principles:
+- Require concrete evidence for every PASS; quote or reference the output.
+- Do not give the benefit of the doubt.
+- PASS an assertion only if every condition in the assertion text holds.
+- A label without substance is a FAIL.
+- Tool calls (when present) are authoritative evidence of model behavior.
+Return STRICT JSON only. No markdown. Shape:
+{&quot;assertion_results&quot;:[{&quot;text&quot;:&quot;...&quot;,&quot;passed&quot;:true,&quot;evidence&quot;:&quot;...&quot;}],&quot;summary&quot;:{&quot;passed&quot;:0,&quot;failed&quot;:0,&quot;total&quot;:0,&quot;pass_rate&quot;:0}}
+Rules:
+- Include every assertion exactly once and copy the full assertion text verbatim into text.
+- Use short concrete evidence: quote, snippet, or file reference.
+- Summary may be included, but it will be recomputed by the caller.
+Assertions:
+[
+  &quot;States which pricing tier receives emphasis and by what visual mechanism&quot;,
+  &quot;Maintains structural consistency across the three tiers while differentiating emphasis&quot;,
+  &quot;FAQ treatment is deliberately de-emphasized relative to pricing tiers with a stated reason&quot;
+]
+Model output:
+For a pricing page, the hierarchy should make the decision path obvious:
+
+1. **Understand the offer**
+2. **Compare tiers**
+3. **Choose a plan**
+4. **Resolve hesitation (FAQ)**
+
+The visual emphasis should not make all three tiers compete equally. Usually, one plan should be the “guided choice,” while still making alternatives credible.
+
+## Component hierarchy
+
+```
+PricingPage
+├── PricingHero
+│   ├── Eyebrow (&quot;Simple pricing&quot; / category label)
+│   ├── Heading
+│   ├── Supporting copy
+│   └── BillingToggle (monthly/yearly)
+│
+├── PricingGrid
+│   ├── PricingCard (Starter)
+│   │   ├── PlanHeader
+│   │   │   ├── PlanName
+│   │   │   ├── AudienceLabel
+│   │   │   └── Price
+│   │   ├── FeatureSummary
+│   │   ├── FeatureList
+│   │   ├── Limits/UsageDetails
+│   │   └── CTAButton
+│   │
+│   ├── PricingCard (Pro / Recommended)
+│   │   ├── RecommendedBadge
+│   │   ├── PlanHeader
+│   │   ├── Price
+│   │   ├── FeatureSummary
+│   │   ├── FeatureList
+│   │   ├── Limits/UsageDetails
+│   │   └── CTAButton
+│   │
+│   └── PricingCard (Enterprise)
+│       ├── PlanHeader
+│       ├── CustomPricingMessage
+│       ├── FeatureList
+│       ├── SalesNotes
+│       └── ContactCTA
+│
+├── TrustSection
+│   ├── CustomerLogos
+│   ├── UsageStats
+│   └── Testimonials
+│
+├── FAQSection
+│   ├── FAQHeader
+│   └── AccordionList
+│       └── FAQItem
+│           ├── Question
+│           └── Answer
+│
+└── FinalCTA
+    ├── Heading
+    └── ActionButtons
+```
+
+---
+
+## Visual emphasis strategy
+
+### 1. Hero: reduce uncertainty, don’t oversell
+
+**Goal:** answer “Which plan fits me?” before showing prices.
+
+Structure:
+
+```
+             Pricing
+   Plans that scale with your team
+
+     Monthly ○────● Yearly (save 20%)
+
+```
+
+Emphasis:
+- Large heading
+- Short supporting statement
+- Billing toggle near pricing cards
+- Avoid excessive decorative content above the decision point
+
+---
+
+### 2. Pricing cards: create a clear focal point
+
+Recommended layout:
+
+```
+┌─────────┐  ┌────────────────┐  ┌───────────┐
+│ Starter │  │ ★ Most popular │  │ Enterprise│
+│         │  │     Pro        │  │           │
+│  $19    │  │     $49        │  │ Contact   │
+│         │  │                │  │           │
+│ CTA     │  │ CTA (primary)  │  │ CTA       │
+└─────────┘  └────────────────┘  └───────────┘
+```
+
+### Recommended tier treatment
+
+| Tier | Visual role | Treatment |
+|---|---|---|
+| Starter | Entry point | Quiet, neutral card |
+| Pro | Default choice | Elevated card, stronger contrast, primary CTA |
+| Enterprise | High-touch option | Distinct but restrained |
+
+---
+
+## Recommended card anatomy
+
+Each card should follow the same rhythm:
+
+```
+Plan name
+Short audience description
+
+Price
+Billing period
+
+Primary benefit statement
+
+✓ Feature
+✓ Feature
+✓ Feature
+
+[Choose plan]
+```
+
+Avoid:
+- Different card structures
+- Long feature dumps
+- Making Enterprise look like a missing price option
+
+---
+
+## Pro tier emphasis techniques
+
+Use **one or two** of these, not all:
+
+### Option A: Elevation
+- Slightly larger card
+- Higher position
+- More whitespace
+
+### Option B: Accent frame
+- Thin border
+- Small “Recommended” label
+
+### Option C: Stronger CTA
+- Filled button vs outlined buttons
+
+Avoid:
+- Huge glowing gradients
+- Oversized badges
+- Making the other plans visually disappear
+
+---
+
+## Feature comparison strategy
+
+For only 3 tiers, keep comparison inside cards.
+
+For complex products:
+
+```
+PricingCards
+
+↓
+
+&quot;Compare all features&quot;
+
+↓
+
+FeatureComparisonTable
+```
+
+Do not force users into a giant matrix before they understand the plans.
+
+---
+
+## FAQ hierarchy
+
+FAQ should remove buying friction, not become a documentation dump.
+
+Recommended categories:
+
+```
+FAQ
+├── Billing
+│   ├── Can I change plans later?
+│   └── How does annual billing work?
+│
+├── Usage
+│   ├── What happens when I exceed limits?
+│
+├── Product
+│   ├── What features are included?
+│
+└── Security / Enterprise
+    ├── Do you support SSO?
+```
+
+Visual treatment:
+- Full-width accordion
+- Narrow reading width (~700px)
+- Plenty of vertical spacing
+- Questions written from customer anxiety, not internal terminology
+
+---
+
+## Responsive behavior
+
+Desktop:
+
+```
+[Starter] [Pro] [Enterprise]
+```
+
+Mobile:
+
+```
+[Pro]        ← recommended first
+
+[Starter]
+
+[Enterprise]
+```
+
+Put the recommended plan first on mobile because users scan vertically.
+
+---
+
+## Design direction recommendation
+
+For a distinctive pricing page, avoid the common “three floating white cards on a gradient background” pattern.
+
+A stronger approach:
+
+- **Background:** quiet neutral canvas
+- **Cards:** editorial, structured blocks
+- **Pro tier:** a single memorable visual accent
+- **Typography:** large plan names, compact feature text
+- **Signature element:** make the recommendation feel like a concierge choice (“Best for growing teams”) rather than a sales badge
+
+The page should feel like a confident recommendation system, not a spreadsheet of prices.
+Output files:
+No output files were captured.</pre></details>
+    </section>
+  
+
+    <section class="run">
+      <header class="run-head">
+        <span class="mode mode-without_skill">without_skill</span>
+        <span class="status bad">FAIL</span>
+        <span class="muted">9ms · 1171 tokens · 1/3</span>
+      </header>
+      
+      <details class="prompt" open><summary>user prompt</summary><pre>For a pricing page with 3 tiers plus FAQ, plan the component hierarchy and visual emphasis strategy.</pre></details>
+      <details class="output" open><summary>output</summary><pre>A strong pricing page should guide users from **understanding → comparing → choosing → resolving objections**. For 3 tiers plus FAQ, structure the page so the middle tier receives the strongest visual and conversion emphasis.
+
+## Component hierarchy
+
+```
+PricingPage
+├── PricingHero
+│   ├── Eyebrow (optional)
+│   ├── Heading
+│   ├── SupportingCopy
+│   └── BillingToggle (Monthly / Annual)
+│
+├── PricingGrid
+│   ├── PricingCard (Tier 1: Starter)
+│   │   ├── TierHeader
+│   │   ├── PriceDisplay
+│   │   ├── BillingNote
+│   │   ├── FeatureList
+│   │   └── CTAButton
+│   │
+│   ├── PricingCard (Tier 2: Pro / Recommended)
+│   │   ├── PopularBadge
+│   │   ├── TierHeader
+│   │   ├── PriceDisplay
+│   │   ├── BillingNote
+│   │   ├── FeatureList
+│   │   └── PrimaryCTAButton
+│   │
+│   └── PricingCard (Tier 3: Enterprise)
+│       ├── TierHeader
+│       ├── PriceDisplay (&quot;Custom&quot; or value)
+│       ├── FeatureList
+│       └── ContactSalesCTA
+│
+├── ComparisonSupport (optional)
+│   ├── FeatureHighlights
+│   └── TrustSignals
+│
+├── FAQSection
+│   ├── FAQHeader
+│   ├── FAQAccordion
+│   │   ├── FAQItem
+│   │   ├── FAQItem
+│   │   └── FAQItem
+│   └── ContactSupportCTA
+│
+└── FinalCTA
+```
+
+---
+
+## Visual emphasis strategy
+
+### 1. Hero: establish confidence, not complexity
+**Goal:** Reduce hesitation before users see prices.
+
+- Large, simple headline:
+  - “Choose the plan that fits your team”
+  - “Simple pricing that scales with you”
+- Keep copy short.
+- Put annual/monthly toggle near the pricing cards, not buried elsewhere.
+- Add reassurance:
+  - Free trial
+  - No credit card required
+  - Cancel anytime
+
+Visual weight:
+```
+Headline ██████████
+Subcopy  █████
+Toggle   ████
+```
+
+---
+
+### 2. Pricing cards: create a clear hierarchy
+
+Three cards should not have equal visual weight.
+
+Recommended emphasis:
+
+```
+Starter       Pro (Recommended)       Enterprise
+
+ 80%              120%                  90%
+ height           height                 height
+ neutral          highlighted            premium
+```
+
+### Tier 1 — Starter
+**Purpose:** Entry point.
+
+Visual treatment:
+- Lowest emphasis
+- Neutral border
+- Shorter feature list
+- Secondary CTA
+
+Example:
+&gt; Get started
+
+---
+
+### Tier 2 — Pro (primary conversion target)
+**Purpose:** Default choice.
+
+Visual treatment:
+- Slightly larger card
+- Elevated position (desktop)
+- Stronger border/shadow
+- Badge:
+  - “Most Popular”
+  - “Best Value”
+  - “Recommended”
+- Primary button styling
+
+Example:
+
+```
+        ★ Recommended
+
+       PRO
+     $29/month
+
+  ✓ Everything in Starter
+  ✓ Advanced analytics
+  ✓ Team collaboration
+
+     [Start Free Trial]
+```
+
+This card should attract attention before users consciously compare.
+
+---
+
+### Tier 3 — Enterprise
+**Purpose:** Capture high-value users without distracting everyone.
+
+Visual treatment:
+- Premium but not dominant
+- Emphasize flexibility:
+  - Custom limits
+  - Security
+  - Support
+  - Integrations
+
+CTA changes from purchase to conversation:
+
+Instead of:
+&gt; Buy now
+
+Use:
+&gt; Contact Sales
+
+---
+
+## Feature list strategy
+
+Avoid long identical lists. Use progressive disclosure.
+
+Example:
+
+```
+Starter
+✓ 5 projects
+✓ Basic analytics
+✓ Email support
+
+Pro
+✓ Everything in Starter
+✓ Unlimited projects
+✓ Advanced analytics
+✓ Priority support
+
+Enterprise
+✓ Everything in Pro
+✓ SSO
+✓ Custom contracts
+✓ Dedicated support
+```
+
+Highlight differences rather than repeating everything.
+
+---
+
+## FAQ hierarchy
+
+FAQ should answer purchase objections, not explain the product.
+
+Recommended order:
+
+```
+FAQSection
+
+1. Billing questions
+   &quot;Can I change plans later?&quot;
+
+2. Trial questions
+   &quot;Is there a free trial?&quot;
+
+3. Usage questions
+   &quot;What happens if I exceed limits?&quot;
+
+4. Account questions
+   &quot;Can I cancel anytime?&quot;
+
+5. Enterprise questions
+   &quot;Do you support custom agreements?&quot;
+```
+
+Visual treatment:
+- Full-width section
+- Accordion rows
+- Plenty of whitespace
+- Keep answers concise
+
+---
+
+## Responsive behavior
+
+Desktop:
+
+```
+[ Starter ] [ ⭐ Pro ] [ Enterprise ]
+```
+
+Mobile:
+
+```
+⭐ Pro
+[CTA]
+
+Starter
+[CTA]
+
+Enterprise
+[CTA]
+
+FAQ
+```
+
+Put the recommended plan first on mobile because users scroll rather than scan horizontally.
+
+---
+
+## Key conversion principles
+
+| Element | Emphasis |
+|---|---|
+| Recommended badge | High |
+| Pro CTA | Highest |
+| Price | High |
+| Feature differences | Medium |
+| FAQ | Trust-building |
+| Enterprise details | Targeted |
+
+The page should make the decision feel like: **“Most people choose Pro; Starter is for trying it; Enterprise is for special needs.”**</pre></details>
+      
+      <table class="assertions"><thead><tr><th>#</th><th></th><th>Assertion</th><th>Evidence</th></tr></thead><tbody>
+        <tr class="ok">
+          <td class="num">1</td>
+          <td><span class='check'>✓</span></td>
+          <td>States which pricing tier receives emphasis and by what visual mechanism</td>
+          <td><span class="evidence">The output states 'Tier 2 — Pro (primary conversion target)' and lists mechanisms: 'Slightly larger card', 'Elevated position (desktop)', 'Stronger border/shadow', 'Badge: Most Popular / Best Value / Recommended', and 'Primary button styling'.</span></td>
+        </tr>
+
+        <tr class="bad">
+          <td class="num">2</td>
+          <td><span class='x'>✗</span></td>
+          <td>Maintains structural consistency across the three tiers while differentiating emphasis</td>
+          <td><span class="evidence">The output differentiates the tiers with treatments, but it does not explicitly state that the three tiers maintain structural consistency. The component hierarchy shows separate PricingCard contents, but no assertion or evidence that the shared structure is maintained across all three.</span></td>
+        </tr>
+
+        <tr class="bad">
+          <td class="num">3</td>
+          <td><span class='x'>✗</span></td>
+          <td>FAQ treatment is deliberately de-emphasized relative to pricing tiers with a stated reason</td>
+          <td><span class="evidence">The output says 'FAQ should answer purchase objections, not explain the product' and labels FAQ as 'Trust-building', but it does not state that FAQ is visually de-emphasized relative to pricing tiers or provide a reason for that relative emphasis.</span></td>
+        </tr></tbody></table>
+      <details class="judge"><summary>judge prompt</summary><pre>You are grading an agentskills.io evaluation run.
+Grading principles:
+- Require concrete evidence for every PASS; quote or reference the output.
+- Do not give the benefit of the doubt.
+- PASS an assertion only if every condition in the assertion text holds.
+- A label without substance is a FAIL.
+- Tool calls (when present) are authoritative evidence of model behavior.
+Return STRICT JSON only. No markdown. Shape:
+{&quot;assertion_results&quot;:[{&quot;text&quot;:&quot;...&quot;,&quot;passed&quot;:true,&quot;evidence&quot;:&quot;...&quot;}],&quot;summary&quot;:{&quot;passed&quot;:0,&quot;failed&quot;:0,&quot;total&quot;:0,&quot;pass_rate&quot;:0}}
+Rules:
+- Include every assertion exactly once and copy the full assertion text verbatim into text.
+- Use short concrete evidence: quote, snippet, or file reference.
+- Summary may be included, but it will be recomputed by the caller.
+Assertions:
+[
+  &quot;States which pricing tier receives emphasis and by what visual mechanism&quot;,
+  &quot;Maintains structural consistency across the three tiers while differentiating emphasis&quot;,
+  &quot;FAQ treatment is deliberately de-emphasized relative to pricing tiers with a stated reason&quot;
+]
+Model output:
+A strong pricing page should guide users from **understanding → comparing → choosing → resolving objections**. For 3 tiers plus FAQ, structure the page so the middle tier receives the strongest visual and conversion emphasis.
+
+## Component hierarchy
+
+```
+PricingPage
+├── PricingHero
+│   ├── Eyebrow (optional)
+│   ├── Heading
+│   ├── SupportingCopy
+│   └── BillingToggle (Monthly / Annual)
+│
+├── PricingGrid
+│   ├── PricingCard (Tier 1: Starter)
+│   │   ├── TierHeader
+│   │   ├── PriceDisplay
+│   │   ├── BillingNote
+│   │   ├── FeatureList
+│   │   └── CTAButton
+│   │
+│   ├── PricingCard (Tier 2: Pro / Recommended)
+│   │   ├── PopularBadge
+│   │   ├── TierHeader
+│   │   ├── PriceDisplay
+│   │   ├── BillingNote
+│   │   ├── FeatureList
+│   │   └── PrimaryCTAButton
+│   │
+│   └── PricingCard (Tier 3: Enterprise)
+│       ├── TierHeader
+│       ├── PriceDisplay (&quot;Custom&quot; or value)
+│       ├── FeatureList
+│       └── ContactSalesCTA
+│
+├── ComparisonSupport (optional)
+│   ├── FeatureHighlights
+│   └── TrustSignals
+│
+├── FAQSection
+│   ├── FAQHeader
+│   ├── FAQAccordion
+│   │   ├── FAQItem
+│   │   ├── FAQItem
+│   │   └── FAQItem
+│   └── ContactSupportCTA
+│
+└── FinalCTA
+```
+
+---
+
+## Visual emphasis strategy
+
+### 1. Hero: establish confidence, not complexity
+**Goal:** Reduce hesitation before users see prices.
+
+- Large, simple headline:
+  - “Choose the plan that fits your team”
+  - “Simple pricing that scales with you”
+- Keep copy short.
+- Put annual/monthly toggle near the pricing cards, not buried elsewhere.
+- Add reassurance:
+  - Free trial
+  - No credit card required
+  - Cancel anytime
+
+Visual weight:
+```
+Headline ██████████
+Subcopy  █████
+Toggle   ████
+```
+
+---
+
+### 2. Pricing cards: create a clear hierarchy
+
+Three cards should not have equal visual weight.
+
+Recommended emphasis:
+
+```
+Starter       Pro (Recommended)       Enterprise
+
+ 80%              120%                  90%
+ height           height                 height
+ neutral          highlighted            premium
+```
+
+### Tier 1 — Starter
+**Purpose:** Entry point.
+
+Visual treatment:
+- Lowest emphasis
+- Neutral border
+- Shorter feature list
+- Secondary CTA
+
+Example:
+&gt; Get started
+
+---
+
+### Tier 2 — Pro (primary conversion target)
+**Purpose:** Default choice.
+
+Visual treatment:
+- Slightly larger card
+- Elevated position (desktop)
+- Stronger border/shadow
+- Badge:
+  - “Most Popular”
+  - “Best Value”
+  - “Recommended”
+- Primary button styling
+
+Example:
+
+```
+        ★ Recommended
+
+       PRO
+     $29/month
+
+  ✓ Everything in Starter
+  ✓ Advanced analytics
+  ✓ Team collaboration
+
+     [Start Free Trial]
+```
+
+This card should attract attention before users consciously compare.
+
+---
+
+### Tier 3 — Enterprise
+**Purpose:** Capture high-value users without distracting everyone.
+
+Visual treatment:
+- Premium but not dominant
+- Emphasize flexibility:
+  - Custom limits
+  - Security
+  - Support
+  - Integrations
+
+CTA changes from purchase to conversation:
+
+Instead of:
+&gt; Buy now
+
+Use:
+&gt; Contact Sales
+
+---
+
+## Feature list strategy
+
+Avoid long identical lists. Use progressive disclosure.
+
+Example:
+
+```
+Starter
+✓ 5 projects
+✓ Basic analytics
+✓ Email support
+
+Pro
+✓ Everything in Starter
+✓ Unlimited projects
+✓ Advanced analytics
+✓ Priority support
+
+Enterprise
+✓ Everything in Pro
+✓ SSO
+✓ Custom contracts
+✓ Dedicated support
+```
+
+Highlight differences rather than repeating everything.
+
+---
+
+## FAQ hierarchy
+
+FAQ should answer purchase objections, not explain the product.
+
+Recommended order:
+
+```
+FAQSection
+
+1. Billing questions
+   &quot;Can I change plans later?&quot;
+
+2. Trial questions
+   &quot;Is there a free trial?&quot;
+
+3. Usage questions
+   &quot;What happens if I exceed limits?&quot;
+
+4. Account questions
+   &quot;Can I cancel anytime?&quot;
+
+5. Enterprise questions
+   &quot;Do you support custom agreements?&quot;
+```
+
+Visual treatment:
+- Full-width section
+- Accordion rows
+- Plenty of whitespace
+- Keep answers concise
+
+---
+
+## Responsive behavior
+
+Desktop:
+
+```
+[ Starter ] [ ⭐ Pro ] [ Enterprise ]
+```
+
+Mobile:
+
+```
+⭐ Pro
+[CTA]
+
+Starter
+[CTA]
+
+Enterprise
+[CTA]
+
+FAQ
+```
+
+Put the recommended plan first on mobile because users scroll rather than scan horizontally.
+
+---
+
+## Key conversion principles
+
+| Element | Emphasis |
+|---|---|
+| Recommended badge | High |
+| Pro CTA | Highest |
+| Price | High |
+| Feature differences | Medium |
+| FAQ | Trust-building |
+| Enterprise details | Targeted |
+
+The page should make the decision feel like: **“Most people choose Pro; Starter is for trying it; Enterprise is for special needs.”**
+Output files:
+No output files were captured.</pre></details>
+    </section>
+  </div>
+    </details>
+  
+
+    <details class="eval ok">
+      <summary>
+        <span class="eval-status">✓</span>
+        <span class="eval-name">eval-landing-page-direction</span>
+        <span class="muted">6/6 assertions</span>
+      </summary>
+      <div class="eval-body">
+    <section class="run">
+      <header class="run-head">
+        <span class="mode mode-with_skill">with_skill</span>
+        <span class="status ok">PASS</span>
+        <span class="muted">19ms · 2663 tokens · 3/3</span>
+      </header>
+      <details class="prompt"><summary>system prompt</summary><pre>&lt;skill name=&quot;frontend-design&quot;&gt;
+&lt;description&gt;Guidance for distinctive, intentional visual design when building new UI or reshaping an existing one. Helps with aesthetic direction, typography, and making choices that don't read as templated defaults.&lt;/description&gt;
+&lt;instructions&gt;
+# Frontend Design
+
+Approach this as the design lead at a small studio known for giving every client a visual identity that could not be mistaken for anyone else's. This client has already rejected proposals that felt templated, and is paying for a distinctive point of view: make deliberate, opinionated choices about palette, typography, and layout that are specific to this brief, and take one real aesthetic risk you can justify.
+
+## Ground it in the subject
+
+If the brief does not pin down what the product or subject is, pin it yourself before designing: name one concrete subject, its audience, and the page's single job, and state your choice. If there's any information in your memory about the human's preferences, context about what they're building, or designs you've made before – use that as a hint. The subject's own world, its materials, instruments, artifacts, and vernacular, is where distinctive choices come from. Build with the brief's real content and subject matter throughout.
+
+## Design principles
+
+For web designs, the hero is a thesis. Open with the most characteristic thing in the subject's world, in whatever form makes sense for it: a headline, an image, an animation, a live demo, an interactive moment. Be deliberate with your choice: a big number with a small label, supporting stats, and a gradient accent is the template answer, only use if that's truly the best option.
+
+Typography carries the personality of the page. Pair the display and body faces deliberately, not the same families you would reach for on any other project, and set a clear type scale with intentional weights, widths, and spacing. Make the type treatment itself a memorable part of the design, not a neutral delivery vehicle for the content.
+
+Structure is information. Structural devices, numbering, eyebrows, dividers, labels, should encode something true about the content, not decorate it. Many generic designs use numbered markers (01 / 02 / 03), but that's only appropriate if the content actually is a sequence - like a real process or a typed timeline where order carries information the reader needs. Question if choices like numbered markers actually make sense before incorporating them.
+
+Leverage motion deliberately. Think about where and if animation can serve the subject: a page-load sequence, a scroll-triggered reveal, hover micro-interactions, ambient atmosphere. An orchestrated moment usually lands harder than scattered effects; choose what the direction calls for. However, sometimes less is more, and extra animation contributes to the feeling that the design is AI-generated.
+
+Match complexity to the vision. Maximalist directions need elaborate execution; minimal directions need precision in spacing, type, and detail. Elegance is executing the chosen vision well.
+
+Consider written content carefully. Often a design brief may not contain real content, and it's up to you to come up with copy. Copy can make a design feel as templated as the design itself. See the below section on writing for more guidance.
+
+## Process: brainstorm, explore, plan, critique, build, critique again
+
+For calibration: AI-generated design right now clusters around three looks: (1) a warm cream background (near #F4F1EA) with a high-contrast serif display and a terracotta accent; (2) a near-black background with a single bright acid-green or vermilion accent; (3) a broadsheet-style layout with hairline rules, zero border-radius, and dense newspaper-like columns. All three are legitimate for some briefs, but they are defaults rather than choices, and they appear regardless of subject. Where the brief pins down a visual direction, follow it exactly — the brief's own words always win, including when it asks for one of these looks. Where it leaves an axis free, don't spend that freedom on one of these defaults. Just like a human designer who's hired, there's often a careful balance between doing what you're good at and taking each project as a chance to experiment and learn.
+
+Work in two passes. First, brainstorm a short design plan based on the human's design brief: create a compact token system with color, type, layout, and signature. Color: describe the palette as 4–6 named hex values. Type: the typefaces for 2+ roles (a characterful display face that's used with restraint, a complementary body face, and a utility face for captions or data if needed). Layout: a layout concept, using one-sentence prose descriptions and ASCII wireframes to ideate and compare. Signature: the single unique element this page will be remembered by that embodies the brief in an appropriate way.
+
+Then review that plan against the brief before building: if any part of it reads like the generic default you would produce for any similar page (work through a similar prompt to see if you arrive somewhere similar) rather than a choice made for this specific brief — revise that part, say what you changed and why. Only after you've confirmed the relative uniqueness of your design plan should you start to write the code, following the revised plan exactly and deriving every color and type decision from it.
+
+When writing the code, be careful of structuring your CSS selector specificities. It's easy to generate CSS classes that cancel each other out (especially with a type-based selector like .section and a element-based selector like .cta). This can happen often with paddings/margins between sections.
+
+Try to do a lot of this planning and iteration in your thinking, and only show ideas to the user when you have higher confidence it'll delight them.
+
+## Restraint and self-critique
+
+Spend your boldness in one place. Let the signature element be the one memorable thing, keep everything around it quiet and disciplined, and cut any decoration that does not serve the brief. Not taking a risk can be a risk itself! Build to a quality floor without announcing it: responsive down to mobile, visible keyboard focus, reduced motion respected. Critique your own work as you build, taking screenshots if your environment supports it – a picture is worth 1000 tokens. Consider Chanel's advice: before leaving the house, take a look in the mirror and remove one accessory. Human creators have memory and always try to do something new, so if you have a space to quickly jot down notes about what you've tried, it can help you in future passes.
+
+## More on writing in design
+
+Words appear in a design for one reason: to make it easier to understand, and therefore easier to use. They are design material, not decoration. Bring the same intentionality to copy that you would bring to spacing and color. Before writing anything, ask what the design needs to say, and how it can best be said to help the person navigate the experience.
+
+Write from the end user's side of the screen. Name things by what people control and recognize, never by how the system is built. A person manages notifications, not webhook config. Describe what something does in plain terms rather than selling it. Being specific is always better than being clever.
+
+Use active voice as default. A control should say exactly what happens when it's used: &quot;Save changes,&quot; not &quot;Submit.&quot; An action keeps the same name through the whole flow, so the button that says &quot;Publish&quot; produces a toast that says &quot;Published.&quot; The vocabulary of an interface is the signposting for someone navigating the product. Cohesion and consistency are how people learn their way around.
+
+Treat failure and emptiness as moments for direction, not mood. Explain what went wrong and how to fix it, in the interface's voice rather than a person's. Errors don't apologize, and they are never vague about what happened. An empty screen is an invitation to act.
+
+Keep the register conversational and tuned: plain verbs, sentence case, no filler, with tone matched to the brand and the audience. Let each element do exactly one job. A label labels, an example demonstrates, and nothing quietly does double duty.
+&lt;/instructions&gt;
+&lt;/skill&gt;</pre></details>
+      <details class="prompt" open><summary>user prompt</summary><pre>I'm building a landing page for an indie note-taking app targeting writers. Describe the visual design direction you'd choose and why.</pre></details>
+      <details class="output" open><summary>output</summary><pre>I’d position the app less like a productivity tool and more like a **quiet writing studio** — a place where authors, essayists, and journalers feel they are entering a room designed for thought.
+
+## Design thesis: “The writer’s desk, not the productivity dashboard”
+
+Most note-taking apps lean toward sterile SaaS aesthetics: bright gradients, floating cards, metrics, and efficiency language. For writers, the emotional promise is different: **capture a thought before it disappears, develop a voice, return to unfinished ideas**.
+
+The visual direction should evoke the physical artifacts of writing — notebooks, marginalia, drafts, typewriters, bookshelves — while still feeling like a modern digital tool.
+
+---
+
+## Visual system
+
+### Palette: archival paper + ink + one unexpected accent
+
+- **Warm parchment** `#F3EEE4` — primary background, like aged paper
+- **Charcoal ink** `#181716` — main text, high contrast without feeling harsh
+- **Muted graphite** `#6B6760` — secondary UI text
+- **Faded moss** `#68705D` — subtle interactive states
+- **Burnt sienna** `#B45F3C` — signature accent for moments of emphasis
+
+The risk: avoid the obvious “cream + serif + brown” literary cliché by introducing a single contemporary accent and sharper digital details. The page should feel like a writer’s tool from 2026, not a vintage stationery shop.
+
+---
+
+## Typography
+
+### Display: a literary voice
+
+Use a distinctive serif with personality:
+- [&quot;brand&quot;,&quot;Fraunces font&quot;,&quot;Google Fonts typeface&quot;] or [&quot;brand&quot;,&quot;Literata font&quot;,&quot;Google Fonts typeface&quot;]
+
+Large headlines should feel like the opening line of a novel:
+
+&gt; “Your unfinished thoughts deserve a place to become something.”
+
+Avoid overly elegant fashion-editorial typography. Writers need warmth and trust, not luxury branding.
+
+### Body: a clear reading companion
+
+Pair with a calm sans:
+- [&quot;brand&quot;,&quot;Inter font&quot;,&quot;Google Fonts typeface&quot;]
+- [&quot;brand&quot;,&quot;IBM Plex Sans&quot;,&quot;typeface family&quot;]
+
+Use it for navigation, feature explanations, and product UI.
+
+### Utility type
+
+A restrained monospace:
+- [&quot;brand&quot;,&quot;IBM Plex Mono&quot;,&quot;typeface family&quot;]
+
+Use sparingly for things like word counts, shortcuts, timestamps, or note metadata.
+
+---
+
+## Layout concept
+
+The hero should not show a generic laptop mockup. The characteristic object is the **draft itself**.
+
+```
+------------------------------------------------
+ small logo                 writers • notes • ideas
+
+                 Write before
+                 the thought fades.
+
+        A calm space for fragments,
+        drafts, research, and stories.
+
+             [ Start writing ]
+
+        ┌───────────────────────┐
+        │ Chapter idea...       │
+        │                       │
+        │ &quot;The rain arrived     │
+        │ before she did...&quot;    │
+        │                       │
+        │              842 words│
+        └───────────────────────┘
+
+------------------------------------------------
+```
+
+The hero’s centerpiece is a living note canvas:
+- cursor blinking subtly
+- text appearing as if being written
+- handwritten annotations or pinned fragments nearby
+- minimal UI chrome
+
+The product itself becomes the visual proof.
+
+---
+
+## Signature element: the “margin”
+
+The memorable design feature would be a persistent **digital margin system** inspired by book annotations.
+
+Instead of ordinary side panels:
+
+- notes appear as small marginal thoughts
+- references attach like sticky tabs
+- ideas branch outward like a writer’s notebook
+
+Example:
+
+```
+The protagonist leaves at dawn.
+                    └── Why dawn?
+                    └── Research: coastal towns
+                    └── Possible chapter title
+```
+
+This communicates the app’s identity instantly: it is not just storing notes; it is helping writers think.
+
+---
+
+## Motion direction
+
+Keep animation rare and intentional:
+
+- Hero text appears with a typewriter-like rhythm (but faster and less gimmicky)
+- Margin notes gently slide into place
+- Page transitions feel like turning a sheet of paper
+- Cursor movement provides subtle life
+
+Avoid:
+- bouncing cards
+- excessive parallax
+- animated gradients
+- “AI startup” effects
+
+---
+
+## Supporting sections
+
+### Feature sections should feel like pages from a manuscript
+
+Instead of:
+
+&gt; “Powerful organization features”
+
+Use:
+
+&gt; “Collect the fragments that become chapters.”
+
+Show:
+- research notes
+- character sketches
+- outlines
+- excerpts
+
+Each section feels like a different stage of writing.
+
+---
+
+## Overall feeling
+
+The finished page should make a writer think:
+
+&gt; “I want to write something here.”
+
+Not:
+
+&gt; “This looks like another productivity app.”
+
+The design’s single bold choice is treating the interface as a **living manuscript** rather than a dashboard. Everything else stays quiet so that the act of writing remains the hero.</pre></details>
+      
+      <table class="assertions"><thead><tr><th>#</th><th></th><th>Assertion</th><th>Evidence</th></tr></thead><tbody>
+        <tr class="ok">
+          <td class="num">1</td>
+          <td><span class='check'>✓</span></td>
+          <td>Commits to a SPECIFIC direction rather than listing generic options or hedging</td>
+          <td><span class="evidence">The output commits to a direction: &quot;I’d position the app less like a productivity tool and more like a quiet writing studio&quot; and states &quot;The design’s single bold choice is treating the interface as a living manuscript rather than a dashboard.&quot;</span></td>
+        </tr>
+
+        <tr class="ok">
+          <td class="num">2</td>
+          <td><span class='check'>✓</span></td>
+          <td>Typography and color choices are concrete (named characteristics, not just 'nice fonts')</td>
+          <td><span class="evidence">The output specifies colors with names and hex codes, including &quot;Warm parchment #F3EEE4&quot; and &quot;Charcoal ink #181716&quot;, and names typefaces including &quot;Fraunces&quot;, &quot;Literata&quot;, &quot;Inter&quot;, &quot;IBM Plex Sans&quot;, and &quot;IBM Plex Mono&quot; with usage guidance.</span></td>
+        </tr>
+
+        <tr class="ok">
+          <td class="num">3</td>
+          <td><span class='check'>✓</span></td>
+          <td>Design choices are explicitly connected to the target audience (writers) rather than generic best practices</td>
+          <td><span class="evidence">The output repeatedly ties choices to writers, e.g. &quot;For writers, the emotional promise is different: capture a thought before it disappears, develop a voice, return to unfinished ideas&quot; and &quot;This communicates the app’s identity instantly: it is not just storing notes; it is helping writers think.&quot;</span></td>
+        </tr></tbody></table>
+      <details class="judge"><summary>judge prompt</summary><pre>You are grading an agentskills.io evaluation run.
+Grading principles:
+- Require concrete evidence for every PASS; quote or reference the output.
+- Do not give the benefit of the doubt.
+- PASS an assertion only if every condition in the assertion text holds.
+- A label without substance is a FAIL.
+- Tool calls (when present) are authoritative evidence of model behavior.
+Return STRICT JSON only. No markdown. Shape:
+{&quot;assertion_results&quot;:[{&quot;text&quot;:&quot;...&quot;,&quot;passed&quot;:true,&quot;evidence&quot;:&quot;...&quot;}],&quot;summary&quot;:{&quot;passed&quot;:0,&quot;failed&quot;:0,&quot;total&quot;:0,&quot;pass_rate&quot;:0}}
+Rules:
+- Include every assertion exactly once and copy the full assertion text verbatim into text.
+- Use short concrete evidence: quote, snippet, or file reference.
+- Summary may be included, but it will be recomputed by the caller.
+Assertions:
+[
+  &quot;Commits to a SPECIFIC direction rather than listing generic options or hedging&quot;,
+  &quot;Typography and color choices are concrete (named characteristics, not just 'nice fonts')&quot;,
+  &quot;Design choices are explicitly connected to the target audience (writers) rather than generic best practices&quot;
+]
+Model output:
+I’d position the app less like a productivity tool and more like a **quiet writing studio** — a place where authors, essayists, and journalers feel they are entering a room designed for thought.
+
+## Design thesis: “The writer’s desk, not the productivity dashboard”
+
+Most note-taking apps lean toward sterile SaaS aesthetics: bright gradients, floating cards, metrics, and efficiency language. For writers, the emotional promise is different: **capture a thought before it disappears, develop a voice, return to unfinished ideas**.
+
+The visual direction should evoke the physical artifacts of writing — notebooks, marginalia, drafts, typewriters, bookshelves — while still feeling like a modern digital tool.
+
+---
+
+## Visual system
+
+### Palette: archival paper + ink + one unexpected accent
+
+- **Warm parchment** `#F3EEE4` — primary background, like aged paper
+- **Charcoal ink** `#181716` — main text, high contrast without feeling harsh
+- **Muted graphite** `#6B6760` — secondary UI text
+- **Faded moss** `#68705D` — subtle interactive states
+- **Burnt sienna** `#B45F3C` — signature accent for moments of emphasis
+
+The risk: avoid the obvious “cream + serif + brown” literary cliché by introducing a single contemporary accent and sharper digital details. The page should feel like a writer’s tool from 2026, not a vintage stationery shop.
+
+---
+
+## Typography
+
+### Display: a literary voice
+
+Use a distinctive serif with personality:
+- [&quot;brand&quot;,&quot;Fraunces font&quot;,&quot;Google Fonts typeface&quot;] or [&quot;brand&quot;,&quot;Literata font&quot;,&quot;Google Fonts typeface&quot;]
+
+Large headlines should feel like the opening line of a novel:
+
+&gt; “Your unfinished thoughts deserve a place to become something.”
+
+Avoid overly elegant fashion-editorial typography. Writers need warmth and trust, not luxury branding.
+
+### Body: a clear reading companion
+
+Pair with a calm sans:
+- [&quot;brand&quot;,&quot;Inter font&quot;,&quot;Google Fonts typeface&quot;]
+- [&quot;brand&quot;,&quot;IBM Plex Sans&quot;,&quot;typeface family&quot;]
+
+Use it for navigation, feature explanations, and product UI.
+
+### Utility type
+
+A restrained monospace:
+- [&quot;brand&quot;,&quot;IBM Plex Mono&quot;,&quot;typeface family&quot;]
+
+Use sparingly for things like word counts, shortcuts, timestamps, or note metadata.
+
+---
+
+## Layout concept
+
+The hero should not show a generic laptop mockup. The characteristic object is the **draft itself**.
+
+```
+------------------------------------------------
+ small logo                 writers • notes • ideas
+
+                 Write before
+                 the thought fades.
+
+        A calm space for fragments,
+        drafts, research, and stories.
+
+             [ Start writing ]
+
+        ┌───────────────────────┐
+        │ Chapter idea...       │
+        │                       │
+        │ &quot;The rain arrived     │
+        │ before she did...&quot;    │
+        │                       │
+        │              842 words│
+        └───────────────────────┘
+
+------------------------------------------------
+```
+
+The hero’s centerpiece is a living note canvas:
+- cursor blinking subtly
+- text appearing as if being written
+- handwritten annotations or pinned fragments nearby
+- minimal UI chrome
+
+The product itself becomes the visual proof.
+
+---
+
+## Signature element: the “margin”
+
+The memorable design feature would be a persistent **digital margin system** inspired by book annotations.
+
+Instead of ordinary side panels:
+
+- notes appear as small marginal thoughts
+- references attach like sticky tabs
+- ideas branch outward like a writer’s notebook
+
+Example:
+
+```
+The protagonist leaves at dawn.
+                    └── Why dawn?
+                    └── Research: coastal towns
+                    └── Possible chapter title
+```
+
+This communicates the app’s identity instantly: it is not just storing notes; it is helping writers think.
+
+---
+
+## Motion direction
+
+Keep animation rare and intentional:
+
+- Hero text appears with a typewriter-like rhythm (but faster and less gimmicky)
+- Margin notes gently slide into place
+- Page transitions feel like turning a sheet of paper
+- Cursor movement provides subtle life
+
+Avoid:
+- bouncing cards
+- excessive parallax
+- animated gradients
+- “AI startup” effects
+
+---
+
+## Supporting sections
+
+### Feature sections should feel like pages from a manuscript
+
+Instead of:
+
+&gt; “Powerful organization features”
+
+Use:
+
+&gt; “Collect the fragments that become chapters.”
+
+Show:
+- research notes
+- character sketches
+- outlines
+- excerpts
+
+Each section feels like a different stage of writing.
+
+---
+
+## Overall feeling
+
+The finished page should make a writer think:
+
+&gt; “I want to write something here.”
+
+Not:
+
+&gt; “This looks like another productivity app.”
+
+The design’s single bold choice is treating the interface as a **living manuscript** rather than a dashboard. Everything else stays quiet so that the act of writing remains the hero.
+Output files:
+No output files were captured.</pre></details>
+    </section>
+  
+
+    <section class="run">
+      <header class="run-head">
+        <span class="mode mode-without_skill">without_skill</span>
+        <span class="status ok">PASS</span>
+        <span class="muted">16ms · 885 tokens · 3/3</span>
+      </header>
+      
+      <details class="prompt" open><summary>user prompt</summary><pre>I'm building a landing page for an indie note-taking app targeting writers. Describe the visual design direction you'd choose and why.</pre></details>
+      <details class="output" open><summary>output</summary><pre>For an indie note-taking app aimed at writers, I’d avoid the usual “productivity SaaS” aesthetic (bright gradients, floating cards, dashboard screenshots) and lean into something that feels like a **quiet creative studio**: a place where ideas become books, essays, and stories.
+
+## Visual direction: “The writer’s desk, reimagined”
+
+{&quot;layout&quot;:&quot;carousel&quot;,&quot;aspect_ratio&quot;:&quot;16:9&quot;,&quot;query&quot;:[&quot;minimal writer desk warm light notebook aesthetic&quot;,&quot;editorial typography website design minimalist&quot;,&quot;modern writing app interface clean typography&quot;]}
+
+### 1. Atmosphere: calm, tactile, literary
+The first impression should be: *“I want to write here.”*
+
+I’d use:
+- Warm off-whites instead of pure white (#FAF7F2 rather than #FFFFFF)
+- Soft charcoal text instead of harsh black
+- Subtle paper grain or texture
+- Gentle shadows that feel physical rather than digital
+- Occasional ink-like accents (deep navy, forest green, muted burgundy)
+
+The app should feel closer to a beautifully designed notebook or a favorite bookstore than a project management tool.
+
+**Why:** Writers are not primarily buying features; they’re buying a feeling of focus, flow, and creative confidence.
+
+---
+
+### 2. Typography: make the words the hero
+Typography should carry much of the brand.
+
+I’d pair:
+- A distinctive serif for headlines (editorial, literary, human)
+- A clean sans-serif for UI and navigation
+
+Example mood:
+- Hero headline: large, elegant serif — “Your ideas deserve a place to unfold.”
+- Supporting copy: restrained, readable sans-serif
+- Product screenshots: crisp monospace or neutral UI font
+
+Avoid overly geometric startup fonts. Writers spend their lives with words; the landing page should respect that.
+
+---
+
+### 3. Hero section: show the writing experience, not the feature list
+
+Instead of:
+
+&gt; “AI-powered notes with tags, sync, collaboration, and markdown.”
+
+I’d show:
+
+**A beautiful blank page becoming a manuscript.**
+
+Possible hero layout:
+- Left: emotionally compelling headline + short explanation + CTA
+- Right: a floating app window showing:
+  - a draft in progress
+  - subtle cursor animation
+  - notes becoming organized
+  - a calm writing environment
+
+The screenshot should feel like someone’s creative workspace, not a software demo.
+
+---
+
+### 4. Use editorial-style layouts
+Borrow from magazines and books:
+
+- Large margins
+- Strong hierarchy
+- Asymmetric sections
+- Full-width statements between product sections
+- Pull quotes from fictional writers/users
+- Slow scrolling rhythm
+
+For example:
+
+&gt; “Every great book starts as a messy collection of fragments.”
+
+Then show how the app turns fragments into structure.
+
+**Why:** The audience identifies as creators, not “users.”
+
+---
+
+### 5. Imagery: human moments, not generic stock
+If using photography:
+- Hands writing notes
+- Annotated pages
+- Desk lamps at night
+- Coffee beside drafts
+- Library/archive textures
+
+Avoid:
+- People smiling at laptops
+- Generic startup teams
+- Abstract AI imagery
+
+The product should feel like a companion to a writer’s ritual.
+
+---
+
+### 6. Interface styling
+The actual app UI should reinforce the brand:
+
+- Minimal chrome
+- Generous line spacing
+- Beautiful markdown rendering
+- Focus mode prominently featured
+- Small details:
+  - page-turn-like transitions
+  - subtle typing animations
+  - thoughtful empty states
+
+Think “digital fountain pen,” not “digital spreadsheet.”
+
+---
+
+### 7. Color system
+A possible palette:
+
+- Background: parchment / warm ivory
+- Text: ink black
+- Primary accent: midnight blue or deep green
+- Highlight: muted gold
+- Secondary surfaces: soft gray-beige
+
+The palette should age well and feel premium without feeling luxury-branded.
+
+---
+
+### 8. Overall brand personality
+I’d aim for:
+
+**70% literary tool**  
+**20% modern software**  
+**10% playful personality**
+
+The message is not:
+&gt; “Manage your notes better.”
+
+It’s:
+&gt; “Protect your ideas until they become something.”
+
+That positioning makes the app feel like a creative instrument rather than another productivity utility.</pre></details>
+      
+      <table class="assertions"><thead><tr><th>#</th><th></th><th>Assertion</th><th>Evidence</th></tr></thead><tbody>
+        <tr class="ok">
+          <td class="num">1</td>
+          <td><span class='check'>✓</span></td>
+          <td>Commits to a SPECIFIC direction rather than listing generic options or hedging</td>
+          <td><span class="evidence">Output commits to “a quiet creative studio” direction and names the concept “The writer’s desk, reimagined,” with specific choices like avoiding “productivity SaaS” aesthetics.</span></td>
+        </tr>
+
+        <tr class="ok">
+          <td class="num">2</td>
+          <td><span class='check'>✓</span></td>
+          <td>Typography and color choices are concrete (named characteristics, not just 'nice fonts')</td>
+          <td><span class="evidence">Output specifies “a distinctive serif for headlines,” “a clean sans-serif for UI,” and colors including “#FAF7F2,” “deep navy,” “forest green,” “muted burgundy,” “midnight blue,” and “deep green.”</span></td>
+        </tr>
+
+        <tr class="ok">
+          <td class="num">3</td>
+          <td><span class='check'>✓</span></td>
+          <td>Design choices are explicitly connected to the target audience (writers) rather than generic best practices</td>
+          <td><span class="evidence">Output repeatedly ties choices to writers, e.g. “Writers spend their lives with words; the landing page should respect that” and “The audience identifies as creators, not ‘users.’”</span></td>
+        </tr></tbody></table>
+      <details class="judge"><summary>judge prompt</summary><pre>You are grading an agentskills.io evaluation run.
+Grading principles:
+- Require concrete evidence for every PASS; quote or reference the output.
+- Do not give the benefit of the doubt.
+- PASS an assertion only if every condition in the assertion text holds.
+- A label without substance is a FAIL.
+- Tool calls (when present) are authoritative evidence of model behavior.
+Return STRICT JSON only. No markdown. Shape:
+{&quot;assertion_results&quot;:[{&quot;text&quot;:&quot;...&quot;,&quot;passed&quot;:true,&quot;evidence&quot;:&quot;...&quot;}],&quot;summary&quot;:{&quot;passed&quot;:0,&quot;failed&quot;:0,&quot;total&quot;:0,&quot;pass_rate&quot;:0}}
+Rules:
+- Include every assertion exactly once and copy the full assertion text verbatim into text.
+- Use short concrete evidence: quote, snippet, or file reference.
+- Summary may be included, but it will be recomputed by the caller.
+Assertions:
+[
+  &quot;Commits to a SPECIFIC direction rather than listing generic options or hedging&quot;,
+  &quot;Typography and color choices are concrete (named characteristics, not just 'nice fonts')&quot;,
+  &quot;Design choices are explicitly connected to the target audience (writers) rather than generic best practices&quot;
+]
+Model output:
+For an indie note-taking app aimed at writers, I’d avoid the usual “productivity SaaS” aesthetic (bright gradients, floating cards, dashboard screenshots) and lean into something that feels like a **quiet creative studio**: a place where ideas become books, essays, and stories.
+
+## Visual direction: “The writer’s desk, reimagined”
+
+{&quot;layout&quot;:&quot;carousel&quot;,&quot;aspect_ratio&quot;:&quot;16:9&quot;,&quot;query&quot;:[&quot;minimal writer desk warm light notebook aesthetic&quot;,&quot;editorial typography website design minimalist&quot;,&quot;modern writing app interface clean typography&quot;]}
+
+### 1. Atmosphere: calm, tactile, literary
+The first impression should be: *“I want to write here.”*
+
+I’d use:
+- Warm off-whites instead of pure white (#FAF7F2 rather than #FFFFFF)
+- Soft charcoal text instead of harsh black
+- Subtle paper grain or texture
+- Gentle shadows that feel physical rather than digital
+- Occasional ink-like accents (deep navy, forest green, muted burgundy)
+
+The app should feel closer to a beautifully designed notebook or a favorite bookstore than a project management tool.
+
+**Why:** Writers are not primarily buying features; they’re buying a feeling of focus, flow, and creative confidence.
+
+---
+
+### 2. Typography: make the words the hero
+Typography should carry much of the brand.
+
+I’d pair:
+- A distinctive serif for headlines (editorial, literary, human)
+- A clean sans-serif for UI and navigation
+
+Example mood:
+- Hero headline: large, elegant serif — “Your ideas deserve a place to unfold.”
+- Supporting copy: restrained, readable sans-serif
+- Product screenshots: crisp monospace or neutral UI font
+
+Avoid overly geometric startup fonts. Writers spend their lives with words; the landing page should respect that.
+
+---
+
+### 3. Hero section: show the writing experience, not the feature list
+
+Instead of:
+
+&gt; “AI-powered notes with tags, sync, collaboration, and markdown.”
+
+I’d show:
+
+**A beautiful blank page becoming a manuscript.**
+
+Possible hero layout:
+- Left: emotionally compelling headline + short explanation + CTA
+- Right: a floating app window showing:
+  - a draft in progress
+  - subtle cursor animation
+  - notes becoming organized
+  - a calm writing environment
+
+The screenshot should feel like someone’s creative workspace, not a software demo.
+
+---
+
+### 4. Use editorial-style layouts
+Borrow from magazines and books:
+
+- Large margins
+- Strong hierarchy
+- Asymmetric sections
+- Full-width statements between product sections
+- Pull quotes from fictional writers/users
+- Slow scrolling rhythm
+
+For example:
+
+&gt; “Every great book starts as a messy collection of fragments.”
+
+Then show how the app turns fragments into structure.
+
+**Why:** The audience identifies as creators, not “users.”
+
+---
+
+### 5. Imagery: human moments, not generic stock
+If using photography:
+- Hands writing notes
+- Annotated pages
+- Desk lamps at night
+- Coffee beside drafts
+- Library/archive textures
+
+Avoid:
+- People smiling at laptops
+- Generic startup teams
+- Abstract AI imagery
+
+The product should feel like a companion to a writer’s ritual.
+
+---
+
+### 6. Interface styling
+The actual app UI should reinforce the brand:
+
+- Minimal chrome
+- Generous line spacing
+- Beautiful markdown rendering
+- Focus mode prominently featured
+- Small details:
+  - page-turn-like transitions
+  - subtle typing animations
+  - thoughtful empty states
+
+Think “digital fountain pen,” not “digital spreadsheet.”
+
+---
+
+### 7. Color system
+A possible palette:
+
+- Background: parchment / warm ivory
+- Text: ink black
+- Primary accent: midnight blue or deep green
+- Highlight: muted gold
+- Secondary surfaces: soft gray-beige
+
+The palette should age well and feel premium without feeling luxury-branded.
+
+---
+
+### 8. Overall brand personality
+I’d aim for:
+
+**70% literary tool**  
+**20% modern software**  
+**10% playful personality**
+
+The message is not:
+&gt; “Manage your notes better.”
+
+It’s:
+&gt; “Protect your ideas until they become something.”
+
+That positioning makes the app feel like a creative instrument rather than another productivity utility.
+Output files:
+No output files were captured.</pre></details>
+    </section>
+  </div>
+    </details>
+  </div>
+    </article>
+  
+      </main>
+</body>
+</html>

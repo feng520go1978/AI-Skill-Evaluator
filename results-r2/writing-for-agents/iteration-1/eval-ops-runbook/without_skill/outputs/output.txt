@@ -1,0 +1,320 @@
+:::writing{variant="document" id="48291" title="Nightly Data Import Failure Recovery Runbook"}
+# Nightly Data Import Failure Recovery Runbook
+
+## Purpose
+
+This runbook describes how an operator can diagnose and recover from failures in the nightly data import pipeline.
+
+The pipeline flow is:
+
+1. Download CSV files from the SFTP server.
+2. Validate and transform CSV data.
+3. Load transformed data into PostgreSQL.
+4. Mark the nightly import as complete.
+
+Use this procedure when the scheduled import fails or produces incomplete data.
+
+---
+
+# 1. Confirm the Failure
+
+## Symptoms
+
+Common failure indicators:
+
+- Nightly import job reports a failed status.
+- Expected data is missing from PostgreSQL.
+- Monitoring alerts indicate importer errors.
+- Import logs show failures in SFTP download, CSV transformation, or database loading.
+
+## Actions
+
+1. Open the import job logs.
+2. Record:
+   - Import run ID or timestamp.
+   - Failure stage.
+   - Error message.
+   - Number of files processed.
+   - Database load status.
+
+Example:
+
+```
+Import run: 2026-08-25 02:00 UTC
+Stage failed: CSV transformation
+Error: Invalid date format in customers_20260825.csv
+Files downloaded: 12/12
+Rows loaded: 0
+```
+
+Do not rerun the import until the failure cause is understood.
+
+---
+
+# 2. Check SFTP Source Files
+
+## Verify SFTP Connectivity
+
+1. Confirm the SFTP server is reachable.
+2. Verify credentials have not expired.
+3. Confirm the expected directory exists.
+4. Check whether the expected CSV files are present.
+
+Example checks:
+
+```bash
+sftp user@sftp.example.com
+cd /incoming/nightly
+ls -lah
+```
+
+Verify:
+
+- Files exist for the current import date.
+- File sizes are reasonable.
+- Files are not empty.
+- File names match the expected pattern.
+
+---
+
+## If Files Are Missing
+
+1. Confirm whether the upstream system completed its export.
+2. Check for delayed file delivery.
+3. Contact the upstream owner if files were not generated.
+
+Do not load partial data unless the import procedure explicitly supports partial loads.
+
+---
+
+## If Files Are Corrupt
+
+Examples:
+
+- Empty CSV files.
+- Truncated uploads.
+- Incorrect delimiters.
+- Unexpected encoding.
+
+Actions:
+
+1. Move the bad files aside if required:
+
+```bash
+mv file.csv file.csv.failed
+```
+
+2. Request replacement files from the source system.
+3. Restart from the SFTP download step after corrected files are available.
+
+---
+
+# 3. Validate CSV Transformation
+
+## Review Transformation Logs
+
+Check for:
+
+- Invalid column values.
+- Missing required fields.
+- Unexpected column changes.
+- Duplicate records.
+- Encoding problems.
+- Schema mismatches.
+
+Example errors:
+
+```
+Column count mismatch:
+Expected: 25
+Received: 26
+```
+
+```
+Invalid value:
+customer_status="unknown"
+Allowed values: active,inactive
+```
+
+---
+
+## Fix Data Issues
+
+If the issue is with source data:
+
+1. Identify affected file(s).
+2. Correct the source data or obtain corrected files.
+3. Remove failed transformation output.
+4. Rerun the transformation step.
+
+If the issue is with transformation logic:
+
+1. Stop the import.
+2. Escalate to the engineering owner.
+3. Do not manually modify transformation code in production unless authorized.
+
+---
+
+# 4. Check PostgreSQL Load Status
+
+## Verify Database Connectivity
+
+Confirm:
+
+- Database is reachable.
+- Credentials are valid.
+- The importer user has required permissions.
+- Storage capacity is available.
+
+Example:
+
+```bash
+psql -h postgres.example.com -U importer -d warehouse
+```
+
+---
+
+## Check for Partial Loads
+
+Determine whether any records were loaded before failure.
+
+Examples:
+
+```sql
+SELECT COUNT(*)
+FROM target_table
+WHERE import_date = CURRENT_DATE;
+```
+
+Review:
+
+- Row counts.
+- Import batch identifiers.
+- Load timestamps.
+
+---
+
+# 5. Recover From a Failed Load
+
+## If the Load Was Not Started
+
+1. Confirm transformed files are valid.
+2. Restart the PostgreSQL load step.
+
+---
+
+## If the Load Was Partially Completed
+
+1. Identify the import batch ID.
+2. Roll back incomplete data if supported.
+
+Example:
+
+```sql
+DELETE FROM target_table
+WHERE batch_id = 'FAILED_BATCH_ID';
+```
+
+3. Confirm cleanup completed.
+4. Restart the load.
+
+Do not reload data without removing partial records first, unless the load process is designed to be idempotent.
+
+---
+
+# 6. Restart the Import
+
+Before restarting:
+
+- [ ] SFTP files are available and valid.
+- [ ] Transformation completed successfully.
+- [ ] Database connectivity is working.
+- [ ] Previous partial data has been handled.
+- [ ] The failure cause has been documented.
+
+Restart the importer using the normal operational procedure.
+
+Example:
+
+```bash./importer run --date 2026-08-25
+```
+
+Monitor:
+
+- SFTP download completion.
+- Transformation output.
+- Database row counts.
+- Final job status.
+
+---
+
+# 7. Validate Successful Recovery
+
+After completion:
+
+1. Confirm the job status is successful.
+2. Verify expected tables were updated.
+3. Compare row counts against expected ranges.
+4. Check for import errors in logs.
+
+Example:
+
+```sql
+SELECT import_status, completed_at
+FROM import_history
+ORDER BY completed_at DESC
+LIMIT 1;
+```
+
+Confirm:
+
+- Status = SUCCESS.
+- Completion timestamp is correct.
+- Data is available to downstream systems.
+
+---
+
+# 8. Escalation
+
+Escalate to the engineering team when:
+
+- SFTP credentials or connectivity cannot be restored.
+- Source files are consistently invalid.
+- Transformation code fails.
+- Database schema changes are suspected.
+- Data correction requires application changes.
+
+Include:
+
+- Import run ID.
+- Timestamp.
+- Logs.
+- Error messages.
+- Steps already attempted.
+- Impact assessment.
+
+---
+
+# 9. Post-Incident Cleanup
+
+After recovery:
+
+1. Archive failed files and logs according to retention policy.
+2. Document the root cause.
+3. Record the corrective action.
+4. Update monitoring or validation checks if needed.
+
+---
+
+# Operator Quick Checklist
+
+- [ ] Confirm failure stage.
+- [ ] Review logs and capture error details.
+- [ ] Verify SFTP availability and files.
+- [ ] Validate CSV format and contents.
+- [ ] Check transformation output.
+- [ ] Verify PostgreSQL status.
+- [ ] Remove partial loads if required.
+- [ ] Restart importer.
+- [ ] Validate successful completion.
+- [ ] Document incident and escalate if needed.:::

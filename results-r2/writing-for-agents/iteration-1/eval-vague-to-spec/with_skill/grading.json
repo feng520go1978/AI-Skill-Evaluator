@@ -1,0 +1,25 @@
+{
+  "assertion_results": [
+    {
+      "text": "Performance goal is made measurable with a specific metric and numeric target",
+      "passed": true,
+      "evidence": "\"Reduce initial dashboard load time to under 2 seconds\" and \"Reduce the number of network requests made during initial render by at least 30%.\""
+    },
+    {
+      "text": "'Look nicer' is replaced with concrete, enumerable UI changes",
+      "passed": true,
+      "evidence": "The output lists concrete UI changes including \"Use consistent spacing, typography, colors, and component styles\", \"Ensure cards, charts, tables, and controls align to a consistent grid\", and \"Improve responsiveness\"."
+    },
+    {
+      "text": "Includes how completion would be verified or tested",
+      "passed": true,
+      "evidence": "Acceptance criteria include \"Before/after performance measurements are recorded using the project’s existing performance tooling or Lighthouse\", \"All dashboard pages pass existing automated tests\", and \"A reviewer can identify the main improvements from a visual comparison of before and after screenshots.\""
+    }
+  ],
+  "summary": {
+    "passed": 3,
+    "failed": 0,
+    "total": 3,
+    "pass_rate": 1
+  }
+}

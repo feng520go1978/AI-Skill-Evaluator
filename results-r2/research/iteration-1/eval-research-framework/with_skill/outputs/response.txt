@@ -1,0 +1,234 @@
+search("Research question: Is WebSocket or Server-Sent Events better for a live dashboard? Before answering, lay out HOW you would research this: information sources and verification steps.")slow|WebSocket Server-Sent Events RFC official specification comparison
+## How I would research this question
+
+I would avoid starting from blog opinions or “X is faster” claims. I would frame the question as a **decision problem**: *for what kind of live dashboard workload does WebSocket or Server-Sent Events provide the better engineering tradeoff?*
+
+### 1. Define the dashboard requirements first
+
+Before comparing technologies, I would specify the workload:
+
+**Data flow**
+- Is it mostly **server → browser** updates?
+  - Example: stock prices, monitoring metrics, analytics charts, operational dashboards.
+- Does the browser need to send frequent real-time messages back?
+  - Example: collaborative controls, live editing, command consoles.
+
+**Latency requirements**
+- Is “near real time” acceptable (100 ms–5 s)?
+- Is sub-100 ms interaction required?
+
+**Traffic pattern**
+- Number of connected clients:
+  - 100?
+  - 10,000?
+  - 1 million?
+- Update frequency:
+  - once per minute?
+  - 10 events/sec?
+  - thousands/sec?
+
+**Operational constraints**
+- Existing HTTP infrastructure?
+- Load balancers/proxies?
+- Need for mobile clients?
+- Need for binary data?
+- Need for replay/reconnect?
+
+The answer depends heavily on these assumptions.
+
+---
+
+## 2. Primary information sources I would use
+
+### A. Official protocol specifications
+
+These are the highest-trust sources.
+
+**WebSocket**
+- Read the WebSocket protocol specification:
+  - RFC 6455 defines the protocol model, handshake, framing, and full-duplex communication. 
+
+Questions to verify:
+- Is communication bidirectional?
+- How is connection establishment handled?
+- Are binary messages supported?
+- What guarantees exist around message framing?
+
+**Server-Sent Events**
+- Read the EventSource/SSE specification:
+  - SSE defines an HTTP-based connection for receiving server-pushed events. 
+
+Questions to verify:
+- Is it one-way?
+- How does reconnection work?
+- How are events formatted?
+- What browser APIs exist?
+
+---
+
+### B. Browser/platform documentation
+
+Check first-party browser documentation:
+
+Sources:
+- WHATWG HTML specification
+- MDN WebSocket documentation
+- MDN EventSource/SSE documentation
+
+Verification goals:
+- Browser compatibility
+- Connection limits
+- Reconnection behavior
+- API ergonomics
+- Debugging support
+
+---
+
+### C. Infrastructure documentation
+
+Because dashboards usually sit behind production infrastructure, I would examine:
+
+- NGINX documentation
+- AWS Application Load Balancer/WebSocket support
+- Cloudflare WebSocket/SSE guidance
+- Kubernetes ingress controller behavior
+
+Questions:
+- Do idle connections time out?
+- How are sticky sessions handled?
+- Does HTTP/2 affect deployment?
+- Are there proxy-specific problems?
+
+---
+
+### D. Real-world implementation evidence
+
+Look at production examples:
+
+For SSE:
+- Monitoring dashboards
+- AI token streaming systems
+- Notification feeds
+
+For WebSockets:
+- Collaborative apps
+- Multiplayer systems
+- Trading applications
+- Chat systems
+
+The goal is not “who uses what,” but identifying why they chose it.
+
+---
+
+### E. Benchmark evidence
+
+I would look for measurements rather than claims.
+
+Test dimensions:
+
+| Metric | Test |
+|---|---|
+| Latency | Time from server event creation → browser rendering |
+| Throughput | Messages/sec per connection |
+| Memory | Server memory per 1k/10k/100k clients |
+| CPU | Connection management overhead |
+| Reliability | Reconnect behavior after network failure |
+| Scaling | Horizontal scaling complexity |
+
+I would be cautious with synthetic benchmarks because dashboard workloads vary significantly.
+
+---
+
+# Verification steps
+
+## Step 1 — Build a comparison matrix from specifications
+
+Example:
+
+| Capability | WebSocket | SSE |
+|-|-|-|
+| Server → client | Yes | Yes |
+| Client → server | Yes | No (normally) |
+| Uses HTTP semantics | Limited after upgrade | Yes |
+| Binary messages | Yes | No (text events) |
+| Automatic reconnect | Application-managed | Built-in behavior |
+| Simple browser API | Moderate | Simple |
+
+Then verify every row against primary specs.
+
+---
+
+## Step 2 — Map dashboard requirements to protocol properties
+
+Example reasoning:
+
+**A metrics dashboard**
+- Server pushes updates
+- User rarely sends data
+- Text/JSON updates
+- Needs easy scaling
+
+→ SSE may be preferable.
+
+**A trading workstation**
+- Server sends prices
+- User sends orders/interactions
+- Very low latency
+
+→ WebSocket may be preferable.
+
+---
+
+## Step 3 — Validate operational complexity
+
+Run through production questions:
+
+- How many open connections?
+- How do reconnect storms behave?
+- How does deployment work behind proxies?
+- How do you authenticate?
+- How do you handle missed events?
+
+A protocol that looks faster but is harder to operate may be the worse choice.
+
+---
+
+## Step 4 — If needed, run an experiment
+
+For a realistic dashboard:
+
+1. Implement the same dashboard twice:
+   - SSE backend
+   - WebSocket backend
+
+2. Generate:
+   - 10k simulated users
+   - realistic update rates
+
+3. Measure:
+   - p50/p95 latency
+   - server CPU
+   - memory
+   - bandwidth
+   - failure recovery
+
+---
+
+## Step 5 — Produce the final recommendation
+
+The final answer should not be:
+
+> “WebSockets are better.”
+
+or:
+
+> “SSE is simpler.”
+
+It should be a conditional recommendation:
+
+- **Choose SSE when the dashboard is primarily a live feed of server-generated updates.**
+- **Choose WebSockets when the dashboard is interactive and requires continuous two-way communication.**
+
+The research would therefore aim to identify which category the dashboard belongs to, rather than declaring a universal winner. 
+
+After completing that research, I would answer the original question with a workload-specific recommendation and the tradeoffs behind it.

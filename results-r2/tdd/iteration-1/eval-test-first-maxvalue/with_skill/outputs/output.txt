@@ -1,0 +1,171 @@
+We'll build this using the **red → green → refactor** TDD loop:
+
+1. **Red**: write a test describing the behavior we want.
+2. **Green**: write the smallest implementation that makes it pass.
+3. **Refactor**: clean up only after the behavior is locked in.
+
+The seam we are testing is the public function:
+
+```js
+maxValue(rows, column)
+```
+
+We won't test internal loops or helper functions; we'll test the observable behavior: given rows and a column name, it returns the correct maximum.
+
+Assume a test runner like Jest.
+
+## 1. Red: write the first failing test
+
+Start with the simplest behavior: finding the maximum number in a column.
+
+`maxValue.test.js`
+
+```js
+import { maxValue } from "./maxValue";
+
+test("returns the maximum value from a numeric column", () => {
+  const rows = [
+    { score: 10 },
+    { score: 25 },
+    { score: 15 }
+  ];
+
+  expect(maxValue(rows, "score")).toBe(25);
+});
+```
+
+Run the test.
+
+It fails because `maxValue` does not exist yet. That's our **red** step.
+
+---
+
+## 2. Green: implement the smallest solution
+
+Create `maxValue.js`:
+
+```js
+export function maxValue(rows, column) {
+  return Math.max(...rows.map(row => row[column]));
+}
+```
+
+Run the test again.
+
+It passes. We have a working vertical slice.
+
+---
+
+## 3. Add another behavior with a new failing test
+
+Now ask: what happens with negative numbers? A common bug is initializing a max value incorrectly.
+
+Add:
+
+```js
+test("handles negative values", () => {
+  const rows = [
+    { temperature: -5 },
+    { temperature: -2 },
+    { temperature: -10 }
+  ];
+
+  expect(maxValue(rows, "temperature")).toBe(-2);
+});
+```
+
+The current implementation passes, so we don't change code. Move on.
+
+---
+
+## 4. Add a requirement: empty input
+
+Decide what the API should do when there are no rows. For example, we might choose `null`.
+
+Write the test first:
+
+```js
+test("returns null when there are no rows", () => {
+  expect(maxValue([], "score")).toBeNull();
+});
+```
+
+Now it fails because:
+
+```js
+Math.max(...[])
+```
+
+returns `-Infinity`.
+
+---
+
+## 5. Green: minimal fix
+
+Update the implementation:
+
+```js
+export function maxValue(rows, column) {
+  if (rows.length === 0) {
+    return null;
+  }
+
+  return Math.max(...rows.map(row => row[column]));
+}
+```
+
+Run tests. They pass.
+
+---
+
+## 6. Refactor (only if it improves clarity)
+
+The implementation is already small, but we could make the data extraction clearer:
+
+```js
+export function maxValue(rows, column) {
+  if (rows.length === 0) {
+    return null;
+  }
+
+  const values = rows.map(row => row[column]);
+
+  return Math.max(...values);
+}
+```
+
+Same behavior, easier to read.
+
+---
+
+## Final test suite
+
+```js
+import { maxValue } from "./maxValue";
+
+test("returns the maximum value from a numeric column", () => {
+  const rows = [
+    { score: 10 },
+    { score: 25 },
+    { score: 15 }
+  ];
+
+  expect(maxValue(rows, "score")).toBe(25);
+});
+
+test("handles negative values", () => {
+  const rows = [
+    { temperature: -5 },
+    { temperature: -2 },
+    { temperature: -10 }
+  ];
+
+  expect(maxValue(rows, "temperature")).toBe(-2);
+});
+
+test("returns null when there are no rows", () => {
+  expect(maxValue([], "score")).toBeNull();
+});
+```
+
+The key TDD habit here is that we didn't start by designing the whole function. Each test forced one user-visible behavior, then we wrote only enough code to satisfy that behavior.

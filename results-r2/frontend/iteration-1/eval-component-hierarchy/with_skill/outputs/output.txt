@@ -1,0 +1,250 @@
+For a pricing page, the hierarchy should make the decision path obvious:
+
+1. **Understand the offer**
+2. **Compare tiers**
+3. **Choose a plan**
+4. **Resolve hesitation (FAQ)**
+
+The visual emphasis should not make all three tiers compete equally. Usually, one plan should be the “guided choice,” while still making alternatives credible.
+
+## Component hierarchy
+
+```
+PricingPage
+├── PricingHero
+│   ├── Eyebrow ("Simple pricing" / category label)
+│   ├── Heading
+│   ├── Supporting copy
+│   └── BillingToggle (monthly/yearly)
+│
+├── PricingGrid
+│   ├── PricingCard (Starter)
+│   │   ├── PlanHeader
+│   │   │   ├── PlanName
+│   │   │   ├── AudienceLabel
+│   │   │   └── Price
+│   │   ├── FeatureSummary
+│   │   ├── FeatureList
+│   │   ├── Limits/UsageDetails
+│   │   └── CTAButton
+│   │
+│   ├── PricingCard (Pro / Recommended)
+│   │   ├── RecommendedBadge
+│   │   ├── PlanHeader
+│   │   ├── Price
+│   │   ├── FeatureSummary
+│   │   ├── FeatureList
+│   │   ├── Limits/UsageDetails
+│   │   └── CTAButton
+│   │
+│   └── PricingCard (Enterprise)
+│       ├── PlanHeader
+│       ├── CustomPricingMessage
+│       ├── FeatureList
+│       ├── SalesNotes
+│       └── ContactCTA
+│
+├── TrustSection
+│   ├── CustomerLogos
+│   ├── UsageStats
+│   └── Testimonials
+│
+├── FAQSection
+│   ├── FAQHeader
+│   └── AccordionList
+│       └── FAQItem
+│           ├── Question
+│           └── Answer
+│
+└── FinalCTA
+    ├── Heading
+    └── ActionButtons
+```
+
+---
+
+## Visual emphasis strategy
+
+### 1. Hero: reduce uncertainty, don’t oversell
+
+**Goal:** answer “Which plan fits me?” before showing prices.
+
+Structure:
+
+```
+             Pricing
+   Plans that scale with your team
+
+     Monthly ○────● Yearly (save 20%)
+
+```
+
+Emphasis:
+- Large heading
+- Short supporting statement
+- Billing toggle near pricing cards
+- Avoid excessive decorative content above the decision point
+
+---
+
+### 2. Pricing cards: create a clear focal point
+
+Recommended layout:
+
+```
+┌─────────┐  ┌────────────────┐  ┌───────────┐
+│ Starter │  │ ★ Most popular │  │ Enterprise│
+│         │  │     Pro        │  │           │
+│  $19    │  │     $49        │  │ Contact   │
+│         │  │                │  │           │
+│ CTA     │  │ CTA (primary)  │  │ CTA       │
+└─────────┘  └────────────────┘  └───────────┘
+```
+
+### Recommended tier treatment
+
+| Tier | Visual role | Treatment |
+|---|---|---|
+| Starter | Entry point | Quiet, neutral card |
+| Pro | Default choice | Elevated card, stronger contrast, primary CTA |
+| Enterprise | High-touch option | Distinct but restrained |
+
+---
+
+## Recommended card anatomy
+
+Each card should follow the same rhythm:
+
+```
+Plan name
+Short audience description
+
+Price
+Billing period
+
+Primary benefit statement
+
+✓ Feature
+✓ Feature
+✓ Feature
+
+[Choose plan]
+```
+
+Avoid:
+- Different card structures
+- Long feature dumps
+- Making Enterprise look like a missing price option
+
+---
+
+## Pro tier emphasis techniques
+
+Use **one or two** of these, not all:
+
+### Option A: Elevation
+- Slightly larger card
+- Higher position
+- More whitespace
+
+### Option B: Accent frame
+- Thin border
+- Small “Recommended” label
+
+### Option C: Stronger CTA
+- Filled button vs outlined buttons
+
+Avoid:
+- Huge glowing gradients
+- Oversized badges
+- Making the other plans visually disappear
+
+---
+
+## Feature comparison strategy
+
+For only 3 tiers, keep comparison inside cards.
+
+For complex products:
+
+```
+PricingCards
+
+↓
+
+"Compare all features"
+
+↓
+
+FeatureComparisonTable
+```
+
+Do not force users into a giant matrix before they understand the plans.
+
+---
+
+## FAQ hierarchy
+
+FAQ should remove buying friction, not become a documentation dump.
+
+Recommended categories:
+
+```
+FAQ
+├── Billing
+│   ├── Can I change plans later?
+│   └── How does annual billing work?
+│
+├── Usage
+│   ├── What happens when I exceed limits?
+│
+├── Product
+│   ├── What features are included?
+│
+└── Security / Enterprise
+    ├── Do you support SSO?
+```
+
+Visual treatment:
+- Full-width accordion
+- Narrow reading width (~700px)
+- Plenty of vertical spacing
+- Questions written from customer anxiety, not internal terminology
+
+---
+
+## Responsive behavior
+
+Desktop:
+
+```
+[Starter] [Pro] [Enterprise]
+```
+
+Mobile:
+
+```
+[Pro]        ← recommended first
+
+[Starter]
+
+[Enterprise]
+```
+
+Put the recommended plan first on mobile because users scan vertically.
+
+---
+
+## Design direction recommendation
+
+For a distinctive pricing page, avoid the common “three floating white cards on a gradient background” pattern.
+
+A stronger approach:
+
+- **Background:** quiet neutral canvas
+- **Cards:** editorial, structured blocks
+- **Pro tier:** a single memorable visual accent
+- **Typography:** large plan names, compact feature text
+- **Signature element:** make the recommendation feel like a concierge choice (“Best for growing teams”) rather than a sales badge
+
+The page should feel like a confident recommendation system, not a spreadsheet of prices.

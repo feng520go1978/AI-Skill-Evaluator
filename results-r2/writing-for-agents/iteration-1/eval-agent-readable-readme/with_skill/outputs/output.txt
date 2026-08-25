@@ -1,0 +1,112 @@
+:::writing{variant="document" id="58391" title="deploykit CLI Usage README Section"}
+## Running `deploykit`
+
+`deploykit` is the deployment workflow CLI. Use the commands below in order for the normal deployment lifecycle:
+
+```bash
+deploykit init
+deploykit plan
+deploykit apply
+```
+
+Use rollback only when reverting a previously applied deployment:
+
+```bash
+deploykit rollback
+```
+
+### Command Reference
+
+#### `deploykit init`
+
+Initialize deploykit for the current repository.
+
+Use this command when setting up deploykit in a new environment or after cloning the repository.
+
+```bash
+deploykit init
+```
+
+Completion criteria:
+- The deploykit configuration and required local state are created.
+- Subsequent commands can discover the project deployment settings.
+
+---
+
+#### `deploykit plan`
+
+Generate a deployment plan without making changes.
+
+```bash
+deploykit plan
+```
+
+Use this before `apply` to inspect intended changes and verify that the deployment matches expectations.
+
+Completion criteria:
+- A plan is generated successfully.
+- The planned changes have been reviewed before applying.
+
+---
+
+#### `deploykit apply`
+
+Execute the deployment plan.
+
+```bash
+deploykit apply
+```
+
+Run this only after confirming the output from `deploykit plan`.
+
+Completion criteria:
+- The deployment operation finishes successfully.
+- The resulting deployment state is recorded by deploykit.
+
+---
+
+#### `deploykit rollback`
+
+Revert the most recent deployment or restore a previous known-good state.
+
+```bash
+deploykit rollback
+```
+
+Use this when an applied deployment needs to be undone.
+
+Completion criteria:
+- The rollback operation completes.
+- The deployment state reflects the restored version.
+
+---
+
+### Typical Agent Workflow
+
+When modifying deployment-related code, AI coding agents should generally:
+
+1. Initialize deploykit if the repository has not been initialized:
+
+```bash
+deploykit init
+```
+
+2. Review the proposed changes:
+
+```bash
+deploykit plan
+```
+
+3. Apply the deployment:
+
+```bash
+deploykit apply
+```
+
+4. If the deployment introduces a problem, revert it:
+
+```bash
+deploykit rollback
+```
+
+Avoid running `apply` without first checking the output of `plan`.:::

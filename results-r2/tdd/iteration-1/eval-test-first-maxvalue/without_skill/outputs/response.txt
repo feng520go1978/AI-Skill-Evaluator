@@ -1,0 +1,234 @@
+A good test-first workflow is:
+
+1. **Define the behavior**
+2. **Write a failing test**
+3. **Write the smallest implementation that passes**
+4. **Refactor while keeping tests green**
+
+Let's assume we are using a common JavaScript test runner like Jest.
+
+## 1. Start with the first requirement
+
+We want:
+
+```js
+maxValue(rows, column)
+```
+
+Given:
+
+```js
+[
+  { name: "Alice", score: 10 },
+  { name: "Bob", score: 25 },
+  { name: "Cara", score: 15 }
+]
+```
+
+Calling:
+
+```js
+maxValue(rows, "score")
+```
+
+should return:
+
+```js
+25
+```
+
+## 2. Write the test first
+
+Create `maxValue.test.js`:
+
+```js
+import { maxValue } from "./maxValue";
+
+test("returns the maximum value from a numeric column", () => {
+  const rows = [
+    { name: "Alice", score: 10 },
+    { name: "Bob", score: 25 },
+    { name: "Cara", score: 15 }
+  ];
+
+  expect(maxValue(rows, "score")).toBe(25);
+});
+```
+
+Run the test.
+
+It should fail because `maxValue` does not exist yet. That's good: the test proves we have a requirement that is not implemented.
+
+## 3. Implement the smallest thing that passes
+
+Create `maxValue.js`:
+
+```js
+export function maxValue(rows, column) {
+  return Math.max(...rows.map(row => row[column]));
+}
+```
+
+Now the test should pass.
+
+The implementation does three things:
+
+1. Extract values:
+
+```js
+rows.map(row => row[column])
+```
+
+produces:
+
+```js
+[10, 25, 15]
+```
+
+2. Spread them into `Math.max`:
+
+```js
+Math.max(10, 25, 15)
+```
+
+3. Return:
+
+```js
+25
+```
+
+---
+
+## 4. Add edge cases as new tests
+
+Test-driven development means the tests drive the design. Ask: "What behavior do we need?"
+
+### Empty array
+
+What should happen?
+
+You need to choose a rule. For example, return `null`.
+
+Add:
+
+```js
+test("returns null when rows is empty", () => {
+  expect(maxValue([], "score")).toBeNull();
+});
+```
+
+The current implementation fails because:
+
+```js
+Math.max(...[])
+```
+
+returns:
+
+```js
+-Infinity
+```
+
+Update the implementation:
+
+```js
+export function maxValue(rows, column) {
+  if (rows.length === 0) {
+    return null;
+  }
+
+  return Math.max(...rows.map(row => row[column]));
+}
+```
+
+---
+
+### Missing values
+
+Decide what happens with:
+
+```js
+[
+  { score: 10 },
+  { name: "Bob" },
+  { score: 20 }
+]
+```
+
+A reasonable rule is to ignore missing values.
+
+Write the test:
+
+```js
+test("ignores missing column values", () => {
+  const rows = [
+    { score: 10 },
+    { name: "Bob" },
+    { score: 20 }
+  ];
+
+  expect(maxValue(rows, "score")).toBe(20);
+});
+```
+
+Then adjust:
+
+```js
+export function maxValue(rows, column) {
+  const values = rows.map(row => row[column]).filter(value => typeof value === "number");
+
+  if (values.length === 0) {
+    return null;
+  }
+
+  return Math.max(...values);
+}
+```
+
+---
+
+## 5. Final test suite
+
+```js
+import { maxValue } from "./maxValue";
+
+test("returns the maximum value from a numeric column", () => {
+  const rows = [
+    { name: "Alice", score: 10 },
+    { name: "Bob", score: 25 },
+    { name: "Cara", score: 15 }
+  ];
+
+  expect(maxValue(rows, "score")).toBe(25);
+});
+
+test("returns null when rows is empty", () => {
+  expect(maxValue([], "score")).toBeNull();
+});
+
+test("ignores missing column values", () => {
+  const rows = [
+    { score: 10 },
+    { name: "Bob" },
+    { score: 20 }
+  ];
+
+  expect(maxValue(rows, "score")).toBe(20);
+});
+```
+
+Implementation:
+
+```js
+export function maxValue(rows, column) {
+  const values = rows.map(row => row[column]).filter(value => typeof value === "number");
+
+  if (values.length === 0) {
+    return null;
+  }
+
+  return Math.max(...values);
+}
+```
+
+The important TDD habit here is that we didn't start by writing the function—we first captured the contract. The implementation is then just the simplest code needed to satisfy that contract.

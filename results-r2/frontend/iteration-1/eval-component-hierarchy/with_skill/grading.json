@@ -1,0 +1,25 @@
+{
+  "assertion_results": [
+    {
+      "text": "States which pricing tier receives emphasis and by what visual mechanism",
+      "passed": true,
+      "evidence": "The output identifies “Pro / Recommended” as the emphasized tier and states mechanisms including “Elevated card, stronger contrast, primary CTA” and “Recommended label.”"
+    },
+    {
+      "text": "Maintains structural consistency across the three tiers while differentiating emphasis",
+      "passed": true,
+      "evidence": "The output says “Each card should follow the same rhythm” and provides tier differentiation: “Starter | Quiet, neutral card,” “Pro | Elevated card, stronger contrast, primary CTA,” and “Enterprise | Distinct but restrained.”"
+    },
+    {
+      "text": "FAQ treatment is deliberately de-emphasized relative to pricing tiers with a stated reason",
+      "passed": false,
+      "evidence": "The output states “FAQ should remove buying friction, not become a documentation dump” and places FAQ after PricingGrid, but it does not explicitly state that FAQ is de-emphasized relative to the pricing tiers."
+    }
+  ],
+  "summary": {
+    "passed": 2,
+    "failed": 1,
+    "total": 3,
+    "pass_rate": 0.6666666666666666
+  }
+}

@@ -1,0 +1,64 @@
+Following TDD, I’d write regression tests against the **public behavior of `slugify`** before changing the implementation. The current bug is that it only replaces the **first literal space** and doesn’t handle other title inputs well.
+
+I’d start with tests that describe the expected contract:
+
+```js
+describe('slugify', () => {
+  test('lowercases a title', () => {
+    expect(slugify('Hello World')).toBe('hello-world');
+  });
+
+  test('replaces multiple spaces with hyphens', () => {
+    expect(slugify('Hello Big World')).toBe('hello-big-world');
+  });
+
+  test('does not leave repeated hyphens from extra whitespace', () => {
+    expect(slugify('Hello   Big   World')).toBe('hello-big-world');
+  });
+
+  test('trims leading and trailing whitespace', () => {
+    expect(slugify('  Hello World  ')).toBe('hello-world');
+  });
+
+  test('handles titles with no spaces', () => {
+    expect(slugify('Hello')).toBe('hello');
+  });
+
+  test('handles empty titles', () => {
+    expect(slugify('')).toBe('');
+  });
+
+  test('handles tabs and newlines as whitespace', () => {
+    expect(slugify('Hello\tWorld\nToday')).toBe('hello-world-today');
+  });
+});
+```
+
+Depending on the intended slug rules, I’d also add tests for punctuation and non-ASCII titles:
+
+```js
+test('removes punctuation if slugs should be URL-safe', () => {
+  expect(slugify('Hello, World!')).toBe('hello-world');
+});
+
+test('preserves or normalizes unicode according to the slug policy', () => {
+  expect(slugify('Café Déjà Vu')).toBe('cafe-deja-vu'); // if transliteration is expected
+});
+```
+
+The minimum regression test that exposes the existing bug is probably:
+
+```js
+test('replaces every space, not just the first one', () => {
+  expect(slugify('My Great Title')).toBe('my-great-title');
+});
+```
+
+That test fails with the current implementation because:
+
+```js
+'My Great Title'.toLowerCase().replace(' ', '-')
+// => 'my-great title'
+```
+
+I’d avoid testing implementation details like “uses regex” or “calls replaceAll”; the tests should lock down the user-visible slug behavior, not the chosen fix.

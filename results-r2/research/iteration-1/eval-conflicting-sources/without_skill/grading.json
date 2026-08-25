@@ -1,0 +1,25 @@
+{
+  "assertion_results": [
+    {
+      "text": "Examines benchmark methodology differences before trusting either claim",
+      "passed": true,
+      "evidence": "States: \"I would treat this as a benchmark validity problem, not a ‘which source do I trust?’ problem\" and compares \"Library versions,\" \"Runtime/compiler version,\" \"Hardware,\" \"Dataset,\" \"Workload,\" \"Warmup performed,\" \"Number of runs,\" and \"Statistical reporting\"."
+    },
+    {
+      "text": "Flags potential bias (vendor-published benchmarks, outdated versions, non-matching workload)",
+      "passed": true,
+      "evidence": "Flags \"Microbenchmark vs real application workload,\" \"Vendor blog posts,\" \"marketing comparisons,\" and \"Version mismatch - Was one tested on an older release?\" as things to check."
+    },
+    {
+      "text": "Concludes with reproducing the benchmark against one's own real workload as the deciding step",
+      "passed": true,
+      "evidence": "States: \"Then I’d run multiple repetitions and report variance, not just the fastest run\" and \"A neutral benchmark designed around my actual workload,\" concluding: \"Which library is fastest for the workload I actually care about, under conditions I can reproduce?\""
+    }
+  ],
+  "summary": {
+    "passed": 3,
+    "failed": 0,
+    "total": 3,
+    "pass_rate": 1
+  }
+}

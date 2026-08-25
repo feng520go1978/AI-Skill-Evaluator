@@ -1,0 +1,38 @@
+[
+  {
+    "skill": "tdd",
+    "dimensions": {
+      "capability": 89,
+      "lift": null,
+      "cost": 100,
+      "speed": 100,
+      "stability": 37,
+      "security": 100
+    },
+    "overall": 64.9,
+    "verdict": "INCONCLUSIVE",
+    "reasons": [
+      "task shows no sensitivity to the skill"
+    ],
+    "reliability": "low",
+    "inconclusiveReason": "task shows no sensitivity to the skill",
+    "evaluation_cost": {
+      "currency": "USD",
+      "skill_cost": {
+        "usd": 0.010408,
+        "tokens": 4435
+      },
+      "eval_overhead": {
+        "usd": 0.019534,
+        "judge_usd": 0.011129,
+        "judge_tokens": 7019,
+        "baseline_usd": 0.008405,
+        "baseline_tokens": 2195
+      },
+      "total_eval_cost": {
+        "usd": 0.029942
+      }
+    },
+    "securityFindings": []
+  }
+]

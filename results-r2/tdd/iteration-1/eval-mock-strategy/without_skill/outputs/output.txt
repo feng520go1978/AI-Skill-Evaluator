@@ -1,0 +1,103 @@
+For testing a welcome-email function, I usually **do not start with a real SMTP server**. The right approach depends on what you’re trying to verify.
+
+A practical testing strategy:
+
+### 1. Unit test: don't send email at all
+Mock the email-sending layer and verify your signup flow calls it correctly.
+
+Example flow:
+
+```
+signup(user)
+  -> create user record
+  -> generate welcome email payload
+  -> call email service.send(...)
+```
+
+Test things like:
+- Was `sendWelcomeEmail(user)` called?
+- Did it use the right recipient?
+- Did the template receive the right variables?
+- Did failures get handled correctly?
+
+This is fast and should run on every test.
+
+---
+
+### 2. Integration test: use a fake SMTP server
+For most applications, this is the sweet spot.
+
+Run a local mail catcher such as:
+- MailHog
+- Mailpit
+- smtp4dev
+
+Your app connects via SMTP, sends the email, and the test inspects the captured message.
+
+You verify:
+- SMTP connection works
+- headers are correct
+- HTML/text body renders
+- attachments (if any) are included
+- encoding works
+
+Example setup:
+
+```
+App
+ |
+ | SMTP localhost:1025
+ v
+Mailpit
+ |
+ v
+Test checks captured email
+```
+
+This catches problems that mocking misses.
+
+---
+
+### 3. Staging test: use a real email provider
+I would use a real SMTP/API provider only in a staging environment.
+
+Examples:
+- Amazon SES
+- SendGrid
+- Mailgun
+- Postmark
+
+Use:
+- a dedicated staging domain/subdomain
+- test recipient allowlists
+- low sending limits
+
+Avoid accidentally emailing real users during tests.
+
+---
+
+### 4. Production-like verification
+For a final confidence check:
+- create a test account
+- trigger signup
+- receive the email in Gmail/Outlook/etc.
+- check:
+  - spam placement
+  - links
+  - images
+  - unsubscribe headers (if applicable)
+  - mobile rendering
+
+---
+
+My typical setup:
+
+| Environment | Email behavior |
+|---|---|
+| Unit tests | Mock email service |
+| Local development | Mailpit/MailHog |
+| CI pipeline | Fake SMTP container |
+| Staging | Real provider + test inboxes |
+| Production | Real provider |
+
+I would avoid pointing automated tests at a real SMTP server because it makes tests slower, flaky, harder to isolate, and risks sending accidental emails. Use real SMTP only when you specifically need to validate deliverability or provider integration.
