@@ -15,8 +15,9 @@
 
 ## 当前阶段
 
-**Phase 6.2 完成，公开测试标准 5/5 通过 → 待批进入 PUBLISH（GitHub 接管）**
-公开测试阻塞已解除。
+**✅ PUBLISH COMPLETE（2026-08-25）— GitHub 公开仓库已上线**
+https://github.com/feng520go1978/AI-Skill-Evaluator （Public，main @ fa72bdd，7 commits 全同步）
+下一阶段：HANDOFF（公开测试运营 + README Known Limitations 复核 + npm 发布可选）
 
 ## 阶段台账
 
@@ -29,7 +30,7 @@
 | P6 校准设计 | 校准报告 V1.0 | docs/scoring-calibration-V1.md | ✅ |
 | P6.1 规则落地+复测 | INCONCLUSIVE/新权重/judge成本入账 + 复测报告 | 本地 commit 41bda2e; docs/phase61-recalibration-report.md; results-r2/ | ✅ |
 | **P6.2 噪声带规则 I4 + 第三轮验证** | I4 落地 + 有害门控 + 最终验证报告 | commit (P6.2); docs/phase62-final-validation-report.md; results-r3/; 35 tests 全绿 | ✅ 公开标准 5/5 |
-| **PUBLISH GitHub 正式接管** | remote 不存在 | — | ❌ **从未执行**（待用户定仓库名/可见性） |
+| **PUBLISH GitHub 正式接管** | ✅ **COMPLETE 2026-08-25**：github.com/feng520go1978/AI-Skill-Evaluator (Public)，main@fa72bdd，7 commits 同步，README/LICENSE/PROJECT_STATE 均在线 |
 | HANDOFF 公开发布准备 | README 重写/npm 包名/license 传递说明 | — | ⬜ 未开始 |
 
 ## 已完成工件清单（关键）
